@@ -1,0 +1,137 @@
+"""Cost-tiered LLM providers for the controlled review workflow."""
+
+from __future__ import annotations
+
+import json
+from typing import Any, Protocol
+
+from langchain_core.messages import HumanMessage
+from langchain_core.runnables import Runnable, RunnableLambda
+from pydantic import BaseModel
+
+from data_agent.config import Settings, get_settings
+from data_agent.llm import get_chat_model
+from data_agent.review.llm.models import ModelTier
+
+
+class ReviewLLMProvider(Protocol):
+    def __call__(
+        self, tier: ModelTier, schema: type[BaseModel] | None = None
+    ) -> Runnable[Any, Any]: ...
+
+
+class _CostTierReviewProvider:
+    """Shared structured-output behavior for one configured model provider."""
+
+    provider_name: str
+
+    def __init__(self, settings: Settings | None = None) -> None:
+        self.settings = settings or get_settings()
+
+    def model_name(self, tier: ModelTier) -> str:
+        raise NotImplementedError
+
+    def __call__(
+        self, tier: ModelTier, schema: type[BaseModel] | None = None
+    ) -> Runnable[Any, Any]:
+        model = get_chat_model(
+            provider=self.provider_name,
+            settings=self.settings,
+            model=self.model_name(tier),
+            temperature=0.0,
+        )
+        if schema is None:
+            return model
+        try:
+            return model.with_structured_output(schema)
+        except (AttributeError, NotImplementedError):
+            return _json_structured(model, schema)
+
+
+class SocGenAIReviewProvider(_CostTierReviewProvider):
+    """Map review cost tiers to explicitly configured SocGenAI models."""
+
+    provider_name = "socgenai"
+
+    def model_name(self, tier: ModelTier) -> str:
+        return (
+            self.settings.socgenai_low_cost_model
+            if tier is ModelTier.LOW_COST
+            else self.settings.socgenai_high_cost_model
+        )
+
+
+class DeepSeekReviewProvider(_CostTierReviewProvider):
+    """Map review cost tiers to DeepSeek v4 flash/pro models."""
+
+    provider_name = "deepseek"
+
+    def model_name(self, tier: ModelTier) -> str:
+        return (
+            self.settings.deepseek_low_cost_model
+            if tier is ModelTier.LOW_COST
+            else self.settings.deepseek_high_cost_model
+        )
+
+
+class ConfiguredReviewProvider:
+    """Select the cost-tier adapter named by the shared ``LLM_PROVIDER`` setting."""
+
+    def __init__(self, settings: Settings | None = None) -> None:
+        self.settings = settings or get_settings()
+        selected = self.settings.llm_provider.strip().lower()
+        providers: dict[str, ReviewLLMProvider] = {
+            "deepseek": DeepSeekReviewProvider(self.settings),
+            "socgenai": SocGenAIReviewProvider(self.settings),
+        }
+        try:
+            self.provider = providers[selected]
+        except KeyError as exc:
+            raise ValueError(
+                f"Unsupported LLM_PROVIDER={selected!r}. Use 'socgenai' or 'deepseek'."
+            ) from exc
+
+    def __call__(
+        self, tier: ModelTier, schema: type[BaseModel] | None = None
+    ) -> Runnable[Any, Any]:
+        return self.provider(tier, schema)
+
+
+def _json_structured(model: Runnable[Any, Any], schema: type[BaseModel]) -> Runnable[Any, Any]:
+    instruction = HumanMessage(
+        content=(
+            "Return only JSON matching this schema. No Markdown fences.\n"
+            + json.dumps(schema.model_json_schema(), default=str)
+        )
+    )
+
+    def invoke(messages: Any) -> Any:
+        sequence = list(messages) if isinstance(messages, list) else [messages]
+        return model.invoke([*sequence, instruction])
+
+    return RunnableLambda(invoke)
+
+
+DEFAULT_LLM_PROVIDER: ReviewLLMProvider = ConfiguredReviewProvider()
+
+
+def create_llm(tier: ModelTier) -> Runnable[Any, Any]:
+    return DEFAULT_LLM_PROVIDER(tier)
+
+
+def create_structured_llm(
+    tier: ModelTier, schema: type[BaseModel]
+) -> Runnable[Any, Any]:
+    return DEFAULT_LLM_PROVIDER(tier, schema)
+
+
+__all__ = [
+    "DEFAULT_LLM_PROVIDER",
+    "ConfiguredReviewProvider",
+    "DeepSeekReviewProvider",
+    "ModelTier",
+    "ReviewLLMProvider",
+    "SocGenAIReviewProvider",
+    "create_llm",
+    "create_structured_llm",
+]

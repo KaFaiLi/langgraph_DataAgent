@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_content_master" data-pptx-master-name="Report Core Content"
+  data-pptx-layout="viz_commentary_left" data-pptx-layout-name="Visual with Left Commentary">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#FFFFFF"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <line id="master-footer-rule" x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF"
+    stroke-width="1" data-pptx-layer="master" data-pptx-editable="false"/>
+  <rect id="master-brand-accent" x="48" y="680" width="6" height="18" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <text id="master-brand-label" x="64" y="694" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="12" font-weight="700"
+    data-pptx-layer="master" data-pptx-editable="false">INDEPENDENT RISK REVIEW</text>
+  <line id="viz-commentary-left-title-rule" x1="48" y1="154" x2="304" y2="154"
+    stroke="#E60028" stroke-width="6" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="viz-commentary-left-rail" x="48" y="188" width="340" height="428" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="viz-commentary-left-header" x="48" y="188" width="340" height="62" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <text id="viz-commentary-left-label" x="72" y="226" fill="#FFFFFF"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="15" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">REVIEW COMMENTARY</text>
+  <line id="viz-commentary-left-rule-one" x1="72" y1="362" x2="364" y2="362"
+    stroke="#51547A" stroke-width="1" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="viz-commentary-left-rule-two" x1="72" y1="500" x2="364" y2="500"
+    stroke="#51547A" stroke-width="1" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <text id="viz-commentary-left-why-label" x="72" y="390" fill="#FFFFFF"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">WHY IT MATTERS</text>
+  <text id="viz-commentary-left-limit-label" x="72" y="528" fill="#FFFFFF"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">EVIDENCE LIMIT</text>
+  <text id="viz-commentary-left-visual-label" x="424" y="210" fill="#6B6B78"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">ONE DECISION-RELEVANT VISUAL</text>
+  <g id="viz-commentary-left-title-slot" data-pptx-placeholder="title"
+    data-pptx-bounds="48 82 1184 64"><text id="viz-commentary-left-title-carrier"
+      data-pptx-carrier="true" x="48" y="128" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="38" font-weight="700">{{PAGE_TITLE}}</text></g>
+  <g id="viz-commentary-left-message-slot" data-pptx-placeholder="body" data-pptx-idx="1"
+    data-pptx-bounds="72 270 292 78"><text id="viz-commentary-left-message-carrier"
+      data-pptx-carrier="true" x="72" y="306" fill="#FFFFFF"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="20" font-weight="700">{{KEY_MESSAGE}}</text></g>
+  <g id="viz-commentary-left-comment-slot" data-pptx-placeholder="body" data-pptx-idx="2"
+    data-pptx-bounds="72 402 292 82"><text id="viz-commentary-left-comment-carrier"
+      data-pptx-carrier="true" x="72" y="434" fill="#FFFFFF"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="17">{{COMMENTARY}}</text></g>
+  <g id="viz-commentary-left-limit-slot" data-pptx-placeholder="body" data-pptx-idx="3"
+    data-pptx-bounds="72 540 292 58"><text id="viz-commentary-left-limit-carrier"
+      data-pptx-carrier="true" x="72" y="570" fill="#FFFFFF"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="15">{{LIMITATION}}</text></g>
+  <g id="viz-commentary-left-visual-slot" data-pptx-placeholder="chart" data-pptx-idx="4"
+    data-pptx-bounds="424 228 808 388">
+    <g id="viz-commentary-left-visual-carrier" data-pptx-carrier="true">
+      <line x1="474" y1="560" x2="1200" y2="560" stroke="#07073F" stroke-width="2"/>
+      <line x1="474" y1="474" x2="1200" y2="474" stroke="#D9D9DF" stroke-width="1"/>
+      <line x1="474" y1="388" x2="1200" y2="388" stroke="#D9D9DF" stroke-width="1"/>
+      <line x1="474" y1="302" x2="1200" y2="302" stroke="#D9D9DF" stroke-width="1"/>
+      <rect x="520" y="430" width="58" height="130" fill="#282C63"/>
+      <rect x="650" y="366" width="58" height="194" fill="#282C63"/>
+      <rect x="780" y="404" width="58" height="156" fill="#282C63"/>
+      <rect x="910" y="304" width="58" height="256" fill="#282C63"/>
+      <rect x="1040" y="338" width="58" height="222" fill="#282C63"/>
+      <polyline points="549,402 679,338 809,364 939,278 1069,312" fill="none"
+        stroke="#E60028" stroke-width="5"/>
+      <circle cx="549" cy="402" r="6" fill="#E60028"/>
+      <circle cx="679" cy="338" r="6" fill="#E60028"/>
+      <circle cx="809" cy="364" r="6" fill="#E60028"/>
+      <circle cx="939" cy="278" r="6" fill="#E60028"/>
+      <circle cx="1069" cy="312" r="6" fill="#E60028"/>
+      <text x="549" y="590" text-anchor="middle" fill="#6B6B78" font-family="Arial, sans-serif" font-size="13">P1</text>
+      <text x="679" y="590" text-anchor="middle" fill="#6B6B78" font-family="Arial, sans-serif" font-size="13">P2</text>
+      <text x="809" y="590" text-anchor="middle" fill="#6B6B78" font-family="Arial, sans-serif" font-size="13">P3</text>
+      <text x="939" y="590" text-anchor="middle" fill="#6B6B78" font-family="Arial, sans-serif" font-size="13">P4</text>
+      <text x="1069" y="590" text-anchor="middle" fill="#6B6B78" font-family="Arial, sans-serif" font-size="13">P5</text>
+    </g>
+  </g>
+  <g id="viz-commentary-left-footer-slot" data-pptx-placeholder="footer" data-pptx-idx="5"
+    data-pptx-bounds="260 676 860 32"><text id="viz-commentary-left-footer-carrier"
+      data-pptx-carrier="true" x="260" y="698" fill="#6B6B78"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="11">{{FOOTER_NOTE}}</text></g>
+  <g id="viz-commentary-left-pagenum-slot" data-pptx-placeholder="slide-number" data-pptx-idx="6"
+    data-pptx-bounds="1180 676 52 32"><text id="viz-commentary-left-pagenum-carrier"
+      data-pptx-carrier="true" x="1232" y="698" text-anchor="end" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700">{{PAGE_NUM}}</text></g>
+</svg>

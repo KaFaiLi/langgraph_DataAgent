@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_content_master" data-pptx-master-name="Report Core Content"
+  data-pptx-layout="text_analysis" data-pptx-layout-name="Text Analysis">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#FFFFFF"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <line id="master-footer-rule" x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF"
+    stroke-width="1" data-pptx-layer="master" data-pptx-editable="false"/>
+  <rect id="master-brand-accent" x="48" y="680" width="6" height="18" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <text id="master-brand-label" x="64" y="694" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="12" font-weight="700"
+    data-pptx-layer="master" data-pptx-editable="false">INDEPENDENT RISK REVIEW</text>
+  <line id="text-analysis-title-rule" x1="48" y1="154" x2="304" y2="154"
+    stroke="#E60028" stroke-width="6" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="text-analysis-rule-one" x1="48" y1="284" x2="1232" y2="284"
+    stroke="#D9D9DF" stroke-width="1" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="text-analysis-rule-two" x1="48" y1="420" x2="1232" y2="420"
+    stroke="#D9D9DF" stroke-width="1" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="text-analysis-rule-three" x1="48" y1="532" x2="1232" y2="532"
+    stroke="#D9D9DF" stroke-width="1" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="text-analysis-observation-accent" x="48" y="190" width="8" height="66" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="text-analysis-evidence-accent" x="48" y="310" width="8" height="84" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="text-analysis-implication-accent" x="48" y="446" width="8" height="60" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="text-analysis-limitation-accent" x="48" y="558" width="8" height="58" fill="#6B6B78"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <text id="text-analysis-observation-label" x="80" y="216" fill="#E60028"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="14" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">OBSERVATION</text>
+  <text id="text-analysis-evidence-label" x="80" y="336" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="14" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">EVIDENCE</text>
+  <text id="text-analysis-implication-label" x="80" y="472" fill="#E60028"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="14" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">IMPLICATION</text>
+  <text id="text-analysis-limitation-label" x="80" y="584" fill="#6B6B78"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="14" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">LIMITATION</text>
+  <g id="text-analysis-title-slot" data-pptx-placeholder="title" data-pptx-bounds="48 82 1184 64">
+    <text id="text-analysis-title-carrier" data-pptx-carrier="true" x="48" y="128" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="38" font-weight="700">{{PAGE_TITLE}}</text></g>
+  <g id="text-analysis-observation-slot" data-pptx-placeholder="body" data-pptx-idx="1"
+    data-pptx-bounds="234 188 998 76"><text id="text-analysis-observation-carrier"
+      data-pptx-carrier="true" x="234" y="220" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="20">{{OBSERVATION}}</text></g>
+  <g id="text-analysis-evidence-slot" data-pptx-placeholder="body" data-pptx-idx="2"
+    data-pptx-bounds="234 306 998 92"><text id="text-analysis-evidence-carrier"
+      data-pptx-carrier="true" x="234" y="340" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="19">{{EVIDENCE}}</text></g>
+  <g id="text-analysis-implication-slot" data-pptx-placeholder="body" data-pptx-idx="3"
+    data-pptx-bounds="234 442 998 68"><text id="text-analysis-implication-carrier"
+      data-pptx-carrier="true" x="234" y="476" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="20" font-weight="700">{{IMPLICATION}}</text></g>
+  <g id="text-analysis-limitation-slot" data-pptx-placeholder="body" data-pptx-idx="4"
+    data-pptx-bounds="234 554 998 64"><text id="text-analysis-limitation-carrier"
+      data-pptx-carrier="true" x="234" y="586" fill="#6B6B78"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="17">{{LIMITATION}}</text></g>
+  <g id="text-analysis-footer-slot" data-pptx-placeholder="footer" data-pptx-idx="5"
+    data-pptx-bounds="260 676 860 32"><text id="text-analysis-footer-carrier" data-pptx-carrier="true"
+      x="260" y="698" fill="#6B6B78" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="11">{{FOOTER_NOTE}}</text></g>
+  <g id="text-analysis-pagenum-slot" data-pptx-placeholder="slide-number" data-pptx-idx="6"
+    data-pptx-bounds="1180 676 52 32"><text id="text-analysis-pagenum-carrier" data-pptx-carrier="true"
+      x="1232" y="698" text-anchor="end" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700">{{PAGE_NUM}}</text></g>
+</svg>

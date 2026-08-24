@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_content_master" data-pptx-master-name="Report Core Content"
+  data-pptx-layout="three_block" data-pptx-layout-name="Three Block">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#FFFFFF"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <line id="master-footer-rule" x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF"
+    stroke-width="1" data-pptx-layer="master" data-pptx-editable="false"/>
+  <rect id="master-brand-accent" x="48" y="680" width="6" height="18" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <text id="master-brand-label" x="64" y="694" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="12" font-weight="700"
+    data-pptx-layer="master" data-pptx-editable="false">INDEPENDENT RISK REVIEW</text>
+  <line id="three-block-title-rule" x1="48" y1="154" x2="304" y2="154" stroke="#E60028"
+    stroke-width="6" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="three-block-one-panel" x="48" y="194" width="370" height="420" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="three-block-two-panel" x="430" y="194" width="370" height="420" fill="#31575A"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="three-block-three-panel" x="812" y="194" width="420" height="420" fill="#282C63"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="three-block-one-rule" x1="66" y1="286" x2="400" y2="286" stroke="#FFFFFF"
+    stroke-width="1" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="three-block-two-rule" x1="448" y1="286" x2="782" y2="286" stroke="#FFFFFF"
+    stroke-width="1" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="three-block-three-rule" x1="830" y1="286" x2="1214" y2="286" stroke="#FFFFFF"
+    stroke-width="1" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <g id="three-block-title-slot" data-pptx-placeholder="title"
+    data-pptx-bounds="48 82 1184 64"><text id="three-block-title-carrier" data-pptx-carrier="true"
+      x="48" y="128" fill="#E60028" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="38" font-weight="700">{{PAGE_TITLE}}</text></g>
+  <g id="three-block-one-slot" data-pptx-placeholder="body" data-pptx-idx="1"
+    data-pptx-bounds="66 218 334 370"><text id="three-block-one-carrier" data-pptx-carrier="true"
+      x="66" y="260" fill="#FFFFFF" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="20" font-weight="700">{{BLOCK_1}}</text></g>
+  <g id="three-block-two-slot" data-pptx-placeholder="body" data-pptx-idx="2"
+    data-pptx-bounds="448 218 334 370"><text id="three-block-two-carrier" data-pptx-carrier="true"
+      x="448" y="260" fill="#FFFFFF" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="20" font-weight="700">{{BLOCK_2}}</text></g>
+  <g id="three-block-three-slot" data-pptx-placeholder="body" data-pptx-idx="3"
+    data-pptx-bounds="830 218 384 370"><text id="three-block-three-carrier" data-pptx-carrier="true"
+      x="830" y="260" fill="#FFFFFF" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="20" font-weight="700">{{BLOCK_3}}</text></g>
+  <g id="three-block-footer-slot" data-pptx-placeholder="footer" data-pptx-idx="4"
+    data-pptx-bounds="260 676 860 32"><text id="three-block-footer-carrier" data-pptx-carrier="true"
+      x="260" y="698" fill="#6B6B78" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="11">{{FOOTER_NOTE}}</text></g>
+  <g id="three-block-pagenum-slot" data-pptx-placeholder="slide-number" data-pptx-idx="5"
+    data-pptx-bounds="1180 676 52 32"><text id="three-block-pagenum-carrier" data-pptx-carrier="true"
+      x="1232" y="698" text-anchor="end" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700">{{PAGE_NUM}}</text></g>
+</svg>

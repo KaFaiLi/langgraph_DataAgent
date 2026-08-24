@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_content_master" data-pptx-master-name="Report Core Content"
+  data-pptx-layout="process_timeline" data-pptx-layout-name="Process Timeline">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#FFFFFF"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <line id="master-footer-rule" x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF"
+    stroke-width="1" data-pptx-layer="master" data-pptx-editable="false"/>
+  <rect id="master-brand-accent" x="48" y="680" width="6" height="18" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <text id="master-brand-label" x="64" y="694" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="12" font-weight="700"
+    data-pptx-layer="master" data-pptx-editable="false">INDEPENDENT RISK REVIEW</text>
+  <line id="timeline-title-rule" x1="48" y1="154" x2="304" y2="154" stroke="#E60028"
+    stroke-width="6" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="timeline-axis" x1="160" y1="330" x2="1120" y2="330" stroke="#07073F"
+    stroke-width="3" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <circle id="timeline-node-one" cx="160" cy="330" r="13" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <circle id="timeline-node-two" cx="480" cy="330" r="13" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <circle id="timeline-node-three" cx="800" cy="330" r="13" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <circle id="timeline-node-four" cx="1120" cy="330" r="13" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <text id="timeline-index-one" x="160" y="264" text-anchor="middle" fill="#E60028"
+    font-family="Arial, sans-serif" font-size="30" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">01</text>
+  <text id="timeline-index-two" x="480" y="264" text-anchor="middle" fill="#E60028"
+    font-family="Arial, sans-serif" font-size="30" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">02</text>
+  <text id="timeline-index-three" x="800" y="264" text-anchor="middle" fill="#E60028"
+    font-family="Arial, sans-serif" font-size="30" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">03</text>
+  <text id="timeline-index-four" x="1120" y="264" text-anchor="middle" fill="#E60028"
+    font-family="Arial, sans-serif" font-size="30" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">04</text>
+  <rect id="timeline-conclusion-band" x="160" y="526" width="960" height="78" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <g id="timeline-title-slot" data-pptx-placeholder="title" data-pptx-bounds="48 82 1184 64">
+    <text id="timeline-title-carrier" data-pptx-carrier="true" x="48" y="128" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="38" font-weight="700">{{PAGE_TITLE}}</text></g>
+  <g id="timeline-step-one-slot" data-pptx-placeholder="body" data-pptx-idx="1" data-pptx-bounds="64 354 192 142">
+    <text id="timeline-step-one-carrier" data-pptx-carrier="true" x="160" y="390" text-anchor="middle"
+      fill="#07073F" font-family="Arial, Microsoft YaHei, sans-serif" font-size="18" font-weight="700">{{STEP_1}}</text></g>
+  <g id="timeline-step-two-slot" data-pptx-placeholder="body" data-pptx-idx="2" data-pptx-bounds="384 354 192 142">
+    <text id="timeline-step-two-carrier" data-pptx-carrier="true" x="480" y="390" text-anchor="middle"
+      fill="#07073F" font-family="Arial, Microsoft YaHei, sans-serif" font-size="18" font-weight="700">{{STEP_2}}</text></g>
+  <g id="timeline-step-three-slot" data-pptx-placeholder="body" data-pptx-idx="3" data-pptx-bounds="704 354 192 142">
+    <text id="timeline-step-three-carrier" data-pptx-carrier="true" x="800" y="390" text-anchor="middle"
+      fill="#07073F" font-family="Arial, Microsoft YaHei, sans-serif" font-size="18" font-weight="700">{{STEP_3}}</text></g>
+  <g id="timeline-step-four-slot" data-pptx-placeholder="body" data-pptx-idx="4" data-pptx-bounds="1024 354 192 142">
+    <text id="timeline-step-four-carrier" data-pptx-carrier="true" x="1120" y="390" text-anchor="middle"
+      fill="#07073F" font-family="Arial, Microsoft YaHei, sans-serif" font-size="18" font-weight="700">{{STEP_4}}</text></g>
+  <g id="timeline-message-slot" data-pptx-placeholder="body" data-pptx-idx="5" data-pptx-bounds="184 540 912 52">
+    <text id="timeline-message-carrier" data-pptx-carrier="true" x="640" y="576" text-anchor="middle"
+      fill="#FFFFFF" font-family="Arial, Microsoft YaHei, sans-serif" font-size="20" font-weight="700">{{KEY_MESSAGE}}</text></g>
+  <g id="timeline-footer-slot" data-pptx-placeholder="footer" data-pptx-idx="6" data-pptx-bounds="260 676 860 32">
+    <text id="timeline-footer-carrier" data-pptx-carrier="true" x="260" y="698" fill="#6B6B78"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="11">{{FOOTER_NOTE}}</text></g>
+  <g id="timeline-pagenum-slot" data-pptx-placeholder="slide-number" data-pptx-idx="7" data-pptx-bounds="1180 676 52 32">
+    <text id="timeline-pagenum-carrier" data-pptx-carrier="true" x="1232" y="698" text-anchor="end"
+      fill="#E60028" font-family="Arial, Microsoft YaHei, sans-serif" font-size="13"
+      font-weight="700">{{PAGE_NUM}}</text></g>
+</svg>

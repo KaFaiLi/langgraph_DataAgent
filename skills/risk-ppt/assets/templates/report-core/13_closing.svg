@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_cover_master" data-pptx-master-name="Report Core Cover"
+  data-pptx-layout="closing" data-pptx-layout-name="Closing">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#FFFFFF"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <rect id="master-brand-accent" x="48" y="672" width="6" height="22" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <text id="master-brand-label" x="64" y="689" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700"
+    data-pptx-layer="master" data-pptx-editable="false">INDEPENDENT RISK REVIEW</text>
+  <line id="closing-rule" x1="510" y1="326" x2="770" y2="326" stroke="#E60028"
+    stroke-width="6" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="closing-mark-one" x="635" y="482" width="10" height="10" fill="#E8E5DD"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="closing-mark-two" x="635" y="548" width="10" height="10" fill="#E8E5DD"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <g id="closing-message-slot" data-pptx-placeholder="title"
+    data-pptx-bounds="160 220 960 92">
+    <text id="closing-message-carrier" data-pptx-carrier="true" x="640" y="284"
+      text-anchor="middle" fill="#E60028" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="42" font-weight="700">{{CLOSING_MESSAGE}}</text>
+  </g>
+  <g id="closing-contact-slot" data-pptx-placeholder="body" data-pptx-idx="1"
+    data-pptx-bounds="220 398 840 62">
+    <text id="closing-contact-carrier" data-pptx-carrier="true" x="640" y="438"
+      text-anchor="middle" fill="#6B6B78" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="20">{{CONTACT_LINE}}</text>
+  </g>
+</svg>

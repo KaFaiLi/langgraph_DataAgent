@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_content_master" data-pptx-master-name="Report Core Content"
+  data-pptx-layout="matrix_2x2" data-pptx-layout-name="Two-by-Two Matrix">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#FFFFFF"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <line id="master-footer-rule" x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF"
+    stroke-width="1" data-pptx-layer="master" data-pptx-editable="false"/>
+  <rect id="master-brand-accent" x="48" y="680" width="6" height="18" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <text id="master-brand-label" x="64" y="694" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="12" font-weight="700"
+    data-pptx-layer="master" data-pptx-editable="false">INDEPENDENT RISK REVIEW</text>
+  <line id="matrix-title-rule" x1="48" y1="154" x2="304" y2="154" stroke="#E60028"
+    stroke-width="6" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="matrix-one" x="180" y="190" width="476" height="196" fill="#FFFFFF"
+    stroke="#E60028" stroke-width="2" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="matrix-two" x="674" y="190" width="506" height="196" fill="#FFFFFF"
+    stroke="#07073F" stroke-width="2" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="matrix-three" x="180" y="404" width="476" height="196" fill="#FFFFFF"
+    stroke="#07073F" stroke-width="2" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="matrix-four" x="674" y="404" width="506" height="196" fill="#FFFFFF"
+    stroke="#E60028" stroke-width="2" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="matrix-one-header" x="180" y="190" width="476" height="44" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="matrix-two-header" x="674" y="190" width="506" height="44" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="matrix-three-header" x="180" y="404" width="476" height="44" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="matrix-four-header" x="674" y="404" width="506" height="44" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="matrix-y-axis" x1="152" y1="600" x2="152" y2="190" stroke="#07073F" stroke-width="2"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="matrix-x-axis" x1="180" y1="624" x2="1180" y2="624" stroke="#07073F" stroke-width="2"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <g id="matrix-title-slot" data-pptx-placeholder="title" data-pptx-bounds="48 82 1184 64">
+    <text id="matrix-title-carrier" data-pptx-carrier="true" x="48" y="128" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="38" font-weight="700">{{PAGE_TITLE}}</text></g>
+  <g id="matrix-y-axis-slot" data-pptx-placeholder="body" data-pptx-idx="1" data-pptx-bounds="48 310 86 180">
+    <text id="matrix-y-axis-carrier" data-pptx-carrier="true" x="76" y="398" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="15" font-weight="700">{{Y_AXIS}}</text></g>
+  <g id="matrix-x-axis-slot" data-pptx-placeholder="body" data-pptx-idx="2" data-pptx-bounds="520 628 320 28">
+    <text id="matrix-x-axis-carrier" data-pptx-carrier="true" x="680" y="650" text-anchor="middle"
+      fill="#07073F" font-family="Arial, Microsoft YaHei, sans-serif" font-size="15"
+      font-weight="700">{{X_AXIS}}</text></g>
+  <g id="matrix-one-slot" data-pptx-placeholder="body" data-pptx-idx="3" data-pptx-bounds="198 246 440 122">
+    <text id="matrix-one-carrier" data-pptx-carrier="true" x="198" y="286" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="18" font-weight="700">{{QUADRANT_1}}</text></g>
+  <g id="matrix-two-slot" data-pptx-placeholder="body" data-pptx-idx="4" data-pptx-bounds="692 246 470 122">
+    <text id="matrix-two-carrier" data-pptx-carrier="true" x="692" y="286" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="18" font-weight="700">{{QUADRANT_2}}</text></g>
+  <g id="matrix-three-slot" data-pptx-placeholder="body" data-pptx-idx="5" data-pptx-bounds="198 460 440 122">
+    <text id="matrix-three-carrier" data-pptx-carrier="true" x="198" y="500" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="18" font-weight="700">{{QUADRANT_3}}</text></g>
+  <g id="matrix-four-slot" data-pptx-placeholder="body" data-pptx-idx="6" data-pptx-bounds="692 460 470 122">
+    <text id="matrix-four-carrier" data-pptx-carrier="true" x="692" y="500" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="18" font-weight="700">{{QUADRANT_4}}</text></g>
+  <g id="matrix-footer-slot" data-pptx-placeholder="footer" data-pptx-idx="7" data-pptx-bounds="260 676 860 32">
+    <text id="matrix-footer-carrier" data-pptx-carrier="true" x="260" y="698" fill="#6B6B78"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="11">{{FOOTER_NOTE}}</text></g>
+  <g id="matrix-pagenum-slot" data-pptx-placeholder="slide-number" data-pptx-idx="8" data-pptx-bounds="1180 676 52 32">
+    <text id="matrix-pagenum-carrier" data-pptx-carrier="true" x="1232" y="698" text-anchor="end"
+      fill="#E60028" font-family="Arial, Microsoft YaHei, sans-serif" font-size="13"
+      font-weight="700">{{PAGE_NUM}}</text></g>
+</svg>

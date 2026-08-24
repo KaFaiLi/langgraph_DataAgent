@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_divider_master" data-pptx-master-name="Report Core Divider"
+  data-pptx-layout="section_divider" data-pptx-layout-name="Section Divider">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <line id="section-divider-rule" x1="500" y1="442" x2="850" y2="442" stroke="#FFFFFF"
+    stroke-width="9" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <g id="section-divider-number-slot" data-pptx-placeholder="body" data-pptx-idx="1"
+    data-pptx-bounds="88 146 1100 128">
+    <text id="section-divider-number-carrier" data-pptx-carrier="true" x="88" y="244"
+      fill="#FFFFFF" font-family="Arial, Microsoft YaHei, sans-serif" font-size="86"
+      font-weight="700">{{CHAPTER_NUM}}</text>
+  </g>
+  <g id="section-divider-title-slot" data-pptx-placeholder="title"
+    data-pptx-bounds="250 318 950 106">
+    <text id="section-divider-title-carrier" data-pptx-carrier="true" x="250" y="396"
+      fill="#FFFFFF" font-family="Arial, Microsoft YaHei, sans-serif" font-size="58"
+      font-weight="700">{{CHAPTER_TITLE}}</text>
+  </g>
+  <g id="section-divider-description-slot" data-pptx-placeholder="body" data-pptx-idx="2"
+    data-pptx-bounds="250 474 900 66">
+    <text id="section-divider-description-carrier" data-pptx-carrier="true" x="250" y="516"
+      fill="#FFFFFF" font-family="Arial, Microsoft YaHei, sans-serif" font-size="20">{{CHAPTER_DESC}}</text>
+  </g>
+</svg>

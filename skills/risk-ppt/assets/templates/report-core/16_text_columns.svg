@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_content_master" data-pptx-master-name="Report Core Content"
+  data-pptx-layout="text_columns" data-pptx-layout-name="Text Columns">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#FFFFFF"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <line id="master-footer-rule" x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF"
+    stroke-width="1" data-pptx-layer="master" data-pptx-editable="false"/>
+  <rect id="master-brand-accent" x="48" y="680" width="6" height="18" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <text id="master-brand-label" x="64" y="694" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="12" font-weight="700"
+    data-pptx-layer="master" data-pptx-editable="false">INDEPENDENT RISK REVIEW</text>
+  <line id="text-columns-title-rule" x1="48" y1="154" x2="304" y2="154"
+    stroke="#E60028" stroke-width="6" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="text-columns-center-rule" x1="640" y1="196" x2="640" y2="506"
+    stroke="#D9D9DF" stroke-width="1" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="text-columns-left-accent" x="48" y="190" width="74" height="6" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="text-columns-right-accent" x="670" y="190" width="74" height="6" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="text-columns-message-plane" x="48" y="530" width="1184" height="86" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <g id="text-columns-title-slot" data-pptx-placeholder="title" data-pptx-bounds="48 82 1184 64">
+    <text id="text-columns-title-carrier" data-pptx-carrier="true" x="48" y="128" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="38" font-weight="700">{{PAGE_TITLE}}</text></g>
+  <g id="text-columns-left-heading-slot" data-pptx-placeholder="body" data-pptx-idx="1"
+    data-pptx-bounds="48 212 552 42"><text id="text-columns-left-heading-carrier"
+      data-pptx-carrier="true" x="48" y="242" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="17" font-weight="700">{{LEFT_HEADING}}</text></g>
+  <g id="text-columns-left-body-slot" data-pptx-placeholder="body" data-pptx-idx="2"
+    data-pptx-bounds="48 266 552 224"><text id="text-columns-left-body-carrier"
+      data-pptx-carrier="true" x="48" y="300" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="19">{{LEFT_CONTENT}}</text></g>
+  <g id="text-columns-right-heading-slot" data-pptx-placeholder="body" data-pptx-idx="3"
+    data-pptx-bounds="670 212 562 42"><text id="text-columns-right-heading-carrier"
+      data-pptx-carrier="true" x="670" y="242" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="17" font-weight="700">{{RIGHT_HEADING}}</text></g>
+  <g id="text-columns-right-body-slot" data-pptx-placeholder="body" data-pptx-idx="4"
+    data-pptx-bounds="670 266 562 224"><text id="text-columns-right-body-carrier"
+      data-pptx-carrier="true" x="670" y="300" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="19">{{RIGHT_CONTENT}}</text></g>
+  <g id="text-columns-message-slot" data-pptx-placeholder="body" data-pptx-idx="5"
+    data-pptx-bounds="80 540 1120 66"><text id="text-columns-message-carrier"
+      data-pptx-carrier="true" x="80" y="578" fill="#FFFFFF"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="21" font-weight="700">{{KEY_MESSAGE}}</text></g>
+  <g id="text-columns-footer-slot" data-pptx-placeholder="footer" data-pptx-idx="6"
+    data-pptx-bounds="260 676 860 32"><text id="text-columns-footer-carrier" data-pptx-carrier="true"
+      x="260" y="698" fill="#6B6B78" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="11">{{FOOTER_NOTE}}</text></g>
+  <g id="text-columns-pagenum-slot" data-pptx-placeholder="slide-number" data-pptx-idx="7"
+    data-pptx-bounds="1180 676 52 32"><text id="text-columns-pagenum-carrier" data-pptx-carrier="true"
+      x="1232" y="698" text-anchor="end" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700">{{PAGE_NUM}}</text></g>
+</svg>

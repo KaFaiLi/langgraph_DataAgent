@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_cover_master" data-pptx-master-name="Report Core Cover"
+  data-pptx-layout="cover" data-pptx-layout-name="Cover">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#FFFFFF"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <rect id="master-brand-accent" x="48" y="672" width="6" height="22" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <text id="master-brand-label" x="64" y="689" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700"
+    data-pptx-layer="master" data-pptx-editable="false">INDEPENDENT RISK REVIEW</text>
+  <line id="cover-title-rule" x1="196" y1="320" x2="540" y2="320" stroke="#E60028"
+    stroke-width="8" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <g id="cover-title-slot" data-pptx-placeholder="title"
+    data-pptx-bounds="196 160 930 144">
+    <text id="cover-title-carrier" data-pptx-carrier="true" x="196" y="250"
+      fill="#E60028" font-family="Arial, Microsoft YaHei, sans-serif" font-size="58"
+      font-weight="700">{{TITLE}}</text>
+  </g>
+  <g id="cover-subtitle-slot" data-pptx-placeholder="subtitle" data-pptx-idx="1"
+    data-pptx-bounds="510 365 610 58">
+    <text id="cover-subtitle-carrier" data-pptx-carrier="true" x="510" y="406"
+      fill="#07073F" font-family="Arial, Microsoft YaHei, sans-serif" font-size="24"
+      font-weight="700">{{SUBTITLE}}</text>
+  </g>
+  <g id="cover-date-slot" data-pptx-placeholder="date" data-pptx-idx="2"
+    data-pptx-bounds="510 430 610 36">
+    <text id="cover-date-carrier" data-pptx-carrier="true" x="510" y="456"
+      fill="#6B6B78" font-family="Arial, Microsoft YaHei, sans-serif" font-size="18">{{DATE}}</text>
+  </g>
+</svg>

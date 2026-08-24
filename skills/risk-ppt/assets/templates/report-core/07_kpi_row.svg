@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_content_master" data-pptx-master-name="Report Core Content"
+  data-pptx-layout="kpi_row" data-pptx-layout-name="KPI Row">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#FFFFFF"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <line id="master-footer-rule" x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF"
+    stroke-width="1" data-pptx-layer="master" data-pptx-editable="false"/>
+  <rect id="master-brand-accent" x="48" y="680" width="6" height="18" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <text id="master-brand-label" x="64" y="694" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="12" font-weight="700"
+    data-pptx-layer="master" data-pptx-editable="false">INDEPENDENT RISK REVIEW</text>
+  <line id="kpi-row-title-rule" x1="48" y1="154" x2="304" y2="154" stroke="#E60028"
+    stroke-width="6" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="kpi-header-one" x="48" y="194" width="280" height="10" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="kpi-header-two" x="348" y="194" width="280" height="10" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="kpi-header-three" x="648" y="194" width="280" height="10" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="kpi-header-four" x="948" y="194" width="284" height="10" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="kpi-divider-one" x1="338" y1="194" x2="338" y2="518" stroke="#A8A8B4"
+    stroke-width="1" stroke-dasharray="2 5" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="kpi-divider-two" x1="638" y1="194" x2="638" y2="518" stroke="#A8A8B4"
+    stroke-width="1" stroke-dasharray="2 5" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <line id="kpi-divider-three" x1="938" y1="194" x2="938" y2="518" stroke="#A8A8B4"
+    stroke-width="1" stroke-dasharray="2 5" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="kpi-conclusion-band" x="48" y="542" width="1184" height="72" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <g id="kpi-row-title-slot" data-pptx-placeholder="title" data-pptx-bounds="48 82 1184 64">
+    <text id="kpi-row-title-carrier" data-pptx-carrier="true" x="48" y="128" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="38" font-weight="700">{{PAGE_TITLE}}</text></g>
+  <g id="kpi-one-slot" data-pptx-placeholder="body" data-pptx-idx="1" data-pptx-bounds="60 224 256 276">
+    <text id="kpi-one-carrier" data-pptx-carrier="true" x="60" y="276" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="24" font-weight="700">{{KPI_1}}</text></g>
+  <g id="kpi-two-slot" data-pptx-placeholder="body" data-pptx-idx="2" data-pptx-bounds="360 224 256 276">
+    <text id="kpi-two-carrier" data-pptx-carrier="true" x="360" y="276" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="24" font-weight="700">{{KPI_2}}</text></g>
+  <g id="kpi-three-slot" data-pptx-placeholder="body" data-pptx-idx="3" data-pptx-bounds="660 224 256 276">
+    <text id="kpi-three-carrier" data-pptx-carrier="true" x="660" y="276" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="24" font-weight="700">{{KPI_3}}</text></g>
+  <g id="kpi-four-slot" data-pptx-placeholder="body" data-pptx-idx="4" data-pptx-bounds="960 224 260 276">
+    <text id="kpi-four-carrier" data-pptx-carrier="true" x="960" y="276" fill="#07073F"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="24" font-weight="700">{{KPI_4}}</text></g>
+  <g id="kpi-content-slot" data-pptx-placeholder="body" data-pptx-idx="5" data-pptx-bounds="68 552 1144 50">
+    <text id="kpi-content-carrier" data-pptx-carrier="true" x="68" y="588" fill="#FFFFFF"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="20" font-weight="700">{{CONTENT_AREA}}</text></g>
+  <g id="kpi-footer-slot" data-pptx-placeholder="footer" data-pptx-idx="6" data-pptx-bounds="260 676 860 32">
+    <text id="kpi-footer-carrier" data-pptx-carrier="true" x="260" y="698" fill="#6B6B78"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="11">{{FOOTER_NOTE}}</text></g>
+  <g id="kpi-pagenum-slot" data-pptx-placeholder="slide-number" data-pptx-idx="7" data-pptx-bounds="1180 676 52 32">
+    <text id="kpi-pagenum-carrier" data-pptx-carrier="true" x="1232" y="698" text-anchor="end"
+      fill="#E60028" font-family="Arial, Microsoft YaHei, sans-serif" font-size="13"
+      font-weight="700">{{PAGE_NUM}}</text></g>
+</svg>

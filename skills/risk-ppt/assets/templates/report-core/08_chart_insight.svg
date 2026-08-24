@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"
+  data-pptx-master="report_core_content_master" data-pptx-master-name="Report Core Content"
+  data-pptx-layout="chart_insight" data-pptx-layout-name="Chart and Insight">
+  <rect id="master-background" x="0" y="0" width="1280" height="720" fill="#FFFFFF"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <line id="master-footer-rule" x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF"
+    stroke-width="1" data-pptx-layer="master" data-pptx-editable="false"/>
+  <rect id="master-brand-accent" x="48" y="680" width="6" height="18" fill="#E60028"
+    data-pptx-layer="master" data-pptx-editable="false"/>
+  <text id="master-brand-label" x="64" y="694" fill="#07073F"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="12" font-weight="700"
+    data-pptx-layer="master" data-pptx-editable="false">INDEPENDENT RISK REVIEW</text>
+  <line id="chart-insight-title-rule" x1="48" y1="154" x2="304" y2="154" stroke="#E60028"
+    stroke-width="6" data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="chart-insight-rail" x="862" y="188" width="370" height="428" fill="#07073F"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <rect id="chart-insight-rail-header" x="862" y="188" width="370" height="62" fill="#E60028"
+    data-pptx-layer="layout" data-pptx-editable="false"/>
+  <text id="chart-insight-rail-label" x="884" y="226" fill="#FFFFFF"
+    font-family="Arial, Microsoft YaHei, sans-serif" font-size="16" font-weight="700"
+    data-pptx-layer="layout" data-pptx-editable="false">DECISION IMPLICATION</text>
+  <g id="chart-insight-title-slot" data-pptx-placeholder="title" data-pptx-bounds="48 82 1184 64">
+    <text id="chart-insight-title-carrier" data-pptx-carrier="true" x="48" y="128" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="38" font-weight="700">{{PAGE_TITLE}}</text></g>
+  <g id="chart-insight-chart-slot" data-pptx-placeholder="chart" data-pptx-idx="1"
+    data-pptx-bounds="48 188 786 428">
+    <g id="chart-insight-chart-carrier" data-pptx-carrier="true">
+      <line x1="96" y1="558" x2="810" y2="558" stroke="#07073F" stroke-width="2"/>
+      <line x1="96" y1="468" x2="810" y2="468" stroke="#D9D9DF" stroke-width="1"/>
+      <line x1="96" y1="378" x2="810" y2="378" stroke="#D9D9DF" stroke-width="1"/>
+      <line x1="96" y1="288" x2="810" y2="288" stroke="#D9D9DF" stroke-width="1"/>
+      <rect x="142" y="406" width="54" height="152" fill="#282C63"/>
+      <rect x="290" y="344" width="54" height="214" fill="#282C63"/>
+      <rect x="438" y="368" width="54" height="190" fill="#282C63"/>
+      <rect x="586" y="278" width="54" height="280" fill="#282C63"/>
+      <rect x="734" y="318" width="54" height="240" fill="#282C63"/>
+      <polyline points="169,372 317,330 465,352 613,250 761,278" fill="none"
+        stroke="#E60028" stroke-width="5"/>
+      <circle cx="169" cy="372" r="6" fill="#E60028"/>
+      <circle cx="317" cy="330" r="6" fill="#E60028"/>
+      <circle cx="465" cy="352" r="6" fill="#E60028"/>
+      <circle cx="613" cy="250" r="6" fill="#E60028"/>
+      <circle cx="761" cy="278" r="6" fill="#E60028"/>
+      <text x="169" y="588" text-anchor="middle" fill="#6B6B78" font-family="Arial, sans-serif" font-size="13">P1</text>
+      <text x="317" y="588" text-anchor="middle" fill="#6B6B78" font-family="Arial, sans-serif" font-size="13">P2</text>
+      <text x="465" y="588" text-anchor="middle" fill="#6B6B78" font-family="Arial, sans-serif" font-size="13">P3</text>
+      <text x="613" y="588" text-anchor="middle" fill="#6B6B78" font-family="Arial, sans-serif" font-size="13">P4</text>
+      <text x="761" y="588" text-anchor="middle" fill="#6B6B78" font-family="Arial, sans-serif" font-size="13">P5</text>
+    </g>
+  </g>
+  <g id="chart-insight-insight-slot" data-pptx-placeholder="body" data-pptx-idx="2"
+    data-pptx-bounds="884 270 326 244"><text id="chart-insight-insight-carrier" data-pptx-carrier="true"
+      x="884" y="314" fill="#FFFFFF" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="21" font-weight="700">{{KEY_MESSAGE}}</text></g>
+  <g id="chart-insight-source-slot" data-pptx-placeholder="body" data-pptx-idx="3"
+    data-pptx-bounds="884 548 326 46"><text id="chart-insight-source-carrier" data-pptx-carrier="true"
+      x="884" y="578" fill="#FFFFFF" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="12">{{SOURCE}}</text></g>
+  <g id="chart-insight-footer-slot" data-pptx-placeholder="footer" data-pptx-idx="4"
+    data-pptx-bounds="260 676 860 32"><text id="chart-insight-footer-carrier" data-pptx-carrier="true"
+      x="260" y="698" fill="#6B6B78" font-family="Arial, Microsoft YaHei, sans-serif"
+      font-size="11">{{FOOTER_NOTE}}</text></g>
+  <g id="chart-insight-pagenum-slot" data-pptx-placeholder="slide-number" data-pptx-idx="5"
+    data-pptx-bounds="1180 676 52 32"><text id="chart-insight-pagenum-carrier" data-pptx-carrier="true"
+      x="1232" y="698" text-anchor="end" fill="#E60028"
+      font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700">{{PAGE_NUM}}</text></g>
+</svg>

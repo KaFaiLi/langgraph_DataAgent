@@ -1,0 +1,38 @@
+template_id: report-core
+upstream_layout_id: report_core
+upstream_commit: 10ec12e518615dde0b303d60c140a330f0a92703
+canvas:
+  width_inches: 13.333
+  height_inches: 7.5
+fonts:
+  title: Arial
+  body: Arial
+colors:
+  field: "#FFFFFF"
+  surface: "#F2F2F5"
+  ink: "#07073F"
+  muted: "#6B6B78"
+  rule: "#D9D9DF"
+  on_plan: "#00A957"
+  watch: "#D99000"
+  off_plan: "#E60028"
+  focus: "#E60028"
+layouts:
+  - cover
+  - section_divider
+  - agenda
+  - title_content
+  - two_content
+  - three_block
+  - kpi_row
+  - chart_insight
+  - table_summary
+  - process_timeline
+  - matrix_2x2
+  - appendix
+  - closing
+  - text_statement
+  - text_analysis
+  - text_columns
+  - viz_commentary_left
+  - viz_commentary_right

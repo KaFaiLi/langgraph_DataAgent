@@ -1,0 +1,534 @@
+{
+  "schema_version": 1,
+  "upstream": "https://github.com/hugohe3/ppt-master",
+  "upstream_version": "4.8.0",
+  "upstream_commit": "10ec12e518615dde0b303d60c140a330f0a92703",
+  "file_count": 105,
+  "files": [
+    {
+      "source_path": "LICENSE",
+      "local_path": "LICENSE",
+      "sha256": "cd9cf27f52d3c336dd42e13f4a1df453da118e25e15520bbe02f91d75531e91b"
+    },
+    {
+      "source_path": "references/canvas-formats.md",
+      "local_path": "references/canvas-formats.md",
+      "sha256": "c9131b5bdb87774d55ff4316aadc03e8a1e5e2c1ba4bf525ebaed45048b2e5ba"
+    },
+    {
+      "source_path": "references/modes/briefing.md",
+      "local_path": "references/modes/briefing.md",
+      "sha256": "2eaeed675144106b48afe3654f999d7b1963be2d532cf695b6893954b4c39c0b"
+    },
+    {
+      "source_path": "references/modes/pyramid.md",
+      "local_path": "references/modes/pyramid.md",
+      "sha256": "90677fc147118fdad4ea6f5a4eba3d9775fda28ec461ce3f7067414576f4e0b2"
+    },
+    {
+      "source_path": "references/preset-shape-vocabulary.md",
+      "local_path": "references/preset-shape-vocabulary.md",
+      "sha256": "1c61104bb3a0f1725b2850525eff53be39a1ffe8b8b72c1c593a68be3d924edc"
+    },
+    {
+      "source_path": "references/semantic-svg.md",
+      "local_path": "references/semantic-svg.md",
+      "sha256": "e11110d6a27d2122cc91176be40a30cfb481940e59a726dd13bbd0ef3557393a"
+    },
+    {
+      "source_path": "references/shared-standards-core.md",
+      "local_path": "references/shared-standards-core.md",
+      "sha256": "930c2cb8f00ce246fd6f87860fb374857c71eb308535c6eeb118ba4fda765e85"
+    },
+    {
+      "source_path": "references/svg-effects.md",
+      "local_path": "references/svg-effects.md",
+      "sha256": "a42e42928ec938c371df386e336edef7e916a036a00ec1c3c96fba41f8498490"
+    },
+    {
+      "source_path": "references/visual-review.md",
+      "local_path": "references/visual-review.md",
+      "sha256": "bb7261cc1feda979ffd4bfbb5561c54717dadbf7fddfea688d09fce617aee73a"
+    },
+    {
+      "source_path": "references/visual-styles/data-journalism.md",
+      "local_path": "references/data-journalism.md",
+      "sha256": "d4a7e846306f26b28d63f85cb656ba90120b6dba52c782d6f4cb12da9a1f1a87"
+    },
+    {
+      "source_path": "scripts/attribution_guard.py",
+      "local_path": "vendor/ppt-master/scripts/attribution_guard.py",
+      "sha256": "c8d5c3008fa47e026df6f28fd2934b6cda1226af88f2766136420c19d289742c"
+    },
+    {
+      "source_path": "scripts/config.py",
+      "local_path": "vendor/ppt-master/scripts/config.py",
+      "sha256": "30fae7eaa9ef124addd068f1190997f4d700847d4fce6a5c012cb9b9a830d3d0"
+    },
+    {
+      "source_path": "scripts/console_encoding.py",
+      "local_path": "vendor/ppt-master/scripts/console_encoding.py",
+      "sha256": "5017f2857c597b2f4d3385116873bcb923ce18ba76aa8fa50a7a6aaff9cd6947"
+    },
+    {
+      "source_path": "scripts/error_helper.py",
+      "local_path": "vendor/ppt-master/scripts/error_helper.py",
+      "sha256": "4901de23ced30242c3042237676fda740f1151e01f858f881b04e5faf456db57"
+    },
+    {
+      "source_path": "scripts/hyperlink_contract.py",
+      "local_path": "vendor/ppt-master/scripts/hyperlink_contract.py",
+      "sha256": "de6b58b329f96d269db7b448428987c6921fe892892478110df94423bd57cad6"
+    },
+    {
+      "source_path": "scripts/language_tags.py",
+      "local_path": "vendor/ppt-master/scripts/language_tags.py",
+      "sha256": "57e052409c270f38f53ec200b16d549fef79099488a98ee409d9352c9c621eeb"
+    },
+    {
+      "source_path": "scripts/native_payloads.py",
+      "local_path": "vendor/ppt-master/scripts/native_payloads.py",
+      "sha256": "88f27fdb07e340be0060eaa8c4d78ac33c9cdbd649473186e0393e45f4af5379"
+    },
+    {
+      "source_path": "scripts/pptx_animation_presets.json",
+      "local_path": "vendor/ppt-master/scripts/pptx_animation_presets.json",
+      "sha256": "d4646587ec1c2d34b5cb49fe65cfb6d801baab761f7c3f61bd92fb6ce6a30a22"
+    },
+    {
+      "source_path": "scripts/pptx_animations.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_animations.py",
+      "sha256": "0aff641ce614baaf59ec77c56c8cff7bce4be22fe31c36975db9d929ef90fa97"
+    },
+    {
+      "source_path": "scripts/pptx_effects.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_effects.py",
+      "sha256": "a9b7d923209fd4dd175416840223c751def0bcc8e798b8355b5b151b9b6fdb35"
+    },
+    {
+      "source_path": "scripts/pptx_opc_validation.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_opc_validation.py",
+      "sha256": "1d223bd0ce1282e5f18c6b3ef63ef9ccdb5b1a9c211b9a7451f328b891d5cc9c"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/__init__.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/__init__.py",
+      "sha256": "ccededc017589dbf9104d48e2143c4dceca2257ffeeb3e879960ae0484fa004d"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/data/LICENSE-APACHE-2.0.txt",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/data/LICENSE-APACHE-2.0.txt",
+      "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/data/LICENSE-OPEN-XML-SDK-MIT.txt",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/data/LICENSE-OPEN-XML-SDK-MIT.txt",
+      "sha256": "d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/data/NOTICE.md",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/data/NOTICE.md",
+      "sha256": "0bbf6c0a65a24f3d0d554e23dbc1b9acf18a92ed52745b5b65f74487dfbe1b7d"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/data/presetShapeDefinitions.xml",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/data/presetShapeDefinitions.xml",
+      "sha256": "7f7f736321eada1f0b9f0f07823814cf4042382608965dcb88ff3f85051f75a6"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/data/presetShapeSemantics.json",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/data/presetShapeSemantics.json",
+      "sha256": "efb27cea650b41e7b207ab5185d4fa436be0a5834396391b48d19ff7744bb6f8"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/data/shape_type_values.txt",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/data/shape_type_values.txt",
+      "sha256": "d2e1c1ac2594cab931ee1d6dd29df7d2719dff74357fcca9664d1a53563aa5ad"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/errors.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/errors.py",
+      "sha256": "e5a4f2525ba1f6c161f99171853f5b35e7e169fdf372688a2026d596b3e70d74"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/formula.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/formula.py",
+      "sha256": "7f7a33194621d63c789ad54e0927a7466cf63b5e17752988e96d77f77236de29"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/loader.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/loader.py",
+      "sha256": "e41dc30ca89aa47d75e3fc6e6f3766338cb8efd7f6db787d186d97db18e20dab"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/models.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/models.py",
+      "sha256": "240f3834ab20fcd86f29279cf67629d22c14e1d9bfab2b2e57453e0655112e33"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/registry.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/registry.py",
+      "sha256": "22e2eaacc3c4707ccd9513eef4bad50891cd5200a4b2241cc53fee531cf2e8c0"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/semantic_hash.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/semantic_hash.py",
+      "sha256": "414c21fd48b76e0d496c2533cd336004c73a6c780e138c0fec5befc627421fbd"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/semantics.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/semantics.py",
+      "sha256": "4d3f97e7489741f7f9fe7c615d11f4cab702b5d09c4a47162bb239491ac213dc"
+    },
+    {
+      "source_path": "scripts/pptx_shapes/xml_safety.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_shapes/xml_safety.py",
+      "sha256": "6fe699e6ca93e7b091ff207bc66e791c5631bc832c97d1f6fa25fbe756a94eec"
+    },
+    {
+      "source_path": "scripts/pptx_to_svg/__init__.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_to_svg/__init__.py",
+      "sha256": "1cc801773f8f68cdde2159f53a3e2131e6123f3ea7af11a651bbdb49255b6a6a"
+    },
+    {
+      "source_path": "scripts/pptx_to_svg/emu_units.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_to_svg/emu_units.py",
+      "sha256": "da80143cbfea98295ba0638f0cf084e86a17e4a16a1fb0cabd681e92ae3d734b"
+    },
+    {
+      "source_path": "scripts/pptx_to_svg/preset_authoring.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_to_svg/preset_authoring.py",
+      "sha256": "b30c4ced01fbf16b5100b37b3d71ecde3f4e568e8399c1ecd65be7b276262e6b"
+    },
+    {
+      "source_path": "scripts/pptx_to_svg/preset_registry_to_svg.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_to_svg/preset_registry_to_svg.py",
+      "sha256": "e7487015fab82429f7e273bd2ccbf2e5f23dbf0d737bfb6fd57f567b9f4a9f27"
+    },
+    {
+      "source_path": "scripts/pptx_to_svg/preset_svg_markup.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_to_svg/preset_svg_markup.py",
+      "sha256": "1922269dce38adcc7d81609dcad50bf713ae3702952933f7d537ec13a176df92"
+    },
+    {
+      "source_path": "scripts/pptx_transitions.py",
+      "local_path": "vendor/ppt-master/scripts/pptx_transitions.py",
+      "sha256": "6ae4b6dae1ff564480b6492a1ae22d6994ef6431cc6c8211ceb28866a0e97a46"
+    },
+    {
+      "source_path": "scripts/project_management/__init__.py",
+      "local_path": "vendor/ppt-master/scripts/project_management/__init__.py",
+      "sha256": "712411d36bc5f9fa23f539d63caad36e040c490a23473d831fc8d4422d4a617b"
+    },
+    {
+      "source_path": "scripts/project_management/paths.py",
+      "local_path": "vendor/ppt-master/scripts/project_management/paths.py",
+      "sha256": "d924406979a1323ea369059437f93d88c4a92ec1fab4fff9fcf9e8ba0a8b9054"
+    },
+    {
+      "source_path": "scripts/project_management/project_specs.py",
+      "local_path": "vendor/ppt-master/scripts/project_management/project_specs.py",
+      "sha256": "438d75eb848e1cae4ff3484c13b8b10a8368159895c4e2a9889932988e536f9e"
+    },
+    {
+      "source_path": "scripts/project_utils.py",
+      "local_path": "vendor/ppt-master/scripts/project_utils.py",
+      "sha256": "d7c58b81f9d73022a4ae70a8c7cb9e7ba3eb5a55071e26f52fff0b682357f3d5"
+    },
+    {
+      "source_path": "scripts/register_template.py",
+      "local_path": "vendor/ppt-master/scripts/register_template.py",
+      "sha256": "5ca071258f943c611eae4379fc6e6064367a2c0a6c92243d2f7f3b25335f8686"
+    },
+    {
+      "source_path": "scripts/resource_paths.py",
+      "local_path": "vendor/ppt-master/scripts/resource_paths.py",
+      "sha256": "ab9ff1406a1a4f47412def7aba08fab8e8f088259f7a1980a6edd7326499c1af"
+    },
+    {
+      "source_path": "scripts/slide_roster.py",
+      "local_path": "vendor/ppt-master/scripts/slide_roster.py",
+      "sha256": "3c41b8e4e9388fb08e67b7c307be2fc480b76d2ef1cb635c50fea93a675a0ad0"
+    },
+    {
+      "source_path": "scripts/svg_finalize/__init__.py",
+      "local_path": "vendor/ppt-master/scripts/svg_finalize/__init__.py",
+      "sha256": "cdf1597a1e0b8f4ceeaabec1e50c089e40050e84f6c7b233ccbcec7a43cecbe6"
+    },
+    {
+      "source_path": "scripts/svg_finalize/embed_icons.py",
+      "local_path": "vendor/ppt-master/scripts/svg_finalize/embed_icons.py",
+      "sha256": "9063af9eb00387b4b59d7652e34c7eb49afbc0a5727244a706bb41a58d34313f"
+    },
+    {
+      "source_path": "scripts/svg_finalize/flatten_tspan.py",
+      "local_path": "vendor/ppt-master/scripts/svg_finalize/flatten_tspan.py",
+      "sha256": "9f10b36236f569713dba1b585b9fe252c3ba7ddb07b4284d5871275f2af58afe"
+    },
+    {
+      "source_path": "scripts/svg_quality/__init__.py",
+      "local_path": "vendor/ppt-master/scripts/svg_quality/__init__.py",
+      "sha256": "bba857ac743a23fc8c2eb3978b89629c6993e2a5def2c797a78d40991d4f7471"
+    },
+    {
+      "source_path": "scripts/svg_quality/checker.py",
+      "local_path": "vendor/ppt-master/scripts/svg_quality/checker.py",
+      "sha256": "e75618429637c664dfdf52335872068d6775bb3c28d0c9c5ccf6688e70aefdcd"
+    },
+    {
+      "source_path": "scripts/svg_quality/svg_contracts.py",
+      "local_path": "vendor/ppt-master/scripts/svg_quality/svg_contracts.py",
+      "sha256": "9a6e786fe010123e09b5a555fd715245a20d1435a6d16115a57f0543fe54b062"
+    },
+    {
+      "source_path": "scripts/svg_quality/xml_support.py",
+      "local_path": "vendor/ppt-master/scripts/svg_quality/xml_support.py",
+      "sha256": "bacd6931950f3e6cb4bd51622be5a53c7786adb7bdee3f7f0ce3610efd154c14"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/__init__.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/__init__.py",
+      "sha256": "da1c3e4b27178e7b9797af69bb3943746fb8186b4e069532c23b0ac2dd7c438d"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/animation_config.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/animation_config.py",
+      "sha256": "2b5088eeac08e5094da9e1256e6642b8bfb906046f42fbd0f2c0a788abd10c01"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/canvas_contract.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/canvas_contract.py",
+      "sha256": "ceb0af75822ba9ee477aa92953d722838c837a3a647030322663a5cb64fd46fb"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/__init__.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/__init__.py",
+      "sha256": "e82482d8658d14ea03d8b761969a38ff06e8ce6418ae834b2239735feeda2502"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/context.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/context.py",
+      "sha256": "90f76daf89279c04922e85c8aec620280e20e7d472120e32d912d49b3b2c1bfa"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/converter.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/converter.py",
+      "sha256": "40738e8919df767fc77ddfa6f7957896136f4f492ff81f28532e7703ac35a0f8"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/elements.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/elements.py",
+      "sha256": "20167d8ffcb1e9f1a3749a74785d18c1027a9032fda15ca4e97b1c3226422c04"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/hyperlinks.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/hyperlinks.py",
+      "sha256": "a8348203f8abdd3490fd51651a09c2f5ec5fefee6358c77bf1dca07bcb46321f"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/paths.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/paths.py",
+      "sha256": "2c070c1879c30d45add86b5a9ef566cf0e7ba7b9295cbed620523193e70f36db"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/styles.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/styles.py",
+      "sha256": "8958a1565aa4d024960488be7b37ff3f89cefea3be2bbc55d8b2fa50e61ea3e8"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/text_properties.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/text_properties.py",
+      "sha256": "c5827a055b097f649fc3ea8f80cf17a15cbd97c7a70d7e3016707d2e9930cc99"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/theme_colors.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/theme_colors.py",
+      "sha256": "47dd4869eb08411b161f1e768119e499ccaee8304713742170701b988619b55b"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/theme_fonts.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/theme_fonts.py",
+      "sha256": "03f7498646b0f6628bc522c0d6d57859651c18fd1085915b5bd8d7c2a40156c4"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/drawingml/utils.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/drawingml/utils.py",
+      "sha256": "034e6af8ee0755b49846e7ea2b826dc8338e5cbad46619bb0132a414ccfd51c8"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/geometry_properties.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/geometry_properties.py",
+      "sha256": "3b116d114eb38503387fcca456aaa2e2533993aa6a3fe631fa831660c8b82f93"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/__init__.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/__init__.py",
+      "sha256": "1a502ed358c67e1dc4adeea6cf1cd23c2fa07af60a7283da645eb18d7aa00661"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/chart_data.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/chart_data.py",
+      "sha256": "3624c620d21a6743fe21cf52661c0cff94e00d3e60b93aa89b68e3a52c43c064"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/chart_style.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/chart_style.py",
+      "sha256": "6b4ef14aa7401efb03ac70ace77e2239d02bb6154524321d3618a8bcc9500bc0"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/chart_xml.py",
+      "sha256": "0ca3698e48a4930bdc9ead42c3730ca84a5d05a82018097d587b9a39404b3067"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/chartex.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/chartex.py",
+      "sha256": "02f4270d12196198790437d22380c54c3ee779df0edb54a9606ec7fa8a74f301"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/fallback_hash.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/fallback_hash.py",
+      "sha256": "9b455da7e84d9bd66a26dfa0966405be38d7be664f8252fdbc153e644ddcdd54"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/formula.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/formula.py",
+      "sha256": "33f63f2b393bd65c63ec971049caa8dfa6f20f32f3f32cb2f6fecf8c015c24c3"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/formula_ast.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/formula_ast.py",
+      "sha256": "3e5807866fda312f1c103c1cf98cb4d9fdb9ae2458ebb8653f7f735dcc195eff"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/formula_compiler.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/formula_compiler.py",
+      "sha256": "b0d32a9f735df0478e6cc5c1f03ec4f9234c7aa5144c97844bb7e9da6809c577"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/formula_omml.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/formula_omml.py",
+      "sha256": "946f494f46b1b98f307acde1aa0c91d98ca467f4f71b35b07661bf2fcd1e2cfb"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/formula_parser.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/formula_parser.py",
+      "sha256": "32fa830716b483f69cebb3ac74b7323e8621692676848b267e937a365fd193ab"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/formula_profile.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/formula_profile.py",
+      "sha256": "1261531b1c843489f40cc9b642e892cbb5344d9d81784991097ed58dad67fe6a"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/formula_run_properties.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/formula_run_properties.py",
+      "sha256": "22aa4af57e45388e16be7c59f18b6deaa12dafcac6cc9e906e6c606947cc6629"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/inline_formula.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/inline_formula.py",
+      "sha256": "f8f05707f3e5067da24c45b9fa01d4e6acd62dba8b8a2b9b8b650f2928c7ac30"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/marker_attributes.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/marker_attributes.py",
+      "sha256": "9b0171d9570f9e874c081b3a8a476fcdf3af10facb2d2aaf3fd66c02c02d6b0d"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/marker_common.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/marker_common.py",
+      "sha256": "8529f6c616024393c8e39aafcea8d913b816f9841bc5ee01f8de2800bb354247"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/marker_status.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/marker_status.py",
+      "sha256": "d35be13c44c7fa2c3d2d3eb2a88e47600373e1b0a409858c8f102d7823c6ec08"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/table.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/table.py",
+      "sha256": "6ea7b4c38812ed2a1ce1c97ae643d7fa2a8fca92d83fa58974a49c98106a3859"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/native_objects/workbook.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/native_objects/workbook.py",
+      "sha256": "075ba1b09d38af081c7fddce82b819302e923b80ebc18ad144bef92f525b1c74"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/pptx_package/__init__.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/pptx_package/__init__.py",
+      "sha256": "95c84aff6eb037dbb07fe11c12de116c2082952fcbf04bb77d20170b64f4e305"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/pptx_package/builder.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/pptx_package/builder.py",
+      "sha256": "e81713f300fb4c3418aa90fde985f08d3e9f9c9d116a20d34466b4da4f613e81"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/pptx_package/dimensions.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/pptx_package/dimensions.py",
+      "sha256": "fbcc6aff595cf57c01d8310804f43900d5487421a8928f8245f869718c0a5dbf"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/pptx_package/media.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/pptx_package/media.py",
+      "sha256": "0ee4b5a69f24377aee4943b962730e1cb05f26d65f78a2bedfb3356b8d1fae33"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/pptx_package/narration.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/pptx_package/narration.py",
+      "sha256": "a9d690828dc35c64a12a922385e181aca03e0a7924af0ae38323794e203c0c9a"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/pptx_package/notes.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/pptx_package/notes.py",
+      "sha256": "0100c7d7bcb6a12c5fbb8ccdd2c497d51a105b28b45036bf404a4b2748f624e0"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/pptx_package/slide_xml.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/pptx_package/slide_xml.py",
+      "sha256": "da4f7c4ef65f041a010aa54293ba3c78672dfb583cf7e97aec3b7375938613da"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/pptx_package/template_structure.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/pptx_package/template_structure.py",
+      "sha256": "3ca3599377b2bcbf55fa48f16a58711c1946dc560e388993d5eb35b459aabba5"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/pptx_package/template_validation.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/pptx_package/template_validation.py",
+      "sha256": "55763ced606ad51caccf7f5c20db221a37c90fbaf1d014f265b599f602f6ab8e"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/semantic_markers.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/semantic_markers.py",
+      "sha256": "d83e9174a24b9f2655262188d84fc6732d7c2c0aa44eedeb1e99504bd5d0e1c0"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/tspan_flattener.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/tspan_flattener.py",
+      "sha256": "21c88ab56b9935b5db0628915659497cbf47c6415a6f460d5bbb982eb85947b6"
+    },
+    {
+      "source_path": "scripts/svg_to_pptx/use_expander.py",
+      "local_path": "vendor/ppt-master/scripts/svg_to_pptx/use_expander.py",
+      "sha256": "506f54d389df6e88f21808716aa4fdcaacf14df69d9495dc81d1a3b8e8906052"
+    },
+    {
+      "source_path": "scripts/visualization_catalog.py",
+      "local_path": "vendor/ppt-master/scripts/visualization_catalog.py",
+      "sha256": "18acc9103e5fb7099fcb9114c5109e50b90779df2a6932dc55b0276ac11f3f41"
+    },
+    {
+      "source_path": "scripts/workflow_transcript.py",
+      "local_path": "vendor/ppt-master/scripts/workflow_transcript.py",
+      "sha256": "01db41d32a8b181b2aeb47c6b9a15ebef544ee94c81964a83c694b0e41c908ff"
+    },
+    {
+      "source_path": "templates/styles/operating-review/templates/design_spec.md",
+      "local_path": "references/operating-review.md",
+      "sha256": "cffef07707e3ca26a8ef30f121b8b73d2a5a572d5492f9a7735c441a7bf36f03"
+    }
+  ]
+}
