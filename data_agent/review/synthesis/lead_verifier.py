@@ -22,12 +22,9 @@ from data_agent.review.ingestion.evidence_validator import (
     EvidenceValidationSummary,
     EvidenceValidator,
 )
+from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.review.llm.models import ModelTier
 from data_agent.review.llm.structured import invoke_structured
-from data_agent.review.orchestration.specialist_graph import (
-    DEFAULT_LLM_PROVIDER,
-    LLMProvider,
-)
 from data_agent.review.orchestration.state import ParentState
 from data_agent.skills.review import load_lead_review_skill
 from data_agent.tools.review_context import ToolContext
@@ -49,7 +46,7 @@ class FatalEvidenceIntegrityError(RuntimeError):
     """Raised when reviewed evidence no longer matches the run manifest."""
 
 
-def _provider(config: RunnableConfig) -> LLMProvider:
+def _provider(config: RunnableConfig) -> ReviewLLMProvider:
     provider = (config or {}).get("configurable", {}).get("llm_provider")
     if provider is None:
         return DEFAULT_LLM_PROVIDER

@@ -11,10 +11,7 @@ from data_agent.review.domain.domains import (
     SPECIALIST_DOMAINS,
     SpecialistDomain,
 )
-from data_agent.review.orchestration.specialist_graph import (
-    DEFAULT_LLM_PROVIDER,
-    LLMProvider,
-)
+from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.skills.review import SkillDefinition, discover_skills
 from data_agent.skills.runtime import build_skill_graph
 
@@ -82,6 +79,6 @@ def specialist_domain_for(source_domain: SpecialistDomain) -> SpecialistDomain:
 
 def build_specialist(
     domain: SpecialistDomain,
-    llm_provider: LLMProvider = DEFAULT_LLM_PROVIDER,
+    llm_provider: ReviewLLMProvider = DEFAULT_LLM_PROVIDER,
 ) -> CompiledStateGraph:
     return build_skill_graph(SPECIALISTS[domain].skill, llm_provider=llm_provider)

@@ -1,4 +1,4 @@
-"""Public review interface over the checkpointed parent graph."""
+"""Public checkpointed review interface."""
 
 from __future__ import annotations
 
@@ -6,8 +6,19 @@ import json
 from pathlib import Path
 from typing import Any
 
-from data_agent.review.application.review_service import ReviewService as _GraphReviewService
+from langchain_core.callbacks import BaseCallbackHandler
+from langchain_core.runnables.config import RunnableConfig
+from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.graph.state import CompiledStateGraph
+
+from data_agent.review.application.run_bundle import (
+    load_completed_run,
+    load_resume_context,
+    write_run_context,
+)
 from data_agent.review.domain.desk_context import DeskContext
+from data_agent.review.domain.review import RunContext
 from data_agent.review.interface import (
     ReviewRequest,
     ReviewResult,
@@ -15,48 +26,69 @@ from data_agent.review.interface import (
     ReviewStatus,
 )
 from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
+from data_agent.review.orchestration.graph import build_parent_graph
 from data_agent.review.telemetry import ReviewTelemetryHandler
 
 
 class ReviewService:
     """Start, resume, and inspect controlled reviews through one interface."""
 
-    def __init__(self, llm_provider: ReviewLLMProvider | None = None) -> None:
-        self.llm_provider = llm_provider or DEFAULT_LLM_PROVIDER
-
-    def start(
+    def __init__(
         self,
-        request: ReviewRequest,
         llm_provider: ReviewLLMProvider | None = None,
-    ) -> ReviewResult:
-        provider = llm_provider or self.llm_provider
-        graph_service = _GraphReviewService(
-            llm_provider=provider,
-            callbacks=[ReviewTelemetryHandler(request.output_dir / "telemetry" / "llm_usage.jsonl")],
-        )
-        output = graph_service.start(
-            source=request.source_root,
-            output_dir=request.output_dir,
+        *,
+        checkpoint_db_name: str = "checkpoints.sqlite",
+    ) -> None:
+        self.llm_provider = llm_provider or DEFAULT_LLM_PROVIDER
+        self.checkpoint_db_name = checkpoint_db_name
+
+    def start(self, request: ReviewRequest) -> ReviewResult:
+        """Persist authoritative inputs and execute a fresh review."""
+        context = write_run_context(
+            request.output_dir,
             run_id=request.run_id,
+            source_root=request.source_root,
             desk_template=DeskContext.model_validate(request.desk_context),
             review_period=request.review_period,
         )
-        return self._result(output, request.output_dir)
+        root = Path(context.output_dir)
+        with SqliteSaver.from_conn_string(str(root / self.checkpoint_db_name)) as checkpointer:
+            output = self._build_graph(checkpointer).invoke(
+                {
+                    "run_id": context.run_id,
+                    "source_root": context.source_root,
+                    "output_dir": str(root),
+                },
+                config=self._config(context, root),
+            )
+        return self._result(output, root)
 
-    def resume(
-        self,
-        run_dir: str | Path,
-        llm_provider: ReviewLLMProvider | None = None,
-    ) -> ReviewResult:
+    def resume(self, run_dir: str | Path) -> ReviewResult:
+        """Resume an interrupted review or reopen a validated completed bundle."""
         root = Path(run_dir).resolve()
-        provider = llm_provider or self.llm_provider
-        output = _GraphReviewService(
-            llm_provider=provider,
-            callbacks=[ReviewTelemetryHandler(root / "telemetry" / "llm_usage.jsonl")],
-        ).resume(root)
+        if (root / "run_manifest.json").is_file():
+            bundle = load_completed_run(root)
+            return ReviewResult(
+                status=ReviewStatus.COMPLETED,
+                run_id=bundle.run.run_id,
+                output_dir=bundle.run_dir,
+                final_report=bundle.final_report.model_dump(mode="json"),
+                specialist_reports={
+                    domain.value: report.model_dump(mode="json")
+                    for domain, report in bundle.specialist_reports.items()
+                },
+            )
+
+        context = load_resume_context(root, checkpoint_db_name=self.checkpoint_db_name)
+        with SqliteSaver.from_conn_string(str(root / self.checkpoint_db_name)) as checkpointer:
+            output = self._build_graph(checkpointer).invoke(
+                None,
+                config=self._config(context, root),
+            )
         return self._result(output, root)
 
     def status(self, run_dir: str | Path) -> ReviewRunStatus:
+        """Return persisted run status without invoking the graph or a model."""
         root = Path(run_dir).resolve()
         completed = root / "run_manifest.json"
         failure = root / "failure.json"
@@ -80,13 +112,37 @@ class ReviewService:
                 completed_specialists=self._completed_specialists(root),
             )
         return ReviewRunStatus(
-            status=(ReviewStatus.RUNNING if root.is_dir() else ReviewStatus.NOT_FOUND),
+            status=ReviewStatus.RUNNING if root.is_dir() else ReviewStatus.NOT_FOUND,
             run_id=run_id,
             output_dir=root,
             completed_specialists=self._completed_specialists(root),
         )
 
-    def _result(self, output: dict[str, Any], root: Path) -> ReviewResult:
+    def _build_graph(
+        self, checkpointer: BaseCheckpointSaver | None = None
+    ) -> CompiledStateGraph:
+        return build_parent_graph(
+            llm_provider=self.llm_provider,
+            checkpointer=checkpointer,
+        )
+
+    def _config(self, context: RunContext, root: Path) -> RunnableConfig:
+        callbacks: list[BaseCallbackHandler] = [
+            ReviewTelemetryHandler(root / "telemetry" / "llm_usage.jsonl")
+        ]
+        return {
+            "configurable": {
+                "thread_id": context.run_id,
+                "desk_template": context.desk_template.model_dump(mode="json"),
+                "review_period": context.review_period,
+                "llm_provider": self.llm_provider,
+            },
+            "metadata": {"risk_agent_graph": "parent"},
+            "callbacks": callbacks,
+        }
+
+    @staticmethod
+    def _result(output: dict[str, Any], root: Path) -> ReviewResult:
         status = ReviewStatus(str(output.get("status", "failed")))
         result = ReviewResult(
             status=status,
@@ -126,4 +182,8 @@ class ReviewService:
         directory = root / "specialists"
         if not directory.is_dir():
             return []
-        return sorted(path.stem for path in directory.glob("*.json") if ".verification" not in path.name)
+        return sorted(
+            path.stem
+            for path in directory.glob("*.json")
+            if ".verification" not in path.name
+        )

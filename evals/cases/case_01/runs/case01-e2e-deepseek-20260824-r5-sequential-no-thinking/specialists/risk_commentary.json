@@ -1,0 +1,714 @@
+{
+  "domain": "risk_commentary",
+  "report_id": "COMMENTARY",
+  "title": "Risk Commentary Review",
+  "review_period": {
+    "start": "2025-07-01",
+    "end": "2026-06-30"
+  },
+  "generated_at": "2026-08-24T12:37:54.538989Z",
+  "scope": "Risk Commentary review of 6 source(s) (desk_context/desk_background.md, risk_commentary/quarterly_reviews_summary_ia_comment.md, risk_commentary/quarterly_reviews_summary_pnl_comment.md, risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md, risk_commentary/quarterly_reviews_summary_stress_test_comment.md, risk_commentary/quarterly_reviews_summary_var_svar_comment.md) for the period 2025-07-01 to 2026-06-30.",
+  "sources_reviewed": [
+    "SRC-001",
+    "SRC-007",
+    "SRC-008",
+    "SRC-009",
+    "SRC-010",
+    "SRC-011"
+  ],
+  "analysis_performed": [
+    "commentary_extract_population",
+    "commentary_validation_gaps",
+    "commentary_internal_consistency",
+    "commentary_repeated_explanations",
+    "commentary_normalized_reassurance_claims"
+  ],
+  "data_overviews": [
+    {
+      "overview_id": "risk-commentary.extract-coverage",
+      "domain": "risk_commentary",
+      "source_family": "risk_commentary",
+      "title": "Risk commentary extract and evidence coverage",
+      "summary": "Final commentary extracts are profiled by quoted-record and evidence-ID coverage before interpreting validation gaps or repeated explanations.",
+      "status": "available",
+      "primary_for_deck": true,
+      "metrics": [
+        {
+          "label": "Extracts",
+          "value": "6",
+          "unit": "count",
+          "basis": "reviewed final commentary extracts"
+        },
+        {
+          "label": "Quoted records",
+          "value": "266",
+          "unit": "occurrences",
+          "basis": "records marked with a commentary source tag"
+        },
+        {
+          "label": "Unique evidence IDs",
+          "value": "266",
+          "unit": "count",
+          "basis": "unique IDs within each extract"
+        },
+        {
+          "label": "Validation gaps",
+          "value": "10",
+          "unit": "unique records",
+          "basis": "No data, pending, blank, or missing managerial validation"
+        }
+      ],
+      "visual": {
+        "kind": "table",
+        "columns": [
+          "Extract",
+          "Lines",
+          "Quoted records",
+          "Unique evidence IDs",
+          "Validation gaps"
+        ],
+        "rows": [
+          [
+            "desk_context/desk_background.md",
+            "19",
+            "0",
+            "0",
+            "0"
+          ],
+          [
+            "risk_commentary/quarterly_reviews_summary_ia_comment.md",
+            "370",
+            "53",
+            "53",
+            "2"
+          ],
+          [
+            "risk_commentary/quarterly_reviews_summary_pnl_comment.md",
+            "370",
+            "53",
+            "53",
+            "2"
+          ],
+          [
+            "risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md",
+            "370",
+            "53",
+            "53",
+            "2"
+          ],
+          [
+            "risk_commentary/quarterly_reviews_summary_stress_test_comment.md",
+            "370",
+            "53",
+            "53",
+            "2"
+          ],
+          [
+            "risk_commentary/quarterly_reviews_summary_var_svar_comment.md",
+            "376",
+            "54",
+            "54",
+            "2"
+          ]
+        ]
+      },
+      "evidence": [
+        {
+          "locator": "source://desk_context/desk_background.md#lines=1:19",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=1:370",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=1:370",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=1:370",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=1:370",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=1:376",
+          "quote": null
+        }
+      ],
+      "limitations": [
+        "Coverage counts the finalized extracts only and does not imply the underlying commentary is complete."
+      ],
+      "data_fingerprint": "a702bf507130cb819f65f96aa6a6f66cdd31cfca7933d23f26a22997bd0685ca"
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "COMMENTARY-FIND-002",
+      "title": "Validated reassurance claim on VaR exposure within appetite (2026-03-27)",
+      "category": "Commentary reassurance claim",
+      "severity": "info",
+      "confidence": 0.8,
+      "claim": "A material reassurance claim dated 2026-03-27 for CROSS_ASSET desk, CROSS_ASSET perimeter, VAR metric states 'Exposure remained within appetite and the applicable limit framework; no escalation was required.' The claim is marked 'validated.' This is a source-backed commentary observation; downstream correlation must decide whether other source families contradict it.",
+      "period": {
+        "start": "2026-03-27",
+        "end": "2026-03-27"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=269:269",
+          "quote": "Exposure remained within appetite and the applicable limit framework; no escalation was required."
+        }
+      ],
+      "analysis_performed": [
+        "Extracted the normalized reassurance claim from deterministic analysis.",
+        "Verified the claim's event date, desk, perimeter, metric, and validation state.",
+        "Confirmed the claim is source-backed and marked validated.",
+        "Noted that downstream correlation is required to check for contradictions."
+      ],
+      "alternative_explanations": [
+        "The claim may cover only a subset of the desk's VaR exposures.",
+        "The applicable limit framework may have changed during the period.",
+        "The validation may be based on the desk's own assessment rather than independent review."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "passed",
+      "recommendation": "Correlate this claim with limit-register and VaR source data in downstream review.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "COMMENTARY-FIND-001",
+      "title": "Ten quoted commentary records lack managerial validation (pending)",
+      "category": "Commentary validation gap",
+      "severity": "medium",
+      "confidence": 0.7,
+      "claim": "Across all five quarterly commentary extracts, 10 unique quoted source records (review:10019, 10038, 20019, 20038, 30019, 30038, 40019, 40038, 50019, 50038) have Managerial Validation Comment marked 'pending'. These are evidence/closure gaps, not proof of incorrect risk values, but they affect the completeness of the review trail.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:10019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:20019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:30019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:40019 ... Managerial Validation Comment: pending"
+        }
+      ],
+      "analysis_performed": [
+        "Identified 10 unique pending validation records from deterministic analysis.",
+        "Verified each pending record's locator and quote in the supplied extracts.",
+        "Confirmed the records span all five commentary extract types.",
+        "Assessed that pending validation indicates closure gaps, not necessarily data errors."
+      ],
+      "alternative_explanations": [
+        "Pending validation may reflect a timing lag between quarterly compilation and manager sign-off.",
+        "Some records may be low-materiality and awaiting batch approval.",
+        "The review period may still be open for these items."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=269:269",
+          "quote": "Exposure remained within appetite and the applicable limit framework; no escalation was required."
+        }
+      ],
+      "verifier_status": "unresolved",
+      "recommendation": "Follow up with desk management to complete validation for the 10 pending records and document the reason for any delay.",
+      "is_observation": false
+    },
+    {
+      "finding_id": "COMMENTARY-FIND-003",
+      "title": "No internal trigger/reassurance contradictions found in commentary extracts",
+      "category": "Commentary internal consistency",
+      "severity": "info",
+      "confidence": 0.7,
+      "claim": "The deterministic internal-consistency screen retained 0 unique candidates for trigger/reassurance combinations across all quoted records. No source record was found that reports a threshold exceedance while its comment says there was no material change.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=1:370",
+          "quote": "Executive Summary for Income Attribution Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=1:370",
+          "quote": "Executive Summary for PnL Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=1:370",
+          "quote": "Executive Summary for Risk Metrics Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=1:370",
+          "quote": "Executive Summary for Stress Testing Commentary"
+        }
+      ],
+      "analysis_performed": [
+        "Ran deterministic internal-consistency screen over all quoted records.",
+        "Retained 0 unique candidates for trigger/reassurance combinations.",
+        "Reviewed the executive summaries and quoted records for any apparent contradictions.",
+        "Concluded no material internal contradictions were identified."
+      ],
+      "alternative_explanations": [
+        "The screen may miss contradictions that are not phrased as trigger/reassurance pairs.",
+        "The extracts may not include all commentary records for the period.",
+        "The screen relies on deterministic parsing of quoted records."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "unresolved",
+      "recommendation": "No action required; continue to monitor for contradictions in future quarters.",
+      "is_observation": true
+    }
+  ],
+  "unresolved_items": [
+    "COMMENTARY-FIND-001 \u2014 Ten quoted commentary records lack managerial validation (pending): Verifier rounds exhausted; marked UNRESOLVED. The finding claims 10 unique pending validation records but only provides locators for four. The deterministic support also shows only four pending records. To support the claim of 10, the finding must include locators for all 10 evidence IDs. Alternatively, revise the claim to reflect the confirmed number of pending records (four) and adjust severity accordingly. The finding correctly distinguishes between evidence gaps and control failures, but the severity should be recalibrated based on the verified count.",
+    "COMMENTARY-FIND-003 \u2014 No internal trigger/reassurance contradictions found in commentary extracts: Verifier rounds exhausted; marked UNRESOLVED. The finding claims no internal trigger/reassurance contradictions were found, but the evidence provided is truncated and does not include the full set of quoted records. The deterministic support array is empty, but this does not prove absence of contradictions across the entire population. The confidence of 0.7 is too high for a negative claim based on incomplete evidence. Revise the finding to either provide the full deterministic screen results with complete record coverage or lower the confidence and explicitly state the limitation that the conclusion is based on the reviewed excerpts only. Additionally, ensure the claim is scoped to the evidence actually reviewed."
+  ],
+  "overall_conclusion": "Risk Commentary review completed: 1 finding(s) verified, 2 rejected, 2 unresolved. Top findings: COMMENTARY-FIND-001 (medium): Ten quoted commentary records lack managerial validation (pending); COMMENTARY-FIND-002 (info): Validated reassurance claim on VaR exposure within appetite (2026-03-27); COMMENTARY-FIND-003 (info): No internal trigger/reassurance contradictions found in commentary extracts.",
+  "verification_history": {
+    "COMMENTARY-FIND-001": [
+      {
+        "round_number": 1,
+        "decision": "pass",
+        "questions": [
+          {
+            "question": "Does the cited evidence support the claim that 10 unique quoted source records have Managerial Validation Comment marked 'pending'?",
+            "answer": "Yes. The reopened evidence shows four records with 'pending' validation (review:10019, 20019, 30019, 40019). The deterministic support lists these four and indicates a total of 10 unique records with pending validation across all extracts. The finding's evidence list includes four locators, but the claim of 10 is supported by the deterministic analysis summary.",
+            "pass_required": true
+          },
+          {
+            "question": "Are the counts reproducible from the supplied extracts?",
+            "answer": "The deterministic support reports 'Found 10 unique quoted record(s) with No data, pending, blank, or missing managerial validation'. The finding states 10 unique records. The four reopened locators confirm the pattern; the remaining six are not reopened but are consistent with the deterministic count. The count is reproducible from the deterministic analysis.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the severity calibrated as a medium evidence/closure gap rather than a control failure?",
+            "answer": "Yes. The finding explicitly states these are 'evidence/closure gaps, not proof of incorrect risk values' and recommends follow-up. The policy treats pending validation as an evidence-quality issue, escalated only if repeated, material, and lacking corrective process. The finding does not overstate severity.",
+            "pass_required": true
+          },
+          {
+            "question": "Is there any contrary evidence that would undermine the finding?",
+            "answer": "The counter evidence provided is a validated record from var_svar_comment (certification:9101) with a reassuring comment. This does not contradict the existence of pending validation in other records; it merely shows that some records are validated. The finding does not claim all records are pending, so no contradiction.",
+            "pass_required": true
+          },
+          {
+            "question": "Are alternative explanations considered?",
+            "answer": "Yes. The finding lists timing lag, low materiality, and open review period as possible benign explanations. This aligns with the policy to treat pending as a gap, not a failure.",
+            "pass_required": true
+          }
+        ],
+        "checks": [
+          "Reopened four of the ten cited locators; each shows 'Managerial Validation Comment: pending'.",
+          "Deterministic support confirms 10 unique pending records across extracts.",
+          "Finding correctly categorizes as observation, not control failure.",
+          "Severity medium is appropriate for a validation gap affecting completeness of review trail.",
+          "No material counter-evidence found; the provided counter evidence is a validated record that does not negate the pending ones.",
+          "evidence reopen: 4 locator(s)"
+        ],
+        "feedback": "The finding is well-supported by the reopened evidence and deterministic analysis. The claim of 10 unique pending records is consistent with the deterministic count. The severity and confidence are calibrated. The finding appropriately distinguishes evidence gaps from risk-value errors and considers benign explanations.",
+        "analyst_response": "Revised COMMENTARY-FIND-005 to clarify that counts are based on full files and cannot be independently verified from truncated excerpts; reduced confidence to 0.6. Also adjusted confidence on other findings to reflect evidence limitations."
+      },
+      {
+        "round_number": 2,
+        "decision": "unresolved",
+        "questions": [
+          {
+            "question": "Does the cited evidence support the claim that 10 unique quoted source records have Managerial Validation Comment marked 'pending'?",
+            "answer": "The finding lists 10 evidence IDs (review:10019, 10038, 20019, 20038, 30019, 30038, 40019, 40038, 50019, 50038) but only provides locators for four of them (review:10019, 20019, 30019, 40019). The reopened evidence confirms those four records have 'pending' validation. The remaining six IDs are not cited with locators in the evidence array, so the claim of 10 unique pending records is not fully supported by the provided citations.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the count of 10 unique pending records reproducible from the supplied extracts?",
+            "answer": "The deterministic support shows only four matching flag candidates with 'pending' validation, all at line 134 of their respective files. The finding claims 10 unique records, but the supplied evidence and deterministic support do not include the other six IDs. Therefore, the count is not reproducible from the provided evidence.",
+            "pass_required": true
+          },
+          {
+            "question": "Does the finding appropriately distinguish between evidence/closure gaps and control failures?",
+            "answer": "Yes, the finding explicitly states that pending validation indicates evidence/closure gaps, not proof of incorrect risk values, and recommends follow-up rather than asserting a control failure. This aligns with the policy.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the severity of 'medium' calibrated given the nature of the gap?",
+            "answer": "The severity may be too high if only four records are confirmed. The policy suggests escalating as a control failure only when repeated, material, and lacking corrective process. Here, the finding is framed as an observation with a recommendation, not a control failure. However, the severity 'medium' might be inflated if the actual number of pending records is lower than claimed. A lower severity (e.g., 'low') might be more appropriate unless the full 10 records are verified.",
+            "pass_required": true
+          },
+          {
+            "question": "Is there any contrary evidence that contradicts the finding?",
+            "answer": "The counter evidence provided (certification:9101) shows a validated record, but it does not contradict the existence of pending records. It is not directly relevant to the validation gap claim.",
+            "pass_required": false
+          }
+        ],
+        "checks": [
+          "Reopened the four cited locators and confirmed each contains a source record with 'Managerial Validation Comment: pending'.",
+          "Verified that the evidence IDs in the reopened locators match the first four IDs listed in the finding.",
+          "Noted that the finding lists 10 evidence IDs but only provides locators for four; the remaining six are not cited.",
+          "Checked the deterministic support: it lists only four matching flag candidates with pending validation, not ten.",
+          "Assessed that the finding's characterization as an evidence/closure gap is consistent with policy.",
+          "Evaluated severity: 'medium' may be too high given the unverified count; a lower severity might be more appropriate.",
+          "evidence reopen: 4 locator(s)"
+        ],
+        "feedback": "Verifier rounds exhausted; marked UNRESOLVED. The finding claims 10 unique pending validation records but only provides locators for four. The deterministic support also shows only four pending records. To support the claim of 10, the finding must include locators for all 10 evidence IDs. Alternatively, revise the claim to reflect the confirmed number of pending records (four) and adjust severity accordingly. The finding correctly distinguishes between evidence gaps and control failures, but the severity should be recalibrated based on the verified count.",
+        "analyst_response": null
+      }
+    ],
+    "COMMENTARY-FIND-002": [
+      {
+        "round_number": 1,
+        "decision": "pass",
+        "questions": [
+          {
+            "question": "Does the cited source record support the claim?",
+            "answer": "Yes. The reopened line 269 contains the exact quote 'Exposure remained within appetite and the applicable limit framework; no escalation was required.' and includes the desk, perimeter, metric, validation state, and evidence ID as claimed.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the finding reproducible from the supplied extracts?",
+            "answer": "Yes. The deterministic support matches the finding's normalized reassurance claim with the same event date, desk, perimeter, metric, claim, validation, evidence ID, and locator.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the finding based solely on outlier or exceptional records?",
+            "answer": "No. The finding is an observation of a single source-backed reassurance claim, not an outlier analysis.",
+            "pass_required": true
+          },
+          {
+            "question": "Is there any contrary evidence within the supplied extracts?",
+            "answer": "No. The finding itself notes no contradiction assessed here, and the reopened evidence does not show any conflicting record.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the timing of the claim correctly represented?",
+            "answer": "Yes. The event date is 2026-03-27, and the source record is from the quarterly review summary for that period.",
+            "pass_required": true
+          },
+          {
+            "question": "Does the finding confuse causation with correlation?",
+            "answer": "No. The finding is purely observational and does not assert causation.",
+            "pass_required": true
+          },
+          {
+            "question": "Are there benign alternative explanations that would undermine the finding?",
+            "answer": "The finding explicitly lists alternative explanations (e.g., claim may cover a subset, limit framework may have changed, validation may be desk-based). These are appropriately noted and do not undermine the observation.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the control-version effectiveness relevant to this finding?",
+            "answer": "Not applicable. The finding is about a commentary reassurance claim, not a control version.",
+            "pass_required": false
+          },
+          {
+            "question": "Are there cross-source contradictions that should be considered?",
+            "answer": "The finding explicitly defers cross-source correlation to downstream review, which is appropriate for this specialist scope.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the severity calibrated?",
+            "answer": "Yes. Severity is 'info' and confidence 0.8, appropriate for a source-backed observation with no contradiction assessed.",
+            "pass_required": true
+          }
+        ],
+        "checks": [
+          "Reopened locator source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=269:269 and confirmed exact quote, desk, perimeter, metric, validation, and evidence ID.",
+          "Matched deterministic support confirms the normalized reassurance claim with identical fields.",
+          "No counter-evidence found in the supplied extracts.",
+          "Finding is correctly scoped as an observation, not a conclusion about limit breaches or control failures.",
+          "Alternative explanations are appropriately listed and do not affect the observational nature.",
+          "evidence reopen: 1 locator(s)"
+        ],
+        "feedback": "The finding is well-supported by the cited source record and the deterministic analysis. It correctly preserves the required fields and defers cross-source correlation. No revision needed.",
+        "analyst_response": "Revised COMMENTARY-FIND-005 to clarify that counts are based on full files and cannot be independently verified from truncated excerpts; reduced confidence to 0.6. Also adjusted confidence on other findings to reflect evidence limitations."
+      },
+      {
+        "round_number": 2,
+        "decision": "pass",
+        "questions": [
+          {
+            "question": "Does the cited source record support the claim?",
+            "answer": "Yes. The reopened line 269 contains the exact quote 'Exposure remained within appetite and the applicable limit framework; no escalation was required.' and includes the desk, perimeter, metric, validation state, and event date as claimed.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the claim reproducible from the deterministic support?",
+            "answer": "Yes. The matched deterministic support entry shows the same normalized reassurance claim with event_date 2026-03-27, desk CROSS_ASSET, perimeter CROSS_ASSET, metric VAR, validation 'validated.', and evidence_id certification:9101.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the finding an observation rather than a conclusion?",
+            "answer": "Yes. The finding explicitly states it is a source-backed commentary observation and that downstream correlation must decide contradictions. It does not assert an absolute limit breach or control failure.",
+            "pass_required": true
+          },
+          {
+            "question": "Are there any contrary evidence or alternative explanations that undermine the observation?",
+            "answer": "No. The finding lists alternative explanations and notes the claim may cover a subset. The source record itself contains a threshold exceeded error message alongside the reassuring comment, but the finding does not escalate this to a contradiction; it remains an observation.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the severity calibrated?",
+            "answer": "Yes. Severity is 'info' and confidence 0.8, appropriate for a single validated reassurance claim that requires downstream correlation.",
+            "pass_required": true
+          }
+        ],
+        "checks": [
+          "Reopened locator source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=269:269 and confirmed exact quote and metadata.",
+          "Verified deterministic support matches the finding's normalized claim.",
+          "Confirmed the finding is framed as an observation, not a conclusion.",
+          "Checked for counter-evidence: none in the supplied extracts contradict the claim's existence.",
+          "Severity and confidence are reasonable for an informational observation.",
+          "evidence reopen: 1 locator(s)"
+        ],
+        "feedback": "The finding is well-supported by the cited source record and deterministic analysis. It correctly distinguishes observation from conclusion and does not overstate the evidence. No revision needed.",
+        "analyst_response": null
+      }
+    ],
+    "COMMENTARY-FIND-003": [
+      {
+        "round_number": 1,
+        "decision": "pass",
+        "questions": [
+          {
+            "question": "Does the cited evidence support the claim that no internal trigger/reassurance contradictions were found?",
+            "answer": "Yes. The reopened evidence shows quoted source records with 'review trigger' error messages and comments that are reassuring (e.g., 'no escalation required', 'within tolerance' implied). However, none of the quoted records contain a phrase indicating a threshold exceedance or breach alongside a reassuring comment. The claim is about the absence of contradictions, and the evidence supports that absence.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the deterministic screen reproducible from the supplied extracts?",
+            "answer": "The finding states that the screen retained 0 unique candidates. The matched deterministic support array is empty, which is consistent with 0 candidates. The screen logic is not fully specified, but the result is reproducible in the sense that no trigger/reassurance contradiction is evident in the provided records.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the finding based solely on outlier-only records?",
+            "answer": "Yes, the extracts are movement-review populations, which are selected by triggers, not complete daily commentary. The finding acknowledges this limitation in alternative explanations.",
+            "pass_required": true
+          },
+          {
+            "question": "Is there any contrary evidence in the supplied extracts?",
+            "answer": "No. The reopened evidence does not show any record with a threshold exceedance and a reassuring comment. All comments are consistent with the review trigger being a movement review, not a breach.",
+            "pass_required": true
+          },
+          {
+            "question": "Does the finding correctly distinguish movement breaches from absolute limit breaches?",
+            "answer": "Yes. The finding explicitly states that movement-review triggers are not treated as absolute-limit conclusions, and the evidence supports this distinction.",
+            "pass_required": true
+          },
+          {
+            "question": "Are there benign explanations for the absence of contradictions?",
+            "answer": "Yes, the finding lists alternative explanations such as the screen missing non-standard phrasings, incomplete extracts, and deterministic parsing limitations.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the severity calibrated as 'info' appropriate?",
+            "answer": "Yes. The finding is an observation of no contradictions, which is informational and does not indicate a control failure.",
+            "pass_required": true
+          }
+        ],
+        "checks": [
+          "Reopened all cited locators and confirmed they contain executive summaries and quoted source records.",
+          "Verified that no quoted record contains a threshold exceedance phrase alongside a reassuring comment.",
+          "Confirmed the matched deterministic support array is empty, consistent with 0 candidates.",
+          "Checked that the finding's period covers the quarters present in the extracts (2025Q3 onwards).",
+          "Ensured the finding does not overstate the absence as a guarantee of no contradictions.",
+          "evidence reopen: 4 locator(s)"
+        ],
+        "feedback": "The finding is well-supported by the supplied evidence. The claim of zero internal trigger/reassurance contradictions is consistent with the reopened records. The severity and confidence are appropriate for an informational observation.",
+        "analyst_response": "Revised COMMENTARY-FIND-005 to clarify that counts are based on full files and cannot be independently verified from truncated excerpts; reduced confidence to 0.6. Also adjusted confidence on other findings to reflect evidence limitations."
+      },
+      {
+        "round_number": 2,
+        "decision": "unresolved",
+        "questions": [
+          {
+            "question": "Does the cited evidence support the claim that no internal trigger/reassurance contradictions were found?",
+            "answer": "The cited evidence includes executive summaries and quoted records from four extracts. The quoted records show review triggers with comments that are reassuring (e.g., 'no escalation required', 'exposure remained monitored'). However, the claim is a negative assertion about the entire population of quoted records across all extracts. The evidence provided is truncated and does not include the full set of quoted records, so the claim cannot be fully verified from the cited locators alone. The deterministic support array is empty, indicating no locator-matched deterministic candidate was found, but this does not prove absence of contradictions in the full population.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the deterministic screen reproducible from the supplied evidence?",
+            "answer": "The deterministic screen is described as running over all quoted records, but the exact algorithm and the full set of records are not provided. The matched deterministic support is empty, but without the complete data and the screen's logic, reproducibility cannot be confirmed.",
+            "pass_required": true
+          },
+          {
+            "question": "Does the finding correctly distinguish between movement-review triggers and absolute-limit breaches?",
+            "answer": "The finding does not explicitly discuss absolute-limit breaches, but the claim is about internal contradictions between trigger and reassurance. The evidence shows movement-review triggers, and the comments are reassuring. The finding does not conflate these with absolute-limit breaches, so this aspect is acceptable.",
+            "pass_required": false
+          },
+          {
+            "question": "Are there any contrary examples in the reopened evidence that contradict the claim?",
+            "answer": "In the reopened evidence, all quoted records show a review trigger and a reassuring comment. For example, in ia_comment, record 2025Q3-01 has 'Error Message: review trigger' and 'Comment: Temporary market volatility was observed; exposure remained monitored.' This is not a contradiction because the comment does not say 'no material change' but rather acknowledges volatility and monitoring. However, the claim specifically says 'no source record was found that reports a threshold exceedance while its comment says there was no material change.' The evidence does not show any record with a threshold exceedance phrase, so no contradiction is evident in the provided excerpts.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the severity and confidence calibrated given the evidence?",
+            "answer": "The severity is 'info' and confidence 0.7. Since the claim is a negative finding based on a deterministic screen, and the evidence is incomplete, the confidence may be too high. The severity is appropriate for an informational observation, but the confidence should be lowered or the claim should be revised to reflect the limited evidence.",
+            "pass_required": true
+          }
+        ],
+        "checks": [
+          "Cited locators are reopened and partially match the finding's evidence.",
+          "The quoted records in the reopened evidence show review triggers with reassuring comments, but no explicit threshold exceedance phrases.",
+          "The deterministic support array is empty, consistent with no locator-matched candidates, but the full population is not shown.",
+          "The finding's claim is a negative assertion that requires complete coverage of all quoted records, which is not demonstrated.",
+          "The alternative explanations acknowledge potential limitations of the screen and incomplete extracts, but the finding still asserts a definitive conclusion.",
+          "evidence reopen: 4 locator(s)"
+        ],
+        "feedback": "Verifier rounds exhausted; marked UNRESOLVED. The finding claims no internal trigger/reassurance contradictions were found, but the evidence provided is truncated and does not include the full set of quoted records. The deterministic support array is empty, but this does not prove absence of contradictions across the entire population. The confidence of 0.7 is too high for a negative claim based on incomplete evidence. Revise the finding to either provide the full deterministic screen results with complete record coverage or lower the confidence and explicitly state the limitation that the conclusion is based on the reviewed excerpts only. Additionally, ensure the claim is scoped to the evidence actually reviewed.",
+        "analyst_response": null
+      }
+    ],
+    "COMMENTARY-FIND-004": [
+      {
+        "round_number": 1,
+        "decision": "reject",
+        "questions": [
+          {
+            "question": "Does the cited evidence support the claim that no explanation phrase appeared at least 3 times after deduplication?",
+            "answer": "No. The reopened evidence shows repeated phrases across multiple records. For example, 'Temporary market volatility was observed; exposure remained monitored.' appears in ia_comment records 2025Q3-01 and 2025Q3-05, and 'The movement was reconciled to the applicable hierarchy and reporting basis.' appears in multiple records across extracts. The claim of zero repeated phrases is contradicted by the supplied extracts.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the analysis reproducible from the supplied extracts?",
+            "answer": "No. The finding states that after deduplication no phrase appeared at least 3 times, but the reopened evidence shows repeated phrases. The deterministic support array is empty, indicating no locator-matched candidate was found, but the manual inspection of the reopened lines reveals repetition. The analysis is not reproducible as stated.",
+            "pass_required": true
+          },
+          {
+            "question": "Does the finding consider alternative explanations for the absence of repeated phrases?",
+            "answer": "The finding lists alternative explanations, but the primary claim is false because repeated phrases are present. The alternative explanations do not rescue the claim.",
+            "pass_required": false
+          },
+          {
+            "question": "Is the severity and confidence calibrated given the evidence?",
+            "answer": "The severity is 'info' and confidence 0.9, but the claim is unsupported. The confidence is too high for a false claim.",
+            "pass_required": true
+          }
+        ],
+        "checks": [
+          "Reopened all cited locators.",
+          "Compared quoted source records across extracts.",
+          "Identified repeated explanation phrases (e.g., 'Temporary market volatility was observed; exposure remained monitored.', 'The movement was reconciled to the applicable hierarchy and reporting basis.').",
+          "Confirmed that the claim of zero repeated phrases is contradicted by the evidence.",
+          "Deterministic support array is empty, but manual inspection of reopened lines shows repetition.",
+          "evidence reopen: 4 locator(s)"
+        ],
+        "feedback": "The finding claims no repeated boilerplate explanations after deduplication, but the reopened evidence shows multiple instances of identical phrases across different records and extracts. For example, 'Temporary market volatility was observed; exposure remained monitored.' appears in ia_comment records 2025Q3-01 and 2025Q3-05, and 'The movement was reconciled to the applicable hierarchy and reporting basis.' appears in multiple records. The claim is directly contradicted by the supplied extracts. The analysis is not reproducible and the confidence is unjustified. Reject the finding.",
+        "analyst_response": null
+      }
+    ],
+    "COMMENTARY-FIND-005": [
+      {
+        "round_number": 1,
+        "decision": "revise",
+        "questions": [
+          {
+            "question": "Does the cited evidence support the claim of 266 quoted source-record occurrences and 53 unique evidence IDs per extract (54 for var_svar)?",
+            "answer": "The reopened evidence shows only the first few records of each extract, not the full 370 lines. The claim of 266 occurrences and 53 unique IDs cannot be verified from the provided excerpts. The deterministic support array is empty, indicating no locator-matched deterministic candidate was found.",
+            "pass_required": true
+          },
+          {
+            "question": "Are the counts reproducible from the supplied extracts?",
+            "answer": "No. The full extracts are not provided; only truncated excerpts are shown. The counts cannot be reproduced without access to the complete files.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the population well-defined and consistent across extracts?",
+            "answer": "The excerpts show a consistent structure (executive summary, quarterly reviews, records with event date, desk, perimeter, metric, review note, validation, source record). However, the claim of consistency in counts cannot be confirmed without full data.",
+            "pass_required": true
+          },
+          {
+            "question": "Are there any contrary evidence or alternative explanations that undermine the finding?",
+            "answer": "The finding itself notes that the population is limited to movement-review triggered commentary and that var_svar has one additional record. These are acknowledged as alternative explanations, but the core claim of exact counts remains unverified.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the severity and confidence calibrated?",
+            "answer": "Severity is low and confidence 0.95. Given the inability to verify the counts, the confidence is too high. The finding is an observation, not a control failure, so low severity is appropriate, but confidence should be reduced.",
+            "pass_required": true
+          }
+        ],
+        "checks": [
+          "Reopened evidence locators show only truncated excerpts, not full 370 lines.",
+          "Deterministic support array is empty, indicating no locator-matched deterministic candidate.",
+          "Counts of 266 occurrences and 53 unique IDs cannot be verified from provided evidence.",
+          "The finding's alternative explanations acknowledge population limitations but do not resolve the verification gap.",
+          "Confidence of 0.95 is not supported by the available evidence.",
+          "evidence reopen: 4 locator(s)"
+        ],
+        "feedback": "The finding claims specific counts (266 quoted source-record occurrences, 53 unique evidence IDs per extract, 54 for var_svar, 10 validation gaps) but the reopened evidence only shows truncated excerpts. The full extracts are required to verify these counts. The deterministic support array is empty, indicating no locator-matched deterministic candidate was found. Please provide the complete extracts or revise the finding to state that counts are based on the full files and cannot be independently verified from the provided excerpts. Additionally, reduce confidence to reflect the lack of verifiable evidence.",
+        "analyst_response": "Revised COMMENTARY-FIND-005 to clarify that counts are based on full files and cannot be independently verified from truncated excerpts; reduced confidence to 0.6. Also adjusted confidence on other findings to reflect evidence limitations."
+      },
+      {
+        "round_number": 2,
+        "decision": "reject",
+        "questions": [
+          {
+            "question": "Does the cited evidence support the claimed counts of 266 quoted source-record occurrences and 53 unique evidence IDs per extract (54 for var_svar)?",
+            "answer": "No. The reopened evidence is truncated and shows only a few records per extract. The full files are not accessible, so the exact counts cannot be verified from the cited locators.",
+            "pass_required": true
+          },
+          {
+            "question": "Can the claimed counts be reproduced from the supplied evidence?",
+            "answer": "No. The evidence excerpts are truncated and do not contain the full set of quoted records. The deterministic support array is empty, indicating no locator-matched deterministic candidate was found.",
+            "pass_required": true
+          },
+          {
+            "question": "Is the finding based solely on outlier or exceptional records?",
+            "answer": "Not applicable. The finding is a population coverage observation, not an outlier analysis.",
+            "pass_required": false
+          },
+          {
+            "question": "Is there contrary evidence that contradicts the finding?",
+            "answer": "The finding itself acknowledges that the provided excerpts are truncated and do not allow independent verification. This self-acknowledged lack of evidence is a form of contrary evidence to the claim of exact counts.",
+            "pass_required": false
+          },
+          {
+            "question": "Does the timing of the evidence align with the finding's period?",
+            "answer": "The period is 2025-07-01 to 2026-06-30, but the reopened evidence only shows records from 2025Q3. The full period coverage cannot be confirmed.",
+            "pass_required": false
+          },
+          {
+            "question": "Is the finding asserting causation or merely correlation?",
+            "answer": "The finding is a descriptive observation of counts, not a causal claim.",
+            "pass_required": false
+          },
+          {
+            "question": "Are there benign alternative explanations for the observed counts?",
+            "answer": "Yes. The counts may be correct, but without full evidence they cannot be verified. The finding itself lists alternative explanations such as the population being limited to movement-review triggered commentary.",
+            "pass_required": false
+          },
+          {
+            "question": "Is the severity calibrated to the evidence?",
+            "answer": "The severity is low, which is appropriate for an observation. However, the confidence of 0.6 is not justified because the counts are unverified.",
+            "pass_required": false
+          },
+          {
+            "question": "Are there cross-source contradictions?",
+            "answer": "No cross-source contradictions are evident because only one source family is involved.",
+            "pass_required": false
+          }
+        ],
+        "checks": [
+          "Reopened evidence locators show truncated excerpts, not full files.",
+          "Deterministic support array is empty, indicating no locator-matched deterministic candidate.",
+          "The finding's claim of exact counts (266 occurrences, 53/54 unique IDs, 10 validation gaps) cannot be verified from the cited evidence.",
+          "The finding acknowledges the lack of verifiable evidence and adjusts confidence, but still asserts the counts as fact.",
+          "The evidence only covers 2025Q3, while the finding's period spans four quarters.",
+          "evidence reopen: 4 locator(s)"
+        ],
+        "feedback": "The finding is rejected because the cited evidence does not support the claimed counts. The reopened locators show truncated excerpts, and the deterministic support is empty. The finding itself admits that the counts cannot be independently verified from the excerpts. Without access to the full files, the exact numbers cannot be confirmed. The finding should be revised to either provide full evidence or be marked as unresolved.",
+        "analyst_response": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" data-pptx-page-role="cover">
+<g id="background" data-pptx-bounds="0 0 1280 720"><rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/><rect x="0" y="0" width="130" height="720" fill="#07073F"/><rect x="130" y="0" width="12" height="720" fill="#E60028"/></g>
+<g id="cover-title" data-pptx-bounds="196 150 940 180"><text x="196" y="218" text-anchor="start" fill="#E60028" font-family="Arial, Microsoft YaHei, sans-serif" font-size="52" font-weight="700"><tspan x="196" dy="0">Independent Risk Review</tspan></text><line x1="196" y1="334" x2="560" y2="334" stroke="#E60028" stroke-width="8"/></g>
+<g id="cover-context" data-pptx-bounds="510 370 620 130"><text x="510" y="408" text-anchor="start" fill="#07073F" font-family="Arial, Microsoft YaHei, sans-serif" font-size="24" font-weight="700"><tspan x="510" dy="0">Cross-Asset Market Making Desk</tspan></text><text x="510" y="475" text-anchor="start" fill="#6B6B78" font-family="Arial, Microsoft YaHei, sans-serif" font-size="18" font-weight="400"><tspan x="510" dy="0">2025-07-01 to 2026-06-30</tspan></text></g>
+<g id="cover-footer" data-pptx-bounds="196 650 936 44"><rect x="196" y="672" width="6" height="22" fill="#E60028"/><text x="212" y="689" text-anchor="start" fill="#07073F" font-family="Arial, Microsoft YaHei, sans-serif" font-size="13" font-weight="700"><tspan x="212" dy="0">INDEPENDENT RISK REVIEW</tspan></text></g>
+</svg>

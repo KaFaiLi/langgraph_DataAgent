@@ -1,0 +1,5 @@
+{
+  "run_id": "CASE01-E2E-DEEPSEEK-20260824-R2",
+  "status": "failed",
+  "failure_reason": "specialist risk_metrics failed: ValueError: structured output failed after 2 attempt(s): Connection error."
+}

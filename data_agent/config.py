@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     deepseek_high_cost_model: str = Field(default="deepseek-v4-pro")
     deepseek_model: str = Field(default="deepseek-chat")
     deepseek_temperature: float = Field(default=0.0)
+    deepseek_max_retries: int = Field(default=5, ge=0)
     deepseek_api_key: SecretStr | None = Field(default=None)
 
     # --- MCP server ----------------------------------------------------------

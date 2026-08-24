@@ -24,24 +24,21 @@ from data_agent.review.domain.verification import VerifierDecision
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 from data_agent.review.llm.models import ModelTier
 from data_agent.review.orchestration.nodes.fanout import _sanitize_verification_collection
-from data_agent.review.orchestration.specialist_graph import (
-    MAX_ANALYSIS_PROMPT_CHARS,
-    MAX_CANDIDATE_FINDINGS,
+from data_agent.review.orchestration.finding_policy import (
     MAX_PERSISTED_FINDING_EVIDENCE,
+    normalize_findings,
+)
+from data_agent.review.orchestration.prompt_projection import (
+    MAX_ANALYSIS_PROMPT_CHARS,
     MAX_REVISION_ANALYSIS_CHARS,
     MAX_VERIFIER_SUPPORT_CHARS,
+    bounded_analyses_json,
+    bounded_revision_feedback,
+    finding_analysis_support_json,
+    revision_candidates_json,
+)
+from data_agent.review.orchestration.specialist_graph import (
     SpecialistSpec,
-    _add_deterministic_candidate_evidence,
-    _add_relevant_context_evidence,
-    _apply_deterministic_severity_floor,
-    _bounded_analyses_json,
-    _bounded_revision_feedback,
-    _finding_analysis_support_json,
-    _infer_finding_period,
-    _limit_candidate_findings,
-    _merge_revision_findings,
-    _namespace_finding_ids,
-    _revision_candidates_json,
     build_specialist_graph,
 )
 from data_agent.review.orchestration.specialist_schemas import (
@@ -69,7 +66,7 @@ def test_analysis_prompt_projection_is_bounded_and_fair() -> None:
         }
         for name in ("first", "second", "third")
     ]
-    encoded = _bounded_analyses_json(analyses)
+    encoded = bounded_analyses_json(analyses)
     payload = json.loads(encoded)
 
     assert len(encoded) <= MAX_ANALYSIS_PROMPT_CHARS
@@ -77,7 +74,7 @@ def test_analysis_prompt_projection_is_bounded_and_fair() -> None:
     assert all(item["flag_candidates"] for item in payload)
     assert all(item["flag_candidate_count"] == 40 for item in payload)
 
-    revision_encoded = _bounded_analyses_json(analyses, max_chars=MAX_REVISION_ANALYSIS_CHARS)
+    revision_encoded = bounded_analyses_json(analyses, max_chars=MAX_REVISION_ANALYSIS_CHARS)
     assert len(revision_encoded) <= MAX_REVISION_ANALYSIS_CHARS
 
 
@@ -108,7 +105,7 @@ def test_verifier_support_is_locator_matched_and_bounded() -> None:
         },
     ]
 
-    encoded = _finding_analysis_support_json(finding, analyses)
+    encoded = finding_analysis_support_json(finding, analyses)
     payload = json.loads(encoded)
 
     assert len(encoded) <= MAX_VERIFIER_SUPPORT_CHARS
@@ -161,15 +158,17 @@ def test_verifier_prompt_receives_python_support_and_reopened_evidence(
 
 def test_candidate_finding_count_is_bounded_in_analyst_priority_order() -> None:
     findings = [make_finding(f"RISK-{index:03d}") for index in range(20)]
-    limited = _limit_candidate_findings(findings)
-    assert len(limited) == MAX_CANDIDATE_FINDINGS
+    limited, _ = normalize_findings(
+        findings, analyses=[], desk_context={}, report_id="RISK"
+    )
+    assert len(limited) == MAX_ANALYST_FINDINGS
     assert [finding.finding_id for finding in limited] == [
-        f"RISK-{index:03d}" for index in range(MAX_CANDIDATE_FINDINGS)
+        f"RISK-{index:03d}" for index in range(MAX_ANALYST_FINDINGS)
     ]
 
 
 def test_analyst_output_schema_is_concise_and_matches_runtime_cap() -> None:
-    assert MAX_CANDIDATE_FINDINGS == MAX_ANALYST_FINDINGS == 8
+    assert MAX_ANALYST_FINDINGS == 8
     schema = AnalystFinding.model_json_schema()
     output_schema = AnalystOutput.model_json_schema()
 
@@ -198,7 +197,9 @@ def test_analyst_output_deterministically_bounds_verbose_live_model_values() -> 
 
 def test_specialist_finding_ids_are_globally_namespaced() -> None:
     findings = [make_finding("F-001"), make_finding("RISK-F-002")]
-    namespaced = _namespace_finding_ids(findings, "RISK")
+    namespaced, _ = normalize_findings(
+        findings, analyses=[], desk_context={}, report_id="RISK"
+    )
     assert [finding.finding_id for finding in namespaced] == [
         "RISK-F-001",
         "RISK-F-002",
@@ -208,9 +209,9 @@ def test_specialist_finding_ids_are_globally_namespaced() -> None:
 def test_missing_finding_period_is_inferred_from_matching_deterministic_flag() -> None:
     finding = make_finding()
     finding.period = None
-    inferred = _infer_finding_period(
-        finding,
-        [
+    normalized, _ = normalize_findings(
+        [finding],
+        analyses=[
             {
                 "flag_candidates": [
                     {
@@ -220,7 +221,10 @@ def test_missing_finding_period_is_inferred_from_matching_deterministic_flag() -
                 ]
             }
         ],
+        desk_context={},
+        report_id="RISK",
     )
+    inferred = normalized[0]
 
     assert inferred.period == DateRange(start=date(2025, 3, 11), end=date(2025, 3, 11))
 
@@ -228,9 +232,9 @@ def test_missing_finding_period_is_inferred_from_matching_deterministic_flag() -
 def test_exact_python_flag_can_apply_policy_owned_severity_floor() -> None:
     finding = make_finding().model_copy(update={"severity": Severity.LOW})
 
-    calibrated = _apply_deterministic_severity_floor(
-        finding,
-        [
+    normalized, _ = normalize_findings(
+        [finding],
+        analyses=[
             {
                 "flag_candidates": [
                     {
@@ -246,7 +250,10 @@ def test_exact_python_flag_can_apply_policy_owned_severity_floor() -> None:
                 ]
             }
         ],
+        desk_context={},
+        report_id="RISK",
     )
+    calibrated = normalized[0]
 
     assert calibrated.severity is Severity.HIGH
     assert calibrated.is_observation is True
@@ -262,9 +269,9 @@ def test_severity_floor_does_not_leak_across_a_shared_evidence_row() -> None:
         }
     )
 
-    calibrated = _apply_deterministic_severity_floor(
-        finding,
-        [
+    normalized, _ = normalize_findings(
+        [finding],
+        analyses=[
             {
                 "flag_candidates": [
                     {
@@ -282,7 +289,10 @@ def test_severity_floor_does_not_leak_across_a_shared_evidence_row() -> None:
                 ]
             }
         ],
+        desk_context={},
+        report_id="RISK",
     )
+    calibrated = normalized[0]
 
     assert calibrated.severity is Severity.MEDIUM
 
@@ -308,7 +318,10 @@ def test_source_backed_context_facts_enrich_unit_dependent_evidence() -> None:
         ]
     }
 
-    enriched = _add_relevant_context_evidence(finding, context)
+    normalized, _ = normalize_findings(
+        [finding], analyses=[], desk_context=context, report_id="RISK"
+    )
+    enriched = normalized[0]
     locators = {reference.locator for reference in enriched.evidence}
 
     assert len(enriched.evidence) <= MAX_PERSISTED_FINDING_EVIDENCE
@@ -331,9 +344,9 @@ def test_measured_candidate_persists_complete_bounded_population_evidence() -> N
     ]
     finding.evidence = [EvidenceReference(locator=locators[0])]
 
-    enriched = _add_deterministic_candidate_evidence(
-        finding,
-        [
+    normalized, _ = normalize_findings(
+        [finding],
+        analyses=[
             {
                 "flag_candidates": [
                     {
@@ -347,7 +360,10 @@ def test_measured_candidate_persists_complete_bounded_population_evidence() -> N
                 ]
             }
         ],
+        desk_context={},
+        report_id="RISK",
     )
+    enriched = normalized[0]
 
     assert {reference.locator for reference in enriched.evidence} == set(locators)
 
@@ -357,7 +373,13 @@ def test_revision_omissions_retain_prior_candidates_in_original_order() -> None:
     second = make_finding("RISK-002")
     revised_second = second.model_copy(update={"title": "Revised second"})
 
-    merged, revised_ids = _merge_revision_findings([first, second], [revised_second])
+    merged, revised_ids = normalize_findings(
+        [revised_second],
+        analyses=[],
+        desk_context={},
+        report_id="RISK",
+        previous=[first, second],
+    )
 
     assert [finding.finding_id for finding in merged] == ["RISK-001", "RISK-002"]
     assert merged[0].title == first.title
@@ -368,13 +390,13 @@ def test_revision_omissions_retain_prior_candidates_in_original_order() -> None:
 def test_revision_context_retains_every_candidate_and_feedback_section() -> None:
     candidates = [
         make_finding(f"RISK-{index:03d}").model_dump(mode="json")
-        for index in range(MAX_CANDIDATE_FINDINGS)
+        for index in range(MAX_ANALYST_FINDINGS)
     ]
-    encoded = _revision_candidates_json(candidates)
-    assert all(f"RISK-{index:03d}" in encoded for index in range(MAX_CANDIDATE_FINDINGS))
+    encoded = revision_candidates_json(candidates)
+    assert all(f"RISK-{index:03d}" in encoded for index in range(MAX_ANALYST_FINDINGS))
 
     sections = [f"[RISK-{index:03d}] " + "x" * 5_000 for index in range(12)]
-    bounded = _bounded_revision_feedback("\n\n---\n\n".join(sections), max_chars=12_000)
+    bounded = bounded_revision_feedback("\n\n---\n\n".join(sections), max_chars=12_000)
     assert len(bounded) <= 12_000
     assert all(f"RISK-{index:03d}" in bounded for index in range(12))
 

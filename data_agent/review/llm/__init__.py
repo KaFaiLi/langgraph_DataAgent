@@ -31,6 +31,14 @@ class _CostTierReviewProvider:
     def model_name(self, tier: ModelTier) -> str:
         raise NotImplementedError
 
+    def model_options(self) -> dict[str, Any]:
+        return {}
+
+    def structured_output(
+        self, model: Runnable[Any, Any], schema: type[BaseModel]
+    ) -> Runnable[Any, Any]:
+        return model.with_structured_output(schema)
+
     def __call__(
         self, tier: ModelTier, schema: type[BaseModel] | None = None
     ) -> Runnable[Any, Any]:
@@ -39,11 +47,12 @@ class _CostTierReviewProvider:
             settings=self.settings,
             model=self.model_name(tier),
             temperature=0.0,
+            **self.model_options(),
         )
         if schema is None:
             return model
         try:
-            return model.with_structured_output(schema)
+            return self.structured_output(model, schema)
         except (AttributeError, NotImplementedError):
             return _json_structured(model, schema)
 
@@ -65,6 +74,24 @@ class DeepSeekReviewProvider(_CostTierReviewProvider):
     """Map review cost tiers to DeepSeek v4 flash/pro models."""
 
     provider_name = "deepseek"
+
+    def model_options(self) -> dict[str, Any]:
+        return {
+            "max_retries": self.settings.deepseek_max_retries,
+            # Review calls are schema-constrained and already use low/high-cost
+            # model selection. DeepSeek v4 enables high-effort thinking by
+            # default, which greatly lengthens these JSON generations and is
+            # incompatible with forced tool selection. Keep it explicit here.
+            "extra_body": {"thinking": {"type": "disabled"}},
+        }
+
+    def structured_output(
+        self, model: Runnable[Any, Any], schema: type[BaseModel]
+    ) -> Runnable[Any, Any]:
+        # DeepSeek v4 thinking models reject the forced tool choice emitted by
+        # LangChain's default function-calling mode. JSON mode avoids tools and
+        # requires the requested schema to be included explicitly in the prompt.
+        return _json_mode_structured(model, schema)
 
     def model_name(self, tier: ModelTier) -> str:
         return (
@@ -112,17 +139,26 @@ def _json_structured(model: Runnable[Any, Any], schema: type[BaseModel]) -> Runn
     return RunnableLambda(invoke)
 
 
-DEFAULT_LLM_PROVIDER: ReviewLLMProvider = ConfiguredReviewProvider()
-
-
-def create_llm(tier: ModelTier) -> Runnable[Any, Any]:
-    return DEFAULT_LLM_PROVIDER(tier)
-
-
-def create_structured_llm(
-    tier: ModelTier, schema: type[BaseModel]
+def _json_mode_structured(
+    model: Runnable[Any, Any], schema: type[BaseModel]
 ) -> Runnable[Any, Any]:
-    return DEFAULT_LLM_PROVIDER(tier, schema)
+    runnable = model.with_structured_output(schema, method="json_mode")
+    instruction = HumanMessage(
+        content=(
+            "Return only one JSON object matching this schema exactly. "
+            "Do not add Markdown fences or fields outside the schema.\n"
+            + json.dumps(schema.model_json_schema(), default=str)
+        )
+    )
+
+    def add_schema_instruction(messages: Any) -> list[Any]:
+        sequence = list(messages) if isinstance(messages, list) else [messages]
+        return [*sequence, instruction]
+
+    return RunnableLambda(add_schema_instruction) | runnable
+
+
+DEFAULT_LLM_PROVIDER: ReviewLLMProvider = ConfiguredReviewProvider()
 
 
 __all__ = [
@@ -132,6 +168,4 @@ __all__ = [
     "ModelTier",
     "ReviewLLMProvider",
     "SocGenAIReviewProvider",
-    "create_llm",
-    "create_structured_llm",
 ]

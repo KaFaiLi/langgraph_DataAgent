@@ -1,0 +1,418 @@
+{
+  "schema_version": 1,
+  "upstream_commit": "10ec12e518615dde0b303d60c140a330f0a92703",
+  "canvas": "0 0 1280 720",
+  "source_fingerprint": "5f1d3e321bb2cd67aa39eef1c150503a7768ea331ac19bf0be1289806f91a026",
+  "passed": true,
+  "files": [
+    {
+      "file": "01_cover.svg",
+      "sha256": "ddfe7711b944b9ce023ea463608f8fcdbf1c57f7663388f8f21e360d5d4a523c",
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 4,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 4,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 1,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "Arial, Microsoft YaHei, sans-serif"
+        ],
+        "text_elements": 4,
+        "tspan_elements": 4
+      }
+    },
+    {
+      "file": "02_summary.svg",
+      "sha256": "9f152c74e879aac45f468b8ab79cd8db751a7f51daaa7ad5ddccc3bb22132dc8",
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 9,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 3,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "Arial, Microsoft YaHei, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21
+      }
+    },
+    {
+      "file": "03_specialist.svg",
+      "sha256": "10f0c5417a3a1a40719e8f43621f4d79b06927535e76488b51127293ffe7ba48",
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 20,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 8,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 8,
+              "polyline": 3,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "Arial, Microsoft YaHei, sans-serif"
+        ],
+        "text_elements": 20,
+        "tspan_elements": 28
+      }
+    },
+    {
+      "file": "04_specialist.svg",
+      "sha256": "4b191b6513a0c3bab5b833ae06d6feac04fa349fb67a6a7d614cdc8d0116e697",
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 24,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 20,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 8,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "Arial, Microsoft YaHei, sans-serif"
+        ],
+        "text_elements": 24,
+        "tspan_elements": 32
+      }
+    },
+    {
+      "file": "05_specialist.svg",
+      "sha256": "32b411a512973f994ae0300efe55813fba5c4dfa6cae9278c9806d8ffc9f4bf0",
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 24,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 30,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 8,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "Arial, Microsoft YaHei, sans-serif"
+        ],
+        "text_elements": 24,
+        "tspan_elements": 32
+      }
+    },
+    {
+      "file": "06_specialist.svg",
+      "sha256": "e7465d6e81d514eca59ba0e8e7b9cd5f1247744a43ca0f6657300ade4f0ca813",
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 53,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 13,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 3,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "Arial, Microsoft YaHei, sans-serif"
+        ],
+        "text_elements": 53,
+        "tspan_elements": 61
+      }
+    },
+    {
+      "file": "07_synthesis.svg",
+      "sha256": "41da9abce66def8a7d1d4614504d51210578e10537d5417153102b2fd7811860",
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 13,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 9,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 2,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "Arial, Microsoft YaHei, sans-serif"
+        ],
+        "text_elements": 13,
+        "tspan_elements": 19
+      }
+    },
+    {
+      "file": "08_closing.svg",
+      "sha256": "dce03e9cc33b19b59887f8563fe2380150e7dd82adbac11450c2f59f4c23cd33",
+      "passed": true,
+      "errors": [],
+      "warnings": [],
+      "info": {
+        "viewbox": "0 0 1280 720",
+        "carrier_receipt": {
+          "text_elements": 14,
+          "images": {
+            "placements": 0,
+            "files": [],
+            "max_frame_share": 0.0
+          },
+          "icons": 0,
+          "geometry": {
+            "svg_elements": {
+              "rect": 10,
+              "circle": 0,
+              "ellipse": 0,
+              "line": 2,
+              "polyline": 0,
+              "polygon": 0,
+              "path": 0
+            },
+            "preset_shapes": 0,
+            "preset_names": {},
+            "page_frame_elements": 0,
+            "marker_uses": {
+              "start": 0,
+              "mid": 0,
+              "end": 0
+            }
+          },
+          "native_objects": {
+            "chart": 0,
+            "table": 0,
+            "formula_block": 0,
+            "formula_inline": 0,
+            "other": 0
+          }
+        },
+        "fonts": [
+          "Arial, Microsoft YaHei, sans-serif"
+        ],
+        "text_elements": 14,
+        "tspan_elements": 21
+      }
+    }
+  ],
+  "blocking_issues": [],
+  "warnings": [],
+  "upstream_summary": {
+    "total": 8,
+    "passed": 8,
+    "warnings": 0,
+    "errors": 0
+  },
+  "upstream_output": "[SCAN] Checking 8 SVG file(s)...\n\n[OK] 01_cover.svg - Passed\n   viewBox: 0 0 1280 720\n\n[OK] 02_summary.svg - Passed\n   viewBox: 0 0 1280 720\n\n[OK] 03_specialist.svg - Passed\n   viewBox: 0 0 1280 720\n\n[OK] 04_specialist.svg - Passed\n   viewBox: 0 0 1280 720\n\n[OK] 05_specialist.svg - Passed\n   viewBox: 0 0 1280 720\n\n[OK] 06_specialist.svg - Passed\n   viewBox: 0 0 1280 720\n\n[OK] 07_synthesis.svg - Passed\n   viewBox: 0 0 1280 720\n\n[OK] 08_closing.svg - Passed\n   viewBox: 0 0 1280 720"
+}

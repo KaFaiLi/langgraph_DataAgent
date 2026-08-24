@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "upstream_commit": "10ec12e518615dde0b303d60c140a330f0a92703",
+  "quality_fingerprint": "5f1d3e321bb2cd67aa39eef1c150503a7768ea331ac19bf0be1289806f91a026",
+  "pptx_sha256": "7aa58373d0a12f7915e5f4b0965ff5411431330fc624bd0006ac5f720fa59c3e",
+  "slide_count": 8,
+  "mode": "flat-editable-drawingml",
+  "features": {
+    "animations": false,
+    "transitions": false,
+    "audio": false,
+    "narration": false,
+    "images": false,
+    "native_objects": false,
+    "external_assets": false
+  }
+}

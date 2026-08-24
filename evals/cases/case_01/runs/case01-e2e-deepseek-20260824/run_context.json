@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "run_id": "CASE01-E2E-DEEPSEEK-20260824",
+  "source_root": "P:\\Alan\\Github\\langgraph_DataAgent\\evals\\cases\\case_01\\source",
+  "output_dir": "P:\\Alan\\Github\\langgraph_DataAgent\\evals\\cases\\case_01\\runs\\case01-e2e-deepseek-20260824",
+  "desk_template": {
+    "desk_name": "Cross-Asset Market Making Desk",
+    "business_description": "Market making across equity derivatives, rates, credit, FX, and portfolio hedges.",
+    "products": [
+      "equity derivatives",
+      "rates",
+      "credit",
+      "FX",
+      "portfolio hedges"
+    ],
+    "currencies": [
+      "EUR",
+      "USD",
+      "JPY",
+      "GBP",
+      "EM exposures"
+    ],
+    "risk_metrics": [
+      "VaR",
+      "SVaR",
+      "stress",
+      "exposure"
+    ],
+    "review_start": "2025-07-01",
+    "review_end": "2026-06-30",
+    "limits": [],
+    "controls": [],
+    "source_backed_facts": [],
+    "inferred_facts": [],
+    "unresolved_items": []
+  },
+  "review_period": {
+    "start": "2025-07-01",
+    "end": "2026-06-30"
+  }
+}

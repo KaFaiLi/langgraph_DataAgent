@@ -14,6 +14,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Send
 
+from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.review.orchestration.nodes import (
     build_catalog,
     build_desk_context,
@@ -26,10 +27,6 @@ from data_agent.review.orchestration.nodes.finalize import finalize
 from data_agent.review.orchestration.nodes.fanout import (
     merge_specialist_outcomes,
     run_specialist_task,
-)
-from data_agent.review.orchestration.specialist_graph import (
-    DEFAULT_LLM_PROVIDER,
-    LLMProvider,
 )
 from data_agent.review.orchestration.state import ParentState
 from data_agent.review.synthesis.lead_review import lead_review
@@ -59,7 +56,7 @@ def _dispatch_specialists(state: ParentState) -> str | list[Send]:
 
 
 def build_parent_graph(
-    llm_provider: LLMProvider = DEFAULT_LLM_PROVIDER,
+    llm_provider: ReviewLLMProvider = DEFAULT_LLM_PROVIDER,
     checkpointer: BaseCheckpointSaver | None = None,
 ) -> CompiledStateGraph:
     """Build the parent review graph.

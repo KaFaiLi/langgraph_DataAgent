@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from langgraph.graph.state import CompiledStateGraph
 
+from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.review.orchestration import specialist_prompts
 from data_agent.review.orchestration.specialist_graph import (
-    DEFAULT_LLM_PROVIDER,
-    LLMProvider,
     SpecialistSpec,
     build_specialist_graph,
 )
@@ -16,7 +15,7 @@ from data_agent.skills.review import SkillDefinition, load_analysis_runner
 
 def build_skill_graph(
     definition: SkillDefinition,
-    llm_provider: LLMProvider = DEFAULT_LLM_PROVIDER,
+    llm_provider: ReviewLLMProvider = DEFAULT_LLM_PROVIDER,
 ) -> CompiledStateGraph:
     """Build the bounded analyst/verifier workflow configured by one skill."""
 

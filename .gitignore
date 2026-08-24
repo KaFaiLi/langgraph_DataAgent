@@ -35,6 +35,10 @@ coverage.xml
 .ipynb_checkpoints/
 .analysis_workspace/
 
+# Evaluation case inputs
+/evals/cases/*/source/
+/evals/cases/*/sources/
+
 # Logs and local databases
 *.log
 *.sqlite

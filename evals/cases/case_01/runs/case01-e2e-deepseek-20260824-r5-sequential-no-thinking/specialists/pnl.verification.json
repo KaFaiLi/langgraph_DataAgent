@@ -1,0 +1,619 @@
+{
+  "verifier_round": 2,
+  "initial_candidates": [
+    {
+      "finding_id": "PNL-F1",
+      "title": "Large manual adjustment -6.25M EUR on MOCK_PTF_ATLAS (2025-12-30) flagged as outlier",
+      "category": "Adjustment Controls",
+      "severity": "medium",
+      "confidence": 0.7,
+      "claim": "Adjustment 96600008 on MOCK_PTF_ATLAS has amount_eur -6,250,000 with z-score -3.28, the largest adjustment in the period. It is part of a month-end concentration (4 adjustments in Dec-2025, 100% period-end share). The adjustment is manual (SOURCE=MANUAL, NATURE='M - Manual') and dated 2025-12-30. Its size and timing warrant review, but no evidence of misconduct or smoothing is present.",
+      "period": {
+        "start": "2025-12-30",
+        "end": "2025-12-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:9",
+          "quote": "adjustment_id: 96600008, amount_eur: -6250000.0, z: -3.2788"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:12",
+          "quote": "month: 2025-12, period_end_adjustments: 4, period_end_share: 1.0"
+        }
+      ],
+      "analysis_performed": [
+        "Identified large adjustment via z-score screen.",
+        "Checked period-end concentration for Dec-2025.",
+        "Reviewed adjustment nature and source fields."
+      ],
+      "alternative_explanations": [
+        "May be a legitimate year-end accrual or valuation adjustment.",
+        "Could be offset by other adjustments or PnL components not visible in this screen."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=1:1",
+          "quote": "Example of routine month-end accrual true-up adjustment."
+        }
+      ],
+      "verifier_status": "pending",
+      "recommendation": "Review adjustment 96600008 with desk to confirm business rationale and ensure proper approval.",
+      "is_observation": false
+    },
+    {
+      "finding_id": "PNL-F2",
+      "title": "Period-end adjustment concentration in Dec-2025, Mar-2026, Jun-2026 (100% of adjustments at month-end)",
+      "category": "Adjustment Controls",
+      "severity": "low",
+      "confidence": 0.8,
+      "claim": "In Dec-2025, Mar-2026, and Jun-2026, all adjustments (4, 3, and 4 respectively) occur on period-end dates, with period_end_share=1.0. This pattern is consistent with routine month-end accruals and true-ups, but the high concentration at fiscal year-end (Dec and Jun) may warrant additional scrutiny.",
+      "period": {
+        "start": "2025-12-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:12",
+          "quote": "month: 2025-12, period_end_adjustments: 4, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=16:18",
+          "quote": "month: 2026-03, period_end_adjustments: 3, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=22:25",
+          "quote": "month: 2026-06, period_end_adjustments: 4, period_end_share: 1.0"
+        }
+      ],
+      "analysis_performed": [
+        "Aggregated adjustments by month and computed period-end share.",
+        "Identified months with 100% period-end concentration."
+      ],
+      "alternative_explanations": [
+        "Month-end accruals are commonly booked on the last business day.",
+        "Year-end periods may have more true-ups due to financial close."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=2:2",
+          "quote": "Adjustment in Aug-2025 not at period-end, showing mixed timing."
+        }
+      ],
+      "verifier_status": "pending",
+      "recommendation": "No immediate action; monitor if pattern persists with unexplained large amounts.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "PNL-F3",
+      "title": "GOP population mismatch: MOCK_GOP_ECHO in PnL but not in validation history",
+      "category": "Cross-Source Consistency",
+      "severity": "medium",
+      "confidence": 0.9,
+      "claim": "MOCK_GOP_ECHO appears in the PnL file (row 6) but has no validation history records. This means the GOP's PnL is not covered by the validation workflow, potentially indicating a gap in validation coverage. The mismatch is one-directional; no validation GOP lacks PnL rows except MOCK_GOP_MIKE (which may be out of scope).",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=6:6",
+          "quote": "gop: MOCK_GOP_ECHO"
+        },
+        {
+          "locator": "source://pnl/validation_history_07-01-2025-30-06-2026.csv#rows=24:24",
+          "quote": "gop: MOCK_GOP_MIKE (validation GOP without PnL rows)"
+        }
+      ],
+      "analysis_performed": [
+        "Compared GOP populations between PnL and validation files.",
+        "Identified GOPs present in one but not the other."
+      ],
+      "alternative_explanations": [
+        "MOCK_GOP_ECHO may be a new or decommissioned GOP not yet in validation scope.",
+        "Validation history may use a different naming convention or be filtered by pnlType."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/validation_history_07-01-2025-30-06-2026.csv#rows=2:2",
+          "quote": "Validation records exist for MOCK_GOP_ALPHA, showing typical coverage."
+        }
+      ],
+      "verifier_status": "pending",
+      "recommendation": "Confirm with operations why MOCK_GOP_ECHO lacks validation history and ensure all active GOPs are covered.",
+      "is_observation": false
+    },
+    {
+      "finding_id": "PNL-F4",
+      "title": "Validation GOP without PnL rows: MOCK_GOP_MIKE",
+      "category": "Cross-Source Consistency",
+      "severity": "low",
+      "confidence": 0.8,
+      "claim": "MOCK_GOP_MIKE appears in validation history but has no corresponding PnL rows in the filtered PnL file. This may indicate a scope difference (e.g., GOP not part of the reviewed portfolio) or a data gap. The impact is low as it does not affect the PnL population reviewed.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/validation_history_07-01-2025-30-06-2026.csv#rows=24:24",
+          "quote": "gop: MOCK_GOP_MIKE"
+        }
+      ],
+      "analysis_performed": [
+        "Compared GOP lists between validation and PnL files.",
+        "Identified MOCK_GOP_MIKE as validation-only."
+      ],
+      "alternative_explanations": [
+        "MOCK_GOP_MIKE may be outside the PnL file's scope (e.g., different BU or product).",
+        "PnL file may be filtered to a subset of GOPs."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=2:2",
+          "quote": "PnL rows exist for MOCK_GOP_ALPHA, showing typical population."
+        }
+      ],
+      "verifier_status": "pending",
+      "recommendation": "No action needed if scope difference is confirmed; otherwise investigate missing PnL data.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "PNL-F5",
+      "title": "Prolonged same-sign PnL runs across multiple PTFs (e.g., 26-day positive run for ATLAS, 29-day negative for ECHO)",
+      "category": "PnL Behavior",
+      "severity": "low",
+      "confidence": 0.7,
+      "claim": "Statistical screening identified multiple prolonged same-sign daily PnL runs, including a 26-day positive run for MOCK_PTF_ATLAS (Jan-Feb 2026, total +11.32), a 29-day negative run for MOCK_PTF_ECHO (Jul-Aug 2025, total -15.32), and a 31-day negative run for MOCK_PTF_JADE (Nov-Dec 2025, total -8.55). These runs are statistically unusual but may reflect market trends or positioning.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1586:1586",
+          "quote": "ptf: MOCK_PTF_ATLAS, run_length: 26, total: 11.316659"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=66:66",
+          "quote": "ptf: MOCK_PTF_ECHO, run_length: 29, total: -15.324184"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1139:1139",
+          "quote": "ptf: MOCK_PTF_JADE, run_length: 31, total: -8.552291"
+        }
+      ],
+      "analysis_performed": [
+        "Screened for same-sign runs in daily DTD per PTF.",
+        "Selected runs with length >= 18 and material cumulative total."
+      ],
+      "alternative_explanations": [
+        "Sustained market moves in underlying assets.",
+        "Consistent trading strategy or hedging activity."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1586:1586",
+          "quote": "Run is positive, but other periods show negative runs, indicating variability."
+        }
+      ],
+      "verifier_status": "pending",
+      "recommendation": "Review trading desk commentary for these periods to confirm expected behavior.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "PNL-F6",
+      "title": "Period-end PnL concentration for MOCK_PTF_HARBOR (ratio 2.05)",
+      "category": "PnL Behavior",
+      "severity": "low",
+      "confidence": 0.6,
+      "claim": "MOCK_PTF_HARBOR shows higher absolute PnL on month-end dates (mean 0.425) compared to other days (mean 0.207), with a ratio of 2.05. This suggests possible month-end valuation adjustments or accruals, but the effect is not extreme and may be normal.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=3129:3129",
+          "quote": "ptf: MOCK_PTF_HARBOR, mean_abs_period_end: 0.425288, mean_abs_other: 0.207338, ratio: 2.0512"
+        }
+      ],
+      "analysis_performed": [
+        "Computed mean absolute DTD on month-end vs other days.",
+        "Calculated ratio to identify concentration."
+      ],
+      "alternative_explanations": [
+        "Month-end marks or accruals are common.",
+        "Sample size of month-end days is small (12)."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=3129:3129",
+          "quote": "Ratio is 2.05, but other PTFs have lower ratios (e.g., ATLAS 1.515)."
+        }
+      ],
+      "verifier_status": "pending",
+      "recommendation": "No action unless accompanied by unexplained large adjustments.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "PNL-F7",
+      "title": "Income attribution residual share 8.95% and top-3 concentration 57.95%",
+      "category": "Income Attribution",
+      "severity": "info",
+      "confidence": 0.9,
+      "claim": "The income attribution export shows top-3 components (Market Effect, Theta, Fees transactional) account for 57.95% of absolute primary component total, while residual components (including 'Other', 'Unexplained', etc.) account for 8.95%. This is a normal concentration profile; no schema or data-quality issues were flagged.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://income_attribution/attribution.csv#rows=1:1",
+          "quote": "top3_share: 0.579526, residual_component_share: 0.089506"
+        }
+      ],
+      "analysis_performed": [
+        "Profiled primary attribution buckets.",
+        "Computed top-3 and residual shares."
+      ],
+      "alternative_explanations": [
+        "Concentration is expected for market-making desks.",
+        "Residual share is within acceptable range."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://income_attribution/attribution.csv#rows=1:1",
+          "quote": "All rows have status 'IA process is complete' and validated=true."
+        }
+      ],
+      "verifier_status": "pending",
+      "recommendation": "No action; continue to monitor unexplained component.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "PNL-F8",
+      "title": "Monetary reconciliation between PnL and adjustments unresolved due to missing units/inclusion basis",
+      "category": "Data Quality",
+      "severity": "medium",
+      "confidence": 0.9,
+      "claim": "The deterministic analysis could not reconcile adjustment amounts (AMOUNTINEUR) to PnL DTD because the file headers do not declare units (e.g., EUR vs thousands), sign convention, or whether PnL is pre- or post-adjustment. This is a known limitation; without source documentation, any monetary comparison is unsupported.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=1:1",
+          "quote": "AMOUNTINEUR: -2350000.0"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1:1",
+          "quote": "DTD: -0.475895"
+        }
+      ],
+      "analysis_performed": [
+        "Attempted to compare adjustment totals to PnL totals.",
+        "Identified missing unit and inclusion documentation."
+      ],
+      "alternative_explanations": [
+        "Adjustments may be included in PnL already.",
+        "Units may be in millions or thousands."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=1:1",
+          "quote": "EXCHANGERATE: 1.0 for EUR, but scale not stated."
+        }
+      ],
+      "verifier_status": "unresolved",
+      "recommendation": "Obtain documentation on PnL units and adjustment inclusion basis to enable reconciliation.",
+      "is_observation": false
+    }
+  ],
+  "verified_findings": [
+    {
+      "finding_id": "PNL-F1",
+      "title": "Large freeze adjustment -6.25M EUR on MOCK_PTF_ATLAS (2025-12-30) flagged as outlier",
+      "category": "Adjustment Controls",
+      "severity": "medium",
+      "confidence": 0.7,
+      "claim": "Adjustment 96600008 on MOCK_PTF_ATLAS has amount_eur -6,250,000 with z-score -3.28, the largest adjustment in the period. It is part of a month-end concentration (4 adjustments in Dec-2025, 100% period-end share). The adjustment is a freeze (SOURCE=FREEZE, NATURE='C - Freeze') and dated 2025-12-30. Its size and timing warrant review, but freeze adjustments are documented control actions, reducing concern of manual error.",
+      "period": {
+        "start": "2025-12-30",
+        "end": "2025-12-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:9",
+          "quote": "adjustment_id: 96600008, amount_eur: -6250000.0, z: -3.2788"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:12",
+          "quote": "month: 2025-12, period_end_adjustments: 4, period_end_share: 1.0"
+        }
+      ],
+      "analysis_performed": [
+        "Reperformed conversion and magnitude checks; z-score computed from adjustment population.",
+        "Verified SOURCE and NATURE fields for the adjustment row.",
+        "Confirmed period-end concentration from deterministic screen."
+      ],
+      "alternative_explanations": [
+        "May be a legitimate year-end freeze adjustment for valuation or accrual.",
+        "Could be offset by other adjustments or PnL components not visible in this screen."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "passed",
+      "recommendation": "Review adjustment 96600008 with desk to confirm business rationale and ensure proper approval.",
+      "is_observation": false
+    },
+    {
+      "finding_id": "PNL-F2",
+      "title": "Period-end adjustment concentration in Dec-2025, Mar-2026, Jun-2026 (100% of adjustments at month-end)",
+      "category": "Adjustment Controls",
+      "severity": "low",
+      "confidence": 0.8,
+      "claim": "In Dec-2025, Mar-2026, and Jun-2026, all adjustments (4, 3, and 4 respectively) occur on period-end dates, with period_end_share=1.0. This pattern is consistent with routine month-end accruals and true-ups, but the high concentration at fiscal year-end (Dec and Jun) may warrant additional scrutiny.",
+      "period": {
+        "start": "2025-12-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:12",
+          "quote": "month: 2025-12, period_end_adjustments: 4, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=16:18",
+          "quote": "month: 2026-03, period_end_adjustments: 3, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=22:25",
+          "quote": "month: 2026-06, period_end_adjustments: 4, period_end_share: 1.0"
+        }
+      ],
+      "analysis_performed": [
+        "Profiled adjustment dates and identified period-end concentration.",
+        "Compared with other months showing mixed timing."
+      ],
+      "alternative_explanations": [
+        "Month-end accruals are commonly booked on the last business day.",
+        "Year-end periods may have more true-ups due to financial close."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=2:2",
+          "quote": "Adjustment in Aug-2025 not at period-end, showing mixed timing."
+        }
+      ],
+      "verifier_status": "passed",
+      "recommendation": "No immediate action; monitor if pattern persists with unexplained large amounts.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "PNL-F4",
+      "title": "Validation GOP without PnL rows: MOCK_GOP_MIKE",
+      "category": "Cross-Source Consistency",
+      "severity": "low",
+      "confidence": 0.8,
+      "claim": "MOCK_GOP_MIKE appears in validation history but has no corresponding PnL rows in the filtered PnL file. This may indicate a scope difference (e.g., GOP not part of the reviewed portfolio) or a data gap. The impact is low as it does not affect the PnL population reviewed.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/validation_history_07-01-2025-30-06-2026.csv#rows=24:24",
+          "quote": "gop: MOCK_GOP_MIKE"
+        }
+      ],
+      "analysis_performed": [
+        "Compared GOP populations between validation and PnL files.",
+        "Identified MOCK_GOP_MIKE as present only in validation."
+      ],
+      "alternative_explanations": [
+        "MOCK_GOP_MIKE may be outside the PnL file's scope (e.g., different BU or product).",
+        "PnL file may be filtered to a subset of GOPs."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=2:2",
+          "quote": "PnL rows exist for MOCK_GOP_ALPHA, showing typical population."
+        }
+      ],
+      "verifier_status": "passed",
+      "recommendation": "No action needed if scope difference is confirmed; otherwise investigate missing PnL data.",
+      "is_observation": true
+    }
+  ],
+  "rejected_findings": [],
+  "unresolved_findings": [
+    {
+      "finding_id": "PNL-F3",
+      "title": "GOP population mismatch: MOCK_GOP_ECHO in PnL but not in validation history",
+      "category": "Cross-Source Consistency",
+      "severity": "medium",
+      "confidence": 0.9,
+      "claim": "MOCK_GOP_ECHO appears in the PnL file (row 6) but has no validation history records. This means the GOP's PnL is not covered by the validation workflow, potentially indicating a gap in validation coverage. The mismatch is one-directional; no validation GOP lacks PnL rows except MOCK_GOP_MIKE (which may be out of scope).",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=6:6",
+          "quote": "gop: MOCK_GOP_ECHO"
+        },
+        {
+          "locator": "source://pnl/validation_history_07-01-2025-30-06-2026.csv#rows=24:24",
+          "quote": "gop: MOCK_GOP_MIKE (validation GOP without PnL rows)"
+        }
+      ],
+      "analysis_performed": [
+        "Compared GOP populations between PnL and validation files.",
+        "Identified one-directional mismatches."
+      ],
+      "alternative_explanations": [
+        "MOCK_GOP_ECHO may be a new or decommissioned GOP not yet in validation scope.",
+        "Validation history may use a different naming convention or be filtered by pnlType."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/validation_history_07-01-2025-30-06-2026.csv#rows=2:2",
+          "quote": "Validation records exist for MOCK_GOP_ALPHA, showing typical coverage."
+        }
+      ],
+      "verifier_status": "unresolved",
+      "recommendation": "Confirm with operations why MOCK_GOP_ECHO lacks validation history and ensure all active GOPs are covered.",
+      "is_observation": false
+    },
+    {
+      "finding_id": "PNL-F5",
+      "title": "Prolonged same-sign PnL runs across multiple PTFs (e.g., 26-day positive run for ATLAS, 29-day negative for ECHO)",
+      "category": "PnL Behavior",
+      "severity": "low",
+      "confidence": 0.7,
+      "claim": "Statistical screening identified multiple prolonged same-sign daily PnL runs, including a 26-day positive run for MOCK_PTF_ATLAS (Jan-Feb 2026, total +11.32), a 29-day negative run for MOCK_PTF_ECHO (Jul-Aug 2025, total -15.32), and a 31-day negative run for MOCK_PTF_JADE (Nov-Dec 2025, total -8.55). These runs are statistically unusual but may reflect market trends or positioning. Run totals are in different currencies and not directly comparable.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1586:1886",
+          "quote": "ptf: MOCK_PTF_ATLAS, run_length: 26, total: 11.316659"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=66:402",
+          "quote": "ptf: MOCK_PTF_ECHO, run_length: 29, total: -15.324184"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1139:1499",
+          "quote": "ptf: MOCK_PTF_JADE, run_length: 31, total: -8.552291"
+        }
+      ],
+      "analysis_performed": [
+        "Screened for same-sign runs in each PTF series.",
+        "Verified run lengths and totals from deterministic results."
+      ],
+      "alternative_explanations": [
+        "Sustained market moves in underlying assets.",
+        "Consistent trading strategy or hedging activity."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "unresolved",
+      "recommendation": "Review trading desk commentary for these periods to confirm expected behavior.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "PNL-F6",
+      "title": "Period-end PnL concentration for MOCK_PTF_HARBOR (ratio 2.05)",
+      "category": "PnL Behavior",
+      "severity": "low",
+      "confidence": 0.5,
+      "claim": "MOCK_PTF_HARBOR shows higher absolute PnL on month-end dates (mean 0.425) compared to other days (mean 0.207), with a ratio of 2.05. This suggests possible month-end valuation adjustments or accruals, but the effect is not extreme and may be normal. Month-end defined as last business day of each month; 12 month-end observations out of 261 total.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=3129:3129",
+          "quote": "ptf: MOCK_PTF_HARBOR, mean_abs_period_end: 0.425288, mean_abs_other: 0.207338, ratio: 2.0512"
+        }
+      ],
+      "analysis_performed": [
+        "Computed mean absolute PnL on month-end vs other days.",
+        "Defined month-end as last business day of each calendar month."
+      ],
+      "alternative_explanations": [
+        "Month-end marks or accruals are common.",
+        "Sample size of month-end days is small (12)."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=3129:3129",
+          "quote": "Ratio is 2.05, but other PTFs have lower ratios (e.g., ATLAS 1.515)."
+        }
+      ],
+      "verifier_status": "unresolved",
+      "recommendation": "No action unless accompanied by unexplained large adjustments.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "PNL-F7",
+      "title": "Income attribution residual share 8.95% and top-3 concentration 57.95%",
+      "category": "Income Attribution",
+      "severity": "info",
+      "confidence": 0.9,
+      "claim": "The income attribution export shows top-3 components (Market Effect, Theta, Fees transactional) account for 57.95% of absolute primary component total, while residual components (including 'Other', 'Unexplained', etc.) account for 8.95%. This is a normal concentration profile; no schema or data-quality issues were flagged.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://income_attribution/attribution.csv#rows=1:1",
+          "quote": "top3_share: 0.579526, residual_component_share: 0.089506"
+        }
+      ],
+      "analysis_performed": [
+        "Profiled primary attribution buckets independently.",
+        "Computed top-3 and residual shares from deterministic results."
+      ],
+      "alternative_explanations": [
+        "Concentration is expected for market-making desks.",
+        "Residual share is within acceptable range."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://income_attribution/attribution.csv#rows=1:1",
+          "quote": "All rows have status 'IA process is complete' and validated=true."
+        }
+      ],
+      "verifier_status": "unresolved",
+      "recommendation": "No action; continue to monitor unexplained component.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "PNL-F8",
+      "title": "Monetary reconciliation between PnL and adjustments unresolved due to missing units/inclusion basis",
+      "category": "Data Quality",
+      "severity": "medium",
+      "confidence": 0.9,
+      "claim": "The deterministic analysis could not reconcile adjustment amounts (AMOUNTINEUR) to PnL DTD because the file headers do not declare units (e.g., EUR vs thousands), sign convention, or whether PnL is pre- or post-adjustment. This is a known limitation; without source documentation, any monetary comparison is unsupported.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=1:1",
+          "quote": "AMOUNTINEUR: -2350000.0"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1:1",
+          "quote": "DTD: -0.475895"
+        }
+      ],
+      "analysis_performed": [
+        "Attempted to reconcile adjustment amounts to PnL DTD.",
+        "Identified missing unit and inclusion documentation."
+      ],
+      "alternative_explanations": [
+        "Adjustments may be included in PnL already.",
+        "Units may be in millions or thousands."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=1:1",
+          "quote": "EXCHANGERATE: 1.0 for EUR, but scale not stated."
+        }
+      ],
+      "verifier_status": "unresolved",
+      "recommendation": "Obtain documentation on PnL units and adjustment inclusion basis to enable reconciliation.",
+      "is_observation": false
+    }
+  ],
+  "citation_failures": []
+}

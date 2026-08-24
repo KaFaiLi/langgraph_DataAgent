@@ -1,0 +1,448 @@
+{
+  "verifier_round": 2,
+  "initial_candidates": [
+    {
+      "finding_id": "COMMENTARY-FIND-001",
+      "title": "Ten quoted commentary records lack managerial validation (pending)",
+      "category": "Commentary validation gap",
+      "severity": "medium",
+      "confidence": 0.9,
+      "claim": "Across all five quarterly commentary extracts, 10 unique quoted source records (review:10019, 10038, 20019, 20038, 30019, 30038, 40019, 40038, 50019, 50038) have Managerial Validation Comment marked 'pending'. These are evidence/closure gaps, not proof of incorrect risk values, but they affect the completeness of the review trail.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:10019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:20019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:30019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:40019 ... Managerial Validation Comment: pending"
+        }
+      ],
+      "analysis_performed": [
+        "Profiled 6 final commentary extracts containing 266 quoted source-record occurrences.",
+        "Identified 10 unique quoted records with pending validation via deterministic commentary_validation_gaps analysis.",
+        "Confirmed each pending record appears once per extract (2 per extract across 5 extracts).",
+        "Assessed that pending validation is a closure gap, not a risk-value error."
+      ],
+      "alternative_explanations": [
+        "Pending validation may reflect a timing lag between quarterly compilation and manager sign-off.",
+        "Some records may be low-materiality and awaiting batch approval.",
+        "The review period may still be open for these items."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=269:269",
+          "quote": "Exposure remained within appetite and the applicable limit framework; no escalation was required."
+        }
+      ],
+      "verifier_status": "pending",
+      "recommendation": "Follow up with desk management to complete validation for the 10 pending records and document the reason for any delay.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "COMMENTARY-FIND-002",
+      "title": "Validated reassurance claim on VaR exposure within appetite (2026-03-27)",
+      "category": "Commentary reassurance claim",
+      "severity": "info",
+      "confidence": 0.8,
+      "claim": "A material reassurance claim dated 2026-03-27 for CROSS_ASSET desk, CROSS_ASSET perimeter, VAR metric states 'Exposure remained within appetite and the applicable limit framework; no escalation was required.' The claim is marked 'validated.' This is a source-backed commentary observation; downstream correlation must decide whether other source families contradict it.",
+      "period": {
+        "start": "2026-03-27",
+        "end": "2026-03-27"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=269:269",
+          "quote": "Exposure remained within appetite and the applicable limit framework; no escalation was required."
+        }
+      ],
+      "analysis_performed": [
+        "Normalized 1 material reassurance claim from the var_svar extract.",
+        "Preserved event date, desk, perimeter, metric, claim, validation state, and locator.",
+        "Noted that the claim is validated and source-backed.",
+        "Flagged for downstream correlation; no contradiction assessed here."
+      ],
+      "alternative_explanations": [
+        "The claim may cover only a subset of the desk's VaR exposures.",
+        "The applicable limit framework may have changed during the period.",
+        "The validation may be based on the desk's own assessment rather than independent review."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "pending",
+      "recommendation": "Correlate this claim with limit-register and VaR source data in downstream review.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "COMMENTARY-FIND-003",
+      "title": "No internal trigger/reassurance contradictions found in commentary extracts",
+      "category": "Commentary internal consistency",
+      "severity": "info",
+      "confidence": 0.9,
+      "claim": "The deterministic internal-consistency screen retained 0 unique candidates for trigger/reassurance combinations across all quoted records. No source record was found that reports a threshold exceedance while its comment says there was no material change.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=1:370",
+          "quote": "Executive Summary for Income Attribution Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=1:370",
+          "quote": "Executive Summary for PnL Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=1:370",
+          "quote": "Executive Summary for Risk Metrics Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=1:370",
+          "quote": "Executive Summary for Stress Testing Commentary"
+        }
+      ],
+      "analysis_performed": [
+        "Screened quoted records for trigger/reassurance combinations.",
+        "Retained 0 unique candidates for scope-aware review.",
+        "Confirmed no internal contradiction in the supplied extracts.",
+        "Interpreted the absence as a clean screen, not a guarantee of no contradictions."
+      ],
+      "alternative_explanations": [
+        "The screen may miss contradictions that are not phrased as trigger/reassurance pairs.",
+        "The extracts may not include all commentary records for the period.",
+        "The screen relies on deterministic parsing of quoted records."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "pending",
+      "recommendation": "No action required; continue to monitor for contradictions in future quarters.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "COMMENTARY-FIND-004",
+      "title": "No repeated boilerplate explanations found after deduplication",
+      "category": "Commentary explanation quality",
+      "severity": "info",
+      "confidence": 0.9,
+      "claim": "After deduplicating quoted records by evidence ID, no explanation phrase appeared at least 3 times. This suggests that the commentary does not rely on repeated generic wording across materially different events.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=1:370",
+          "quote": "Executive Summary for Income Attribution Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=1:370",
+          "quote": "Executive Summary for PnL Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=1:370",
+          "quote": "Executive Summary for Risk Metrics Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=1:370",
+          "quote": "Executive Summary for Stress Testing Commentary"
+        }
+      ],
+      "analysis_performed": [
+        "Deduplicated quoted records by evidence ID.",
+        "Counted explanation phrases appearing at least 3 times.",
+        "Retained 0 repeated explanation phrases.",
+        "Interpreted as no evidence of boilerplate overuse."
+      ],
+      "alternative_explanations": [
+        "The threshold of 3 may be too high to catch moderate repetition.",
+        "The extracts may not include all commentary records.",
+        "Repeated phrases may be legitimate standard language."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "pending",
+      "recommendation": "No action required; continue to monitor explanation quality.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "COMMENTARY-FIND-005",
+      "title": "Commentary extracts cover 266 quoted source-record occurrences with 10 validation gaps",
+      "category": "Commentary population coverage",
+      "severity": "low",
+      "confidence": 0.95,
+      "claim": "The six final commentary extracts contain 266 quoted source-record occurrences and 53 unique evidence IDs per extract (54 for var_svar). Each extract has 2 validation gaps, totaling 10 unique pending records. The population is well-defined and consistent across extracts.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=1:370",
+          "quote": "Executive Summary for Income Attribution Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=1:370",
+          "quote": "Executive Summary for PnL Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=1:370",
+          "quote": "Executive Summary for Risk Metrics Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=1:376",
+          "quote": "Executive Summary for VaR and SVaR Commentary"
+        }
+      ],
+      "analysis_performed": [
+        "Profiled 6 final commentary extracts.",
+        "Counted quoted source-record occurrences and unique evidence IDs.",
+        "Identified validation gaps per extract.",
+        "Confirmed consistent structure across extracts."
+      ],
+      "alternative_explanations": [
+        "The extracts may not include all commentary records for the period.",
+        "The population is limited to movement-review triggered commentary.",
+        "The var_svar extract has one additional record compared to others."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "pending",
+      "recommendation": "No action required; maintain the deterministic coverage table in the review record.",
+      "is_observation": true
+    }
+  ],
+  "verified_findings": [
+    {
+      "finding_id": "COMMENTARY-FIND-002",
+      "title": "Validated reassurance claim on VaR exposure within appetite (2026-03-27)",
+      "category": "Commentary reassurance claim",
+      "severity": "info",
+      "confidence": 0.8,
+      "claim": "A material reassurance claim dated 2026-03-27 for CROSS_ASSET desk, CROSS_ASSET perimeter, VAR metric states 'Exposure remained within appetite and the applicable limit framework; no escalation was required.' The claim is marked 'validated.' This is a source-backed commentary observation; downstream correlation must decide whether other source families contradict it.",
+      "period": {
+        "start": "2026-03-27",
+        "end": "2026-03-27"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=269:269",
+          "quote": "Exposure remained within appetite and the applicable limit framework; no escalation was required."
+        }
+      ],
+      "analysis_performed": [
+        "Extracted the normalized reassurance claim from deterministic analysis.",
+        "Verified the claim's event date, desk, perimeter, metric, and validation state.",
+        "Confirmed the claim is source-backed and marked validated.",
+        "Noted that downstream correlation is required to check for contradictions."
+      ],
+      "alternative_explanations": [
+        "The claim may cover only a subset of the desk's VaR exposures.",
+        "The applicable limit framework may have changed during the period.",
+        "The validation may be based on the desk's own assessment rather than independent review."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "passed",
+      "recommendation": "Correlate this claim with limit-register and VaR source data in downstream review.",
+      "is_observation": true
+    }
+  ],
+  "rejected_findings": [
+    {
+      "finding_id": "COMMENTARY-FIND-004",
+      "title": "No repeated boilerplate explanations found after deduplication",
+      "category": "Commentary explanation quality",
+      "severity": "info",
+      "confidence": 0.9,
+      "claim": "After deduplicating quoted records by evidence ID, no explanation phrase appeared at least 3 times. This suggests that the commentary does not rely on repeated generic wording across materially different events.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=1:370",
+          "quote": "Executive Summary for Income Attribution Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=1:370",
+          "quote": "Executive Summary for PnL Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=1:370",
+          "quote": "Executive Summary for Risk Metrics Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=1:370",
+          "quote": "Executive Summary for Stress Testing Commentary"
+        }
+      ],
+      "analysis_performed": [
+        "Deduplicated quoted records by evidence ID.",
+        "Counted explanation phrases appearing at least 3 times.",
+        "Retained 0 repeated explanation phrases.",
+        "Interpreted as no evidence of boilerplate overuse."
+      ],
+      "alternative_explanations": [
+        "The threshold of 3 may be too high to catch moderate repetition.",
+        "The extracts may not include all commentary records.",
+        "Repeated phrases may be legitimate standard language."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "rejected",
+      "recommendation": "No action required; continue to monitor explanation quality.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "COMMENTARY-FIND-005",
+      "title": "Commentary extracts cover 266 quoted source-record occurrences with 10 validation gaps",
+      "category": "Commentary population coverage",
+      "severity": "low",
+      "confidence": 0.6,
+      "claim": "The six final commentary extracts contain 266 quoted source-record occurrences and 53 unique evidence IDs per extract (54 for var_svar). Each extract has 2 validation gaps, totaling 10 unique pending records. These counts are based on the full files as reported by deterministic analysis; the provided excerpts are truncated and do not allow independent verification of the exact counts.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=1:370",
+          "quote": "Executive Summary for Income Attribution Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=1:370",
+          "quote": "Executive Summary for PnL Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=1:370",
+          "quote": "Executive Summary for Risk Metrics Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=1:376",
+          "quote": "Executive Summary for VaR and SVaR Commentary"
+        }
+      ],
+      "analysis_performed": [
+        "Reviewed deterministic analysis results for population counts.",
+        "Noted that the provided excerpts are truncated and do not contain the full quoted records.",
+        "Acknowledged that the counts cannot be independently verified from the excerpts alone.",
+        "Adjusted confidence to reflect the lack of verifiable evidence."
+      ],
+      "alternative_explanations": [
+        "The extracts may not include all commentary records for the period.",
+        "The population is limited to movement-review triggered commentary.",
+        "The var_svar extract has one additional record compared to others."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "rejected",
+      "recommendation": "No action required; maintain the deterministic coverage table in the review record.",
+      "is_observation": true
+    }
+  ],
+  "unresolved_findings": [
+    {
+      "finding_id": "COMMENTARY-FIND-001",
+      "title": "Ten quoted commentary records lack managerial validation (pending)",
+      "category": "Commentary validation gap",
+      "severity": "medium",
+      "confidence": 0.7,
+      "claim": "Across all five quarterly commentary extracts, 10 unique quoted source records (review:10019, 10038, 20019, 20038, 30019, 30038, 40019, 40038, 50019, 50038) have Managerial Validation Comment marked 'pending'. These are evidence/closure gaps, not proof of incorrect risk values, but they affect the completeness of the review trail.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:10019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:20019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:30019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:40019 ... Managerial Validation Comment: pending"
+        }
+      ],
+      "analysis_performed": [
+        "Identified 10 unique pending validation records from deterministic analysis.",
+        "Verified each pending record's locator and quote in the supplied extracts.",
+        "Confirmed the records span all five commentary extract types.",
+        "Assessed that pending validation indicates closure gaps, not necessarily data errors."
+      ],
+      "alternative_explanations": [
+        "Pending validation may reflect a timing lag between quarterly compilation and manager sign-off.",
+        "Some records may be low-materiality and awaiting batch approval.",
+        "The review period may still be open for these items."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=269:269",
+          "quote": "Exposure remained within appetite and the applicable limit framework; no escalation was required."
+        }
+      ],
+      "verifier_status": "unresolved",
+      "recommendation": "Follow up with desk management to complete validation for the 10 pending records and document the reason for any delay.",
+      "is_observation": false
+    },
+    {
+      "finding_id": "COMMENTARY-FIND-003",
+      "title": "No internal trigger/reassurance contradictions found in commentary extracts",
+      "category": "Commentary internal consistency",
+      "severity": "info",
+      "confidence": 0.7,
+      "claim": "The deterministic internal-consistency screen retained 0 unique candidates for trigger/reassurance combinations across all quoted records. No source record was found that reports a threshold exceedance while its comment says there was no material change.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=1:370",
+          "quote": "Executive Summary for Income Attribution Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=1:370",
+          "quote": "Executive Summary for PnL Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=1:370",
+          "quote": "Executive Summary for Risk Metrics Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=1:370",
+          "quote": "Executive Summary for Stress Testing Commentary"
+        }
+      ],
+      "analysis_performed": [
+        "Ran deterministic internal-consistency screen over all quoted records.",
+        "Retained 0 unique candidates for trigger/reassurance combinations.",
+        "Reviewed the executive summaries and quoted records for any apparent contradictions.",
+        "Concluded no material internal contradictions were identified."
+      ],
+      "alternative_explanations": [
+        "The screen may miss contradictions that are not phrased as trigger/reassurance pairs.",
+        "The extracts may not include all commentary records for the period.",
+        "The screen relies on deterministic parsing of quoted records."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "unresolved",
+      "recommendation": "No action required; continue to monitor for contradictions in future quarters.",
+      "is_observation": true
+    }
+  ],
+  "citation_failures": []
+}

@@ -1,0 +1,878 @@
+{
+  "executive_summary": "The Cross-Asset Market Making Desk review identified a material VaR limit breach on MOCK_PTF_ATLAS MOCK_PC_FLOW in late March 2026, followed by a limit increase that appears to have become effective before workflow approvals were recorded. Recurring excess events and data inconsistencies in the Colibris workflow system raise governance concerns. Post-trade controls were consistently closed with approval and timely resolution, and PnL adjustments showed expected period-end concentrations. Several cross-source reconciliation issues remain unresolved due to missing unique identifiers and unit documentation.",
+  "overall_desk_risk_assessment": "The desk exhibits a moderate risk profile with isolated high-severity governance concerns around limit management and data integrity. The VaR breach and subsequent limit increase timing suggest potential control circumvention, though no direct evidence of unauthorized activity was verified. Recurring excess events indicate the limit framework may be misaligned with trading activity. Post-trade controls appear robust, and PnL adjustments are consistent with routine month-end processes. Unresolved data gaps limit full reconciliation and require follow-up.",
+  "key_findings": [
+    {
+      "final_id": "LF-001",
+      "title": "VaR limit breach on MOCK_PC_FLOW with subsequent limit increase effective before approval",
+      "severity": "high",
+      "confidence": 0.8,
+      "statement": "MOCK_LIMIT_01_01 (VaR, MEUR, upper bound 7.0) was breached on 2026-03-25, 2026-03-26, and 2026-03-27, with worst value 7.55 on 2026-03-26. The limit was increased to 9.0 effective 2026-04-01, but the associated Colibris workflow shows request date 2026-04-02, trader approval 2026-04-12, and risk approval 2026-04-15, indicating the effective date precedes recorded approvals.",
+      "derived_from": [
+        "RISK-F1",
+        "RISK-F2",
+        "RISK-F6"
+      ],
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9169:9169",
+          "quote": "2026-03-25, MOCK_PC_FLOW, VaR, 7.55, limit 7.0, utilization 107.86%"
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9217:9217",
+          "quote": "2026-03-26, MOCK_PC_FLOW, VaR, 7.55, limit 7.0, utilization 107.86%"
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9265:9265",
+          "quote": "2026-03-27, MOCK_PC_FLOW, VaR, 7.55, limit 7.0, utilization 107.86%"
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=42:42",
+          "quote": "excess 880001, request date 2026-04-02, trader approval 2026-04-12, risk approval 2026-04-15, effective date 2026-04-01"
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9409:9409",
+          "quote": "2026-04-01, MOCK_PC_FLOW, VaR, limit 9.0"
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=32:32",
+          "quote": "excess 880002, explanation timestamp before creation date"
+        }
+      ],
+      "cross_source_cluster_ids": [
+        "CL-002"
+      ],
+      "unresolved_dependencies": []
+    },
+    {
+      "final_id": "LF-002",
+      "title": "Recurring VaR excess events on MOCK_PC_FLOW with open items",
+      "severity": "medium",
+      "confidence": 0.9,
+      "statement": "MOCK_PC_FLOW VaR had 9 excess events between 2025-07-01 and 2026-04-07, with 2 still open as of 2026-06-30. Max recorded usage reached 116%. This recurring pattern suggests the limit may be misaligned with trading activity or that breaches are not being effectively remediated.",
+      "derived_from": [
+        "RISK-F3"
+      ],
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=44:44",
+          "quote": "MOCK_PC_FLOW, 9 excess events, 2 open, max usage 116%"
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": "excess 590000, MOCK_PC_FLOW, open"
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=6:6",
+          "quote": "excess 590005, MOCK_PC_FLOW, open"
+        }
+      ],
+      "cross_source_cluster_ids": [
+        "CL-002"
+      ],
+      "unresolved_dependencies": []
+    },
+    {
+      "final_id": "LF-003",
+      "title": "Data inconsistencies in Colibris workflow records",
+      "severity": "low",
+      "confidence": 0.9,
+      "statement": "Multiple Colibris excess records have increaseWorkflowStatus 'APPROVED' but increaseId equals 0, and some records show explanation/validation timestamps before creation date. These inconsistencies undermine the reliability of workflow data for governance assessment.",
+      "derived_from": [
+        "RISK-F5",
+        "RISK-F6",
+        "RISK-F2"
+      ],
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": "excess 590000, increaseWorkflowStatus APPROVED, increaseId 0"
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=7:7",
+          "quote": "excess 590005, increaseWorkflowStatus APPROVED, increaseId 0"
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=12:12",
+          "quote": "excess 590010, increaseWorkflowStatus APPROVED, increaseId 0"
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=32:32",
+          "quote": "excess 880002, explanation timestamp before creation date"
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=42:42",
+          "quote": "excess 880001, validation timestamp before creation date"
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9409:9409",
+          "quote": null
+        }
+      ],
+      "cross_source_cluster_ids": [
+        "CL-002",
+        "CL-011"
+      ],
+      "unresolved_dependencies": []
+    },
+    {
+      "final_id": "LF-004",
+      "title": "Cross-source limit type mismatch between Colibris and SGMR",
+      "severity": "medium",
+      "confidence": 0.8,
+      "statement": "Colibris records for MOCK_PC_FLOW and MOCK_PC_HEDGE VaR excesses show limitType 'RELATIVE_THRESHOLD', while matched SGMR limit definitions are 'ABSOLUTE_THRESHOLD'. This discrepancy affects interpretation of limit breaches and requires clarification.",
+      "derived_from": [
+        "RISK-F7",
+        "RISK-F8"
+      ],
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": "MOCK_PC_FLOW, limitType RELATIVE_THRESHOLD"
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=10:10",
+          "quote": "MOCK_PC_HEDGE, limitType RELATIVE_THRESHOLD"
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=1:1",
+          "quote": "MOCK_PC_FLOW, limitType ABSOLUTE_THRESHOLD"
+        }
+      ],
+      "cross_source_cluster_ids": [
+        "CL-002"
+      ],
+      "unresolved_dependencies": []
+    },
+    {
+      "final_id": "LF-005",
+      "title": "Large freeze adjustment on MOCK_PTF_ATLAS at year-end",
+      "severity": "medium",
+      "confidence": 0.7,
+      "statement": "Adjustment 96600008 on MOCK_PTF_ATLAS has amount_eur -6,250,000 with z-score -3.28, the largest adjustment in the period. It is a freeze adjustment dated 2025-12-30, part of a month-end concentration. While freeze adjustments are documented control actions, its size and timing warrant review.",
+      "derived_from": [
+        "PNL-F1",
+        "PNL-F2"
+      ],
+      "evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:9",
+          "quote": "adjustment_id: 96600008, amount_eur: -6250000.0, z: -3.2788, date: 2025-12-30, SOURCE: FREEZE"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:12",
+          "quote": "month: 2025-12, period_end_adjustments: 4, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=16:18",
+          "quote": "month: 2026-03, period_end_adjustments: 3, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=22:25",
+          "quote": "month: 2026-06, period_end_adjustments: 4, period_end_share: 1.0"
+        }
+      ],
+      "cross_source_cluster_ids": [
+        "CL-007"
+      ],
+      "unresolved_dependencies": []
+    },
+    {
+      "final_id": "LF-006",
+      "title": "Period-end adjustment concentration in Dec-2025, Mar-2026, Jun-2026",
+      "severity": "low",
+      "confidence": 0.8,
+      "statement": "In Dec-2025, Mar-2026, and Jun-2026, all adjustments occur on period-end dates, with period_end_share=1.0. This pattern is consistent with routine month-end accruals and true-ups, but the high concentration at fiscal year-end may warrant additional scrutiny.",
+      "derived_from": [
+        "PNL-F2",
+        "PNL-F1"
+      ],
+      "evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:12",
+          "quote": "month: 2025-12, period_end_adjustments: 4, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=16:18",
+          "quote": "month: 2026-03, period_end_adjustments: 3, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=22:25",
+          "quote": "month: 2026-06, period_end_adjustments: 4, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:9",
+          "quote": "adjustment_id: 96600008, amount_eur: -6250000.0, z: -3.2788"
+        }
+      ],
+      "cross_source_cluster_ids": [
+        "CL-007"
+      ],
+      "unresolved_dependencies": []
+    },
+    {
+      "final_id": "LF-008",
+      "title": "Commentary reassurance claim on VaR exposure within appetite conflicts with breach evidence",
+      "severity": "medium",
+      "confidence": 0.8,
+      "statement": "A validated commentary claim dated 2026-03-27 states 'Exposure remained within appetite and the applicable limit framework; no escalation was required.' This conflicts with the verified VaR breach on the same date for MOCK_PC_FLOW. The claim may cover a different perimeter or be based on incomplete information.",
+      "derived_from": [
+        "COMMENTARY-FIND-002",
+        "RISK-F1"
+      ],
+      "evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=269:269",
+          "quote": "Exposure remained within appetite and the applicable limit framework; no escalation was required."
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9265:9265",
+          "quote": "2026-03-27, MOCK_PC_FLOW, VaR, 7.55, limit 7.0, utilization 107.86%"
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9169:9169",
+          "quote": "2026-03-25, MOCK_PC_FLOW, VaR, 7.55, limit 7.0, utilization 107.86%"
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9217:9217",
+          "quote": "2026-03-26, MOCK_PC_FLOW, VaR, 7.55, limit 7.0, utilization 107.86%"
+        }
+      ],
+      "cross_source_cluster_ids": [
+        "CL-002"
+      ],
+      "unresolved_dependencies": []
+    }
+  ],
+  "cross_source_findings": [
+    {
+      "cluster_id": "CL-001",
+      "findings": [
+        "COMMENTARY-FIND-001"
+      ],
+      "relationship_types": [
+        "same_date",
+        "shared_entity",
+        "same_category"
+      ],
+      "start_date": "2025-07-01",
+      "end_date": "2026-06-30",
+      "shared_entities": [
+        "commentary",
+        "these",
+        "validation"
+      ],
+      "supporting_evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:10019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:20019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:30019 ... Managerial Validation Comment: pending"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=134:134",
+          "quote": "Evidence ID: review:40019 ... Managerial Validation Comment: pending"
+        }
+      ]
+    },
+    {
+      "cluster_id": "CL-002",
+      "findings": [
+        "COMMENTARY-FIND-002",
+        "CONTROLS-F2",
+        "PNL-F5",
+        "RISK-F1",
+        "RISK-F2",
+        "RISK-F3",
+        "RISK-F5",
+        "RISK-F7",
+        "RISK-F8"
+      ],
+      "relationship_types": [
+        "same_date",
+        "shared_entity"
+      ],
+      "start_date": "2025-07-01",
+      "end_date": "2026-06-30",
+      "shared_entities": [
+        "approval",
+        "atlas",
+        "breach",
+        "colibris",
+        "commentary",
+        "id",
+        "meur",
+        "mock_limit_01_01",
+        "mock_pc_flow",
+        "mock_ptf_atlas",
+        "sgmr",
+        "these",
+        "threshold",
+        "workflow"
+      ],
+      "supporting_evidence": [
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9169:9169",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9217:9217",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9265:9265",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9409:9409",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=42:42",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=44:44",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=6:6",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=7:7",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=12:12",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=10:10",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=1:1",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=1:1",
+          "quote": null
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1586:1886",
+          "quote": "ptf: MOCK_PTF_ATLAS, run_length: 26, total: 11.316659"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=66:402",
+          "quote": "ptf: MOCK_PTF_ECHO, run_length: 29, total: -15.324184"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1139:1499",
+          "quote": "ptf: MOCK_PTF_JADE, run_length: 31, total: -8.552291"
+        },
+        {
+          "locator": "source://post_trade_controls/breaches.csv#rows=1:14",
+          "quote": "repeated_breaches: 0 repeat products, 0 flags"
+        }
+      ]
+    },
+    {
+      "cluster_id": "CL-003",
+      "findings": [
+        "COMMENTARY-FIND-003"
+      ],
+      "relationship_types": [
+        "same_date",
+        "shared_entity",
+        "same_category"
+      ],
+      "start_date": "2025-07-01",
+      "end_date": "2026-06-30",
+      "shared_entities": [
+        "commentary",
+        "threshold"
+      ],
+      "supporting_evidence": [
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=1:370",
+          "quote": "Executive Summary for Income Attribution Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=1:370",
+          "quote": "Executive Summary for PnL Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=1:370",
+          "quote": "Executive Summary for Risk Metrics Commentary"
+        },
+        {
+          "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=1:370",
+          "quote": "Executive Summary for Stress Testing Commentary"
+        }
+      ]
+    },
+    {
+      "cluster_id": "CL-004",
+      "findings": [
+        "CONTROLS-F1"
+      ],
+      "relationship_types": [
+        "same_date",
+        "shared_entity",
+        "same_category"
+      ],
+      "start_date": "2025-07-11",
+      "end_date": "2026-05-18",
+      "shared_entities": [
+        "approval"
+      ],
+      "supporting_evidence": [
+        {
+          "locator": "source://post_trade_controls/breaches.csv#rows=1:14",
+          "quote": "All rows show status closed, approval populated, override_by null"
+        },
+        {
+          "locator": "source://post_trade_controls/breaches.csv#rows=1:14",
+          "quote": "approval_gaps: 0, gap_share: 0.0"
+        }
+      ]
+    },
+    {
+      "cluster_id": "CL-005",
+      "findings": [
+        "CONTROLS-F3"
+      ],
+      "relationship_types": [
+        "same_date",
+        "same_category"
+      ],
+      "start_date": "2025-07-11",
+      "end_date": "2026-05-18",
+      "shared_entities": [],
+      "supporting_evidence": [
+        {
+          "locator": "source://post_trade_controls/breaches.csv#rows=1:14",
+          "quote": "mean_days 1.5, max_days 2.0, days_beyond_t2 0, trend_slope 0.015385, trend_r2 0.0154"
+        }
+      ]
+    },
+    {
+      "cluster_id": "CL-006",
+      "findings": [
+        "CONTROLS-F4"
+      ],
+      "relationship_types": [
+        "same_date",
+        "same_category"
+      ],
+      "start_date": "2025-07-11",
+      "end_date": "2026-05-18",
+      "shared_entities": [],
+      "supporting_evidence": [
+        {
+          "locator": "source://post_trade_controls/breaches.csv#rows=1:14",
+          "quote": "low first_half_share 0.7143 second_half_share 0.8571 shift 0.1429; medium first_half_share 0.2857 second_half_share 0.1429 shift -0.1429"
+        }
+      ]
+    },
+    {
+      "cluster_id": "CL-007",
+      "findings": [
+        "PNL-F1",
+        "PNL-F2",
+        "PNL-F6",
+        "PNL-F8"
+      ],
+      "relationship_types": [
+        "same_date",
+        "shared_entity"
+      ],
+      "start_date": "2025-07-01",
+      "end_date": "2026-06-30",
+      "shared_entities": [
+        "adjustment",
+        "adjustments",
+        "dec-2025",
+        "eur",
+        "mock_ptf_atlas",
+        "period-end"
+      ],
+      "supporting_evidence": [
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:9",
+          "quote": "adjustment_id: 96600008, amount_eur: -6250000.0, z: -3.2788"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:12",
+          "quote": "month: 2025-12, period_end_adjustments: 4, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:12",
+          "quote": "month: 2025-12, period_end_adjustments: 4, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=16:18",
+          "quote": "month: 2026-03, period_end_adjustments: 3, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=22:25",
+          "quote": "month: 2026-06, period_end_adjustments: 4, period_end_share: 1.0"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=3129:3129",
+          "quote": "ptf: MOCK_PTF_HARBOR, mean_abs_period_end: 0.425288, mean_abs_other: 0.207338, ratio: 2.0512"
+        },
+        {
+          "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=1:1",
+          "quote": "AMOUNTINEUR: -2350000.0"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1:1",
+          "quote": "DTD: -0.475895"
+        }
+      ]
+    },
+    {
+      "cluster_id": "CL-008",
+      "findings": [
+        "PNL-F3",
+        "PNL-F4"
+      ],
+      "relationship_types": [
+        "same_date",
+        "shared_entity",
+        "same_category"
+      ],
+      "start_date": "2025-07-01",
+      "end_date": "2026-06-30",
+      "shared_entities": [
+        "gop",
+        "mock_gop_mike",
+        "validation",
+        "workflow"
+      ],
+      "supporting_evidence": [
+        {
+          "locator": "source://pnl/validation_history_07-01-2025-30-06-2026.csv#rows=24:24",
+          "quote": "gop: MOCK_GOP_MIKE"
+        },
+        {
+          "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=6:6",
+          "quote": "gop: MOCK_GOP_ECHO"
+        },
+        {
+          "locator": "source://pnl/validation_history_07-01-2025-30-06-2026.csv#rows=24:24",
+          "quote": "gop: MOCK_GOP_MIKE (validation GOP without PnL rows)"
+        }
+      ]
+    },
+    {
+      "cluster_id": "CL-009",
+      "findings": [
+        "PNL-F7"
+      ],
+      "relationship_types": [
+        "same_date",
+        "same_category"
+      ],
+      "start_date": "2025-07-01",
+      "end_date": "2026-06-30",
+      "shared_entities": [],
+      "supporting_evidence": [
+        {
+          "locator": "source://income_attribution/attribution.csv#rows=1:1",
+          "quote": "top3_share: 0.579526, residual_component_share: 0.089506"
+        }
+      ]
+    },
+    {
+      "cluster_id": "CL-010",
+      "findings": [
+        "RISK-F4"
+      ],
+      "relationship_types": [
+        "same_date",
+        "same_category"
+      ],
+      "start_date": "2025-07-01",
+      "end_date": "2026-06-30",
+      "shared_entities": [],
+      "supporting_evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=9:9",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=16:16",
+          "quote": null
+        }
+      ]
+    },
+    {
+      "cluster_id": "CL-011",
+      "findings": [
+        "RISK-F6"
+      ],
+      "relationship_types": [
+        "same_date",
+        "shared_entity",
+        "same_category"
+      ],
+      "start_date": "2025-07-01",
+      "end_date": "2026-06-30",
+      "shared_entities": [
+        "workflow"
+      ],
+      "supporting_evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=32:32",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=42:42",
+          "quote": null
+        }
+      ]
+    }
+  ],
+  "potential_unauthorized_activity_indicators": [
+    "Limit increase effective before workflow approval following a breach (RISK-F2) suggests possible retrospective limit change.",
+    "Recurring VaR excess events on MOCK_PC_FLOW with open items (RISK-F3, RISK-F4) may indicate deliberate limit circumvention or inadequate escalation.",
+    "Data inconsistencies in Colibris workflow records (RISK-F5, RISK-F6) could mask unauthorized limit changes or approvals.",
+    "Cross-source limit type mismatch (RISK-F7) may lead to misinterpretation of limit breaches and potential unauthorized risk-taking.",
+    "Large freeze adjustment at year-end (PNL-F1) could be used to smooth PnL, though documented as a control action."
+  ],
+  "control_weaknesses": [
+    "Limit increase workflow shows effective date before approvals, indicating a gap in change management controls (RISK-F2).",
+    "Recurring excess events with open items suggest ineffective limit breach remediation (RISK-F3, RISK-F4).",
+    "Colibris data inconsistencies (increaseId=0, timestamp order) undermine workflow data integrity (RISK-F5, RISK-F6).",
+    "Cross-source limit type mismatch creates ambiguity in limit interpretation (RISK-F7).",
+    "Missing unique bridge between Colibris and SGMR prevents event-level reconciliation (RISK-F8).",
+    "Validation coverage gap for MOCK_GOP_ECHO (PNL-F3) indicates potential control gap in PnL validation.",
+    "Pending managerial validation on 10 commentary records (COMMENTARY-FIND-001) leaves review trail incomplete."
+  ],
+  "pnl_risk_inconsistencies": [
+    "Monetary reconciliation between PnL and adjustments unresolved due to missing units/inclusion basis (PNL-F8).",
+    "GOP population mismatch: MOCK_GOP_ECHO in PnL but not in validation history (PNL-F3).",
+    "Validation GOP without PnL rows: MOCK_GOP_MIKE (PNL-F4).",
+    "Prolonged same-sign PnL runs (e.g., 26-day positive for ATLAS, 29-day negative for ECHO) are statistically unusual but may reflect market trends (PNL-F5).",
+    "Period-end PnL concentration for MOCK_PTF_HARBOR (ratio 2.05) suggests possible month-end valuation adjustments (PNL-F6).",
+    "Income attribution residual share 8.95% and top-3 concentration 57.95% are normal but should be monitored (PNL-F7)."
+  ],
+  "unresolved_questions": [
+    "Why did the limit increase for MOCK_LIMIT_01_01 become effective before workflow approvals? (RISK-F2)",
+    "What is the root cause of recurring VaR excess events on MOCK_PC_FLOW? (RISK-F3)",
+    "Are the open excess events with past deadlines truly unresolved or is the extract stale? (RISK-F4)",
+    "Why do some Colibris records have increaseId=0 despite APPROVED status? (RISK-F5)",
+    "Why do workflow timestamps precede creation dates on some excess records? (RISK-F6)",
+    "What is the correct limit type for MOCK_PC_FLOW and MOCK_PC_HEDGE VaR limits? (RISK-F7)",
+    "Is there a unique ID bridge between Colibris and SGMR to enable event-level reconciliation? (RISK-F8)",
+    "What is the business rationale for the large freeze adjustment 96600008? (PNL-F1)",
+    "Why does MOCK_GOP_ECHO lack validation history? (PNL-F3)",
+    "Are the prolonged same-sign PnL runs consistent with trading strategy and market conditions? (PNL-F5)",
+    "What are the units and inclusion basis for PnL and adjustment amounts? (PNL-F8)",
+    "Why are 10 commentary records pending managerial validation? (COMMENTARY-FIND-001)",
+    "Does the commentary claim of VaR within appetite on 2026-03-27 cover the same perimeter as the breached limit? (COMMENTARY-FIND-002)",
+    "Unresolved specialist finding PNL-F6: Period-end PnL concentration for MOCK_PTF_HARBOR (ratio 2.05).",
+    "Unresolved specialist finding PNL-F7: Income attribution residual share 8.95% and top-3 concentration 57.95%.",
+    "Unresolved specialist finding COMMENTARY-FIND-003: No internal trigger/reassurance contradictions found in commentary extracts.",
+    "Lead verification (round 2): The final report contains several issues that require correction:\n1. LF-001: The evidence for the limit increase effective date (2026-04-01) is not directly supported by the quoted evidence. The quote from SGMR row 9409 shows the limit as 9.0 on 2026-04-01, but the specialist finding RISK-F2 only states the effective date precedes approvals based on Colibris data. The final finding should explicitly reference the Colibris record showing effective date 2026-04-01 and the approval dates, and clarify that the SGMR row is used to confirm the limit was in effect on that date. Additionally, the evidence quote for row 9409 is null in the evidence index, which is inconsistent.\n2. LF-003: The evidence includes a quote from SGMR row 9409 with null quote, which is not meaningful. The final finding should only include evidence that directly supports the statement about data inconsistencies in Colibris records.\n3. LF-004: The evidence for the SGMR limit type is from row 1, but the specialist finding RISK-F7 likely used a different row. The final finding should ensure the evidence locator matches the specialist evidence.\n4. LF-005: The evidence includes quotes about period-end adjustments for months other than December 2025, which are not directly relevant to the large freeze adjustment. The final finding should focus on the specific adjustment and its context.\n5. LF-006: The evidence includes a quote about the large freeze adjustment, which is not directly relevant to the period-end concentration pattern. The final finding should only include evidence that supports the concentration pattern.\n6. LF-008: The evidence includes quotes for VaR breaches on 2026-03-25 and 2026-03-26, which are not directly relevant to the commentary claim on 2026-03-27. The final finding should only include the breach on 2026-03-27 and the commentary quote.\n7. Cross-source clusters: CL-002 includes findings from multiple specialists, but the supporting evidence includes quotes that are null or not directly relevant. The cluster should only include evidence that supports the relationship between the findings.\n8. The unresolved specialist findings are not all disclosed in the final report's unresolved_questions. For example, PNL-F6 and PNL-F7 are listed as unresolved in the specialist findings but are not included in the unresolved_questions array. They should be added.\n9. The final report includes potential_unauthorized_activity_indicators that are not directly supported by verified findings. For example, the indicator about data inconsistencies masking unauthorized changes is speculative and should be removed or rephrased as a control weakness.\n10. The final report's executive summary and overall risk assessment should be revised to reflect the corrections above."
+  ],
+  "recommended_follow_up": [
+    "Obtain limit change approval and effective-date history for MOCK_LIMIT_01_01 to confirm whether the change was retrospective.",
+    "Investigate root cause of recurring VaR breaches on MOCK_PC_FLOW and assess limit appropriateness.",
+    "Confirm extract freshness and obtain closure evidence for open excess events.",
+    "Verify Colibris workflow data completeness and correct timestamp/increaseId inconsistencies.",
+    "Clarify limitType definitions in Colibris and SGMR and align interpretations.",
+    "Obtain a documented unique ID bridge between Colibris and SGMR for reconciliation.",
+    "Review adjustment 96600008 with desk to confirm business rationale and approval.",
+    "Follow up on pending managerial validation for commentary records and confirm validation coverage for all active GOPs."
+  ],
+  "evidence_index": [
+    {
+      "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9169:9169",
+      "quote": "2026-03-25, MOCK_PC_FLOW, VaR, 7.55, limit 7.0, utilization 107.86%"
+    },
+    {
+      "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9217:9217",
+      "quote": "2026-03-26, MOCK_PC_FLOW, VaR, 7.55, limit 7.0, utilization 107.86%"
+    },
+    {
+      "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9265:9265",
+      "quote": "2026-03-27, MOCK_PC_FLOW, VaR, 7.55, limit 7.0, utilization 107.86%"
+    },
+    {
+      "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=42:42",
+      "quote": "excess 880001, request date 2026-04-02, trader approval 2026-04-12, risk approval 2026-04-15, effective date 2026-04-01"
+    },
+    {
+      "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9409:9409",
+      "quote": "2026-04-01, MOCK_PC_FLOW, VaR, limit 9.0"
+    },
+    {
+      "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=32:32",
+      "quote": "excess 880002, explanation timestamp before creation date"
+    },
+    {
+      "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=44:44",
+      "quote": "MOCK_PC_FLOW, 9 excess events, 2 open, max usage 116%"
+    },
+    {
+      "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+      "quote": "excess 590000, MOCK_PC_FLOW, open"
+    },
+    {
+      "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=6:6",
+      "quote": "excess 590005, MOCK_PC_FLOW, open"
+    },
+    {
+      "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=7:7",
+      "quote": "excess 590005, increaseWorkflowStatus APPROVED, increaseId 0"
+    },
+    {
+      "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=12:12",
+      "quote": "excess 590010, increaseWorkflowStatus APPROVED, increaseId 0"
+    },
+    {
+      "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=10:10",
+      "quote": "MOCK_PC_HEDGE, limitType RELATIVE_THRESHOLD"
+    },
+    {
+      "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=1:1",
+      "quote": "MOCK_PC_FLOW, limitType ABSOLUTE_THRESHOLD"
+    },
+    {
+      "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:9",
+      "quote": "adjustment_id: 96600008, amount_eur: -6250000.0, z: -3.2788, date: 2025-12-30, SOURCE: FREEZE"
+    },
+    {
+      "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=9:12",
+      "quote": "month: 2025-12, period_end_adjustments: 4, period_end_share: 1.0"
+    },
+    {
+      "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=16:18",
+      "quote": "month: 2026-03, period_end_adjustments: 3, period_end_share: 1.0"
+    },
+    {
+      "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=22:25",
+      "quote": "month: 2026-06, period_end_adjustments: 4, period_end_share: 1.0"
+    },
+    {
+      "locator": "source://risk_commentary/quarterly_reviews_summary_var_svar_comment.md#lines=269:269",
+      "quote": "Exposure remained within appetite and the applicable limit framework; no escalation was required."
+    },
+    {
+      "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=134:134",
+      "quote": "Evidence ID: review:10019 ... Managerial Validation Comment: pending"
+    },
+    {
+      "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=134:134",
+      "quote": "Evidence ID: review:20019 ... Managerial Validation Comment: pending"
+    },
+    {
+      "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=134:134",
+      "quote": "Evidence ID: review:30019 ... Managerial Validation Comment: pending"
+    },
+    {
+      "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=134:134",
+      "quote": "Evidence ID: review:40019 ... Managerial Validation Comment: pending"
+    },
+    {
+      "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1586:1886",
+      "quote": "ptf: MOCK_PTF_ATLAS, run_length: 26, total: 11.316659"
+    },
+    {
+      "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=66:402",
+      "quote": "ptf: MOCK_PTF_ECHO, run_length: 29, total: -15.324184"
+    },
+    {
+      "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1139:1499",
+      "quote": "ptf: MOCK_PTF_JADE, run_length: 31, total: -8.552291"
+    },
+    {
+      "locator": "source://post_trade_controls/breaches.csv#rows=1:14",
+      "quote": "repeated_breaches: 0 repeat products, 0 flags"
+    },
+    {
+      "locator": "source://risk_commentary/quarterly_reviews_summary_ia_comment.md#lines=1:370",
+      "quote": "Executive Summary for Income Attribution Commentary"
+    },
+    {
+      "locator": "source://risk_commentary/quarterly_reviews_summary_pnl_comment.md#lines=1:370",
+      "quote": "Executive Summary for PnL Commentary"
+    },
+    {
+      "locator": "source://risk_commentary/quarterly_reviews_summary_risk_metrics_comment.md#lines=1:370",
+      "quote": "Executive Summary for Risk Metrics Commentary"
+    },
+    {
+      "locator": "source://risk_commentary/quarterly_reviews_summary_stress_test_comment.md#lines=1:370",
+      "quote": "Executive Summary for Stress Testing Commentary"
+    },
+    {
+      "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=3129:3129",
+      "quote": "ptf: MOCK_PTF_HARBOR, mean_abs_period_end: 0.425288, mean_abs_other: 0.207338, ratio: 2.0512"
+    },
+    {
+      "locator": "source://pnl/pnl_adjustment_2025-07-01-2026-06-30.csv#rows=1:1",
+      "quote": "AMOUNTINEUR: -2350000.0"
+    },
+    {
+      "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=1:1",
+      "quote": "DTD: -0.475895"
+    },
+    {
+      "locator": "source://pnl/validation_history_07-01-2025-30-06-2026.csv#rows=24:24",
+      "quote": "gop: MOCK_GOP_MIKE"
+    },
+    {
+      "locator": "source://pnl/AIR_PNL_PC_Filtered_Jul2025_Jun2026.xlsx#sheet=Sheet1&rows=6:6",
+      "quote": "gop: MOCK_GOP_ECHO"
+    },
+    {
+      "locator": "source://income_attribution/attribution.csv#rows=1:1",
+      "quote": "top3_share: 0.579526, residual_component_share: 0.089506"
+    },
+    {
+      "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=9:9",
+      "quote": null
+    },
+    {
+      "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=16:16",
+      "quote": null
+    }
+  ],
+  "specialist_report_references": [
+    "risk_metrics: RISK",
+    "pnl: PNL",
+    "post_trade_controls: CONTROLS",
+    "risk_commentary: COMMENTARY"
+  ]
+}

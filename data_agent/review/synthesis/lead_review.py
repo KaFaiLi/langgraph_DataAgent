@@ -18,12 +18,9 @@ from data_agent.review.domain.evidence import EvidenceReference
 from data_agent.review.domain.finding import Finding
 from data_agent.review.domain.reports import FinalFinding, FinalReport, SpecialistReport
 from data_agent.review.domain.severity import SEVERITY_ORDER
+from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.review.llm.models import ModelTier
 from data_agent.review.llm.structured import invoke_structured
-from data_agent.review.orchestration.specialist_graph import (
-    DEFAULT_LLM_PROVIDER,
-    LLMProvider,
-)
 from data_agent.review.orchestration.state import ParentState
 from data_agent.skills.review import load_lead_review_skill
 
@@ -165,7 +162,7 @@ class LeadDraft(BaseModel):
         return [item[:500] if isinstance(item, str) else item for item in value[:32]]
 
 
-def _provider(config: RunnableConfig) -> LLMProvider:
+def _provider(config: RunnableConfig) -> ReviewLLMProvider:
     provider = (config or {}).get("configurable", {}).get("llm_provider")
     if provider is None:
         return DEFAULT_LLM_PROVIDER

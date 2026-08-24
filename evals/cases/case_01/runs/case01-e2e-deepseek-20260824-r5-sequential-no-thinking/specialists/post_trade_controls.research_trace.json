@@ -1,0 +1,102 @@
+[
+  {
+    "tool": "list_assigned_sources",
+    "arguments": {},
+    "result_sha256": "ac7410df0d96041fce03ffabee0627300bdd74e8d08a2aded330eaba113aa6a4",
+    "result_preview": "[{\"source_id\": \"SRC-006\", \"path\": \"post_trade_controls/breaches.csv\", \"source_type\": \"csv\", \"sha256\": \"2070ff5c3021d20386e490b6403a72b82b82b2d91e75dd27444f5811a5c78fe0\", \"size_bytes\": 1504, \"candidate_domains\": [\"post_trade_controls\"], \"date_range\": {\"start\": \"2025-07-11\", \"end\": \"2026-05-18\"}, \"row_count\": 14, \"sheet_names\": [], \"column_names\": [\"date\", \"product\", \"severity\", \"status\", \"closure_days\", \"approval\", \"override_by\", \"notes\"], \"page_count\": null, \"line_count\": 15, \"parse_error\": null}]",
+    "locators": [],
+    "truncated": false,
+    "error": null,
+    "round": 0,
+    "timestamp": "2026-08-24T12:32:37.023738+00:00"
+  },
+  {
+    "tool": "inspect_table",
+    "arguments": {
+      "path": "post_trade_controls/breaches.csv",
+      "sheet": null,
+      "preview_rows": 5
+    },
+    "result_sha256": "31bc68a04c9efadf66f7723fb1952b934a3e1f606ae67840ca3ad141a6f5a121",
+    "result_preview": "{\"path\": \"post_trade_controls/breaches.csv\", \"sheet\": null, \"columns\": [\"date\", \"product\", \"severity\", \"status\", \"closure_days\", \"approval\", \"override_by\", \"notes\"], \"row_count\": 14, \"preview\": [{\"date\": \"2025-07-11\", \"product\": \"MOCK_PTF_ATLAS\", \"severity\": \"medium\", \"status\": \"closed\", \"closure_days\": 1, \"approval\": \"control.approver.1\", \"override_by\": null, \"notes\": \"Independent price check completed\"}, {\"date\": \"2025-08-05\", \"product\": \"MOCK_PTF_BOREAL\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 2, \"approval\": \"control.approver.2\", \"override_by\": null, \"notes\": \"Late confirmation received and reconciled\"}, {\"date\": \"2025-08-28\", \"product\": \"MOCK_PTF_CEDAR\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 1, \"approval\": \"control.approver.3\", \"override_by\": null, \"notes\": \"Late confirmation received and reconciled\"}, {\"date\": \"2025-09-22\", \"product\": \"MOCK_PTF_DUNE\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 2, \"approval\": \"control.approver.4\", \"override_by\": null, \"notes\": \"Late confirmation received and reconciled\"}, {\"date\": \"2025-10-15\", \"product\": \"MOCK_PTF_ECHO\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 1, \"approval\": \"control.approver.1\", \"override_by\": null, \"notes\": \"Threshold event closed with supporting evidence\"}]}",
+    "locators": [],
+    "truncated": false,
+    "error": null,
+    "round": 0,
+    "timestamp": "2026-08-24T12:32:37.029474+00:00"
+  },
+  {
+    "tool": "read_rows",
+    "arguments": {
+      "path": "post_trade_controls/breaches.csv",
+      "start": 1,
+      "end": 14,
+      "sheet": null
+    },
+    "result_sha256": "a72634f10f48de145a5695557724dc3a2d81a3b1eac094733ca80365859298b6",
+    "result_preview": "[{\"date\": \"2025-07-11\", \"product\": \"MOCK_PTF_ATLAS\", \"severity\": \"medium\", \"status\": \"closed\", \"closure_days\": 1, \"approval\": \"control.approver.1\", \"override_by\": null, \"notes\": \"Independent price check completed\"}, {\"date\": \"2025-08-05\", \"product\": \"MOCK_PTF_BOREAL\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 2, \"approval\": \"control.approver.2\", \"override_by\": null, \"notes\": \"Late confirmation received and reconciled\"}, {\"date\": \"2025-08-28\", \"product\": \"MOCK_PTF_CEDAR\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 1, \"approval\": \"control.approver.3\", \"override_by\": null, \"notes\": \"Late confirmation received and reconciled\"}, {\"date\": \"2025-09-22\", \"product\": \"MOCK_PTF_DUNE\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 2, \"approval\": \"control.approver.4\", \"override_by\": null, \"notes\": \"Late confirmation received and reconciled\"}, {\"date\": \"2025-10-15\", \"product\": \"MOCK_PTF_ECHO\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 1, \"approval\": \"control.approver.1\", \"override_by\": null, \"notes\": \"Threshold event closed with supporting evidence\"}, {\"date\": \"2025-11-07\", \"product\": \"MOCK_PTF_FJORD\", \"severity\": \"medium\", \"status\": \"closed\", \"closure_days\": 2, \"approval\": \"control.approver.2\", \"override_by\": null, \"notes\": \"Booking amendment reviewed before closure\"}, {\"date\": \"2025-12-02\", \"product\": \"MOCK_PTF_GARNET\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 1, \"approval\": \"control.approver.3\", \"override_by\": null, \"notes\": \"Independent price check completed\"}, {\"date\": \"2025-12-25\", \"product\": \"MOCK_PTF_HARBOR\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 2, \"approval\": \"control.approver.4\", \"override_by\": null, \"notes\": \"Late confirmation received and reconciled\"}, {\"date\": \"2026-01-19\", \"product\": \"MOCK_PTF_IVORY\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 1, \"approval\": \"control.approver.1\", \"override_by\": null, \"notes\": \"Late confirmation received and reconciled\"}, {\"date\": \"2026-02-11\", \"product\": \"MOCK_PTF_JADE\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 2, \"approval\": \"control.approver.2\", \"override_by\": null, \"notes\": \"Independent price check completed\"}, {\"date\": \"2026-03-06\", \"product\": \"MOCK_PTF_KITE\", \"severity\": \"medium\", \"status\": \"closed\", \"closure_days\": 1, \"approval\": \"control.approver.3\", \"override_by\": null, \"notes\": \"Threshold event closed with supporting evidence\"}, {\"date\": \"2026-03-31\", \"product\": \"MOCK_PTF_LUMEN\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 2, \"approval\": \"control.approver.4\", \"override_by\": null, \"notes\": \"Late confirmation received and reconciled\"}, {\"date\": \"2026-04-23\", \"product\": \"MOCK_PTF_ATLAS\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 1, \"approval\": \"control.approver.1\", \"override_by\": null, \"notes\": \"Late confirmation received and reconciled\"}, {\"date\": \"2026-05-18\", \"product\": \"MOCK_PTF_BOREAL\", \"severity\": \"low\", \"status\": \"closed\", \"closure_days\": 2, \"approval\": \"control.approver.2\", \"override_by\": null, \"notes\": \"Threshold event closed with supporting evidence\"}]",
+    "locators": [],
+    "truncated": false,
+    "error": null,
+    "round": 0,
+    "timestamp": "2026-08-24T12:32:38.772556+00:00"
+  },
+  {
+    "tool": "describe_columns",
+    "arguments": {
+      "path": "post_trade_controls/breaches.csv",
+      "sheet": null
+    },
+    "result_sha256": "cbdfe5920d2b8ded7149c8e11a21921908cefc4bba52e7447138daa3f8fad736",
+    "result_preview": "[{\"column\": \"date\", \"dtype\": \"String\", \"null_count\": 0, \"distinct\": 14, \"min\": null, \"max\": null}, {\"column\": \"product\", \"dtype\": \"String\", \"null_count\": 0, \"distinct\": 12, \"min\": null, \"max\": null}, {\"column\": \"severity\", \"dtype\": \"String\", \"null_count\": 0, \"distinct\": 2, \"min\": null, \"max\": null}, {\"column\": \"status\", \"dtype\": \"String\", \"null_count\": 0, \"distinct\": 1, \"min\": null, \"max\": null}, {\"column\": \"closure_days\", \"dtype\": \"Int64\", \"null_count\": 0, \"distinct\": 2, \"min\": 1, \"max\": 2}, {\"column\": \"approval\", \"dtype\": \"String\", \"null_count\": 0, \"distinct\": 4, \"min\": null, \"max\": null}, {\"column\": \"override_by\", \"dtype\": \"String\", \"null_count\": 14, \"distinct\": 1, \"min\": null, \"max\": null}, {\"column\": \"notes\", \"dtype\": \"String\", \"null_count\": 0, \"distinct\": 4, \"min\": null, \"max\": null}]",
+    "locators": [],
+    "truncated": false,
+    "error": null,
+    "round": 0,
+    "timestamp": "2026-08-24T12:32:38.772556+00:00"
+  },
+  {
+    "tool": "search_text",
+    "arguments": {
+      "pattern": "policy",
+      "case_insensitive": true,
+      "max_results": 50
+    },
+    "result_sha256": "b1f860d6b1879def0628e838deaa5595be9e1f0928b7af8d33f33e30b9c15b42",
+    "result_preview": "{\"matches\": [], \"truncated\": false}",
+    "locators": [],
+    "truncated": false,
+    "error": null,
+    "round": 0,
+    "timestamp": "2026-08-24T12:32:38.772556+00:00"
+  },
+  {
+    "tool": "search_text",
+    "arguments": {
+      "pattern": "references/policy",
+      "case_insensitive": false,
+      "max_results": 50
+    },
+    "result_sha256": "b1f860d6b1879def0628e838deaa5595be9e1f0928b7af8d33f33e30b9c15b42",
+    "result_preview": "{\"matches\": [], \"truncated\": false}",
+    "locators": [],
+    "truncated": false,
+    "error": null,
+    "round": 0,
+    "timestamp": "2026-08-24T12:32:40.304514+00:00"
+  },
+  {
+    "tool": "run_duckdb_query",
+    "arguments": {
+      "sql": "SELECT date, product, severity, status, closure_days, approval, override_by, notes FROM post_trade_controls.breaches ORDER BY date",
+      "max_rows": 1000
+    },
+    "result_sha256": "06c318b1048886c964b27fdda6ac0eab0a5d051a5c2388455a7ca3159b938487",
+    "result_preview": "ToolError: DuckDB query failed: Catalog Error: Table with name \"post_trade_controls.breaches\" does not exist because schema \"post_trade_controls\" does not exist.\n\nLINE 1: ..., status, closure_days, approval, override_by, notes FROM post_trade_controls.breaches ORDER BY date\n                                                                     ^",
+    "locators": [],
+    "truncated": false,
+    "error": "ToolError: DuckDB query failed: Catalog Error: Table with name \"post_trade_controls.breaches\" does not exist because schema \"post_trade_controls\" does not exist.\n\nLINE 1: ..., status, closure_days, approval, override_by, notes FROM post_trade_controls.breaches ORDER BY date\n                                                                     ^",
+    "round": 0,
+    "timestamp": "2026-08-24T12:33:34.062105+00:00"
+  }
+]

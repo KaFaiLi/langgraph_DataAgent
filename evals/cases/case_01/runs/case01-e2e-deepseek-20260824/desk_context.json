@@ -1,0 +1,31 @@
+{
+  "desk_name": "Cross-Asset Market Making Desk",
+  "business_description": "Market making across equity derivatives, rates, credit, FX, and portfolio hedges.",
+  "products": [
+    "equity derivatives",
+    "rates",
+    "credit",
+    "FX",
+    "portfolio hedges"
+  ],
+  "currencies": [
+    "EUR",
+    "USD",
+    "JPY",
+    "GBP",
+    "EM exposures"
+  ],
+  "risk_metrics": [
+    "VaR",
+    "SVaR",
+    "stress",
+    "exposure"
+  ],
+  "review_start": "2025-07-01",
+  "review_end": "2026-06-30",
+  "limits": [],
+  "controls": [],
+  "source_backed_facts": [],
+  "inferred_facts": [],
+  "unresolved_items": []
+}

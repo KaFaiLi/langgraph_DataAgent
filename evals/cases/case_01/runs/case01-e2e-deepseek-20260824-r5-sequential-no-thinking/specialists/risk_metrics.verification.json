@@ -1,0 +1,616 @@
+{
+  "verifier_round": 2,
+  "initial_candidates": [
+    {
+      "finding_id": "RISK-F1",
+      "title": "VaR limit breach on MOCK_PTF_ATLAS MOCK_PC_FLOW with 3 consecutive days above hard bound",
+      "category": "Limit breach",
+      "severity": "high",
+      "confidence": 0.95,
+      "claim": "MOCK_LIMIT_01_01 (VaR, MEUR, upper bound 7.0) was breached on 2026-03-25, 2026-03-26, and 2026-03-27, with worst value 7.55 on 2026-03-26 (utilization 107.86%). This is a hard-bound breach population of 3 observations, confirmed by deterministic analysis.",
+      "period": {
+        "start": "2026-03-25",
+        "end": "2026-03-27"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9169:9169",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9217:9217",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9265:9265",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Identified breach observations from deterministic limit consumption analysis.",
+        "Verified worst value and utilization from the flagged candidate."
+      ],
+      "alternative_explanations": [
+        "Market move or new activity could explain the spike.",
+        "Limit may have been temporarily increased but not reflected in the series."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9409:9409",
+          "quote": "current bounds changed to 9.0 effective 2026-04-01"
+        }
+      ],
+      "verifier_status": "pending",
+      "recommendation": "Review the cause of the breach and confirm whether the limit increase was approved before the breach dates.",
+      "is_observation": false
+    },
+    {
+      "finding_id": "RISK-F2",
+      "title": "Limit increase effective before workflow approval after VaR breach on MOCK_PC_FLOW",
+      "category": "Governance",
+      "severity": "high",
+      "confidence": 0.8,
+      "claim": "MOCK_LIMIT_01_01 upper bound changed from 7.0 to 9.0 effective 2026-04-01, but the associated Colibris workflow (excess 880001) has request date 2026-04-02, trader approval 2026-04-12, and risk approval 2026-04-15. The effective date precedes the recorded approvals, and the change follows a 3-day breach in late March 2026. This is a material governance candidate.",
+      "period": {
+        "start": "2026-03-25",
+        "end": "2026-04-15"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9409:9409",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=42:42",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Compared effective date from SGMR with workflow milestones from Colibris.",
+        "Noted prior breach observations from deterministic analysis."
+      ],
+      "alternative_explanations": [
+        "Effective date may be backdated for legitimate reasons.",
+        "Workflow dates may be system processing dates, not approval dates."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9169:9169",
+          "quote": "prior breach on 2026-03-25"
+        }
+      ],
+      "verifier_status": "pending",
+      "recommendation": "Obtain the limit change approval and effective-date history to confirm whether the change was retrospective.",
+      "is_observation": false
+    },
+    {
+      "finding_id": "RISK-F3",
+      "title": "Recurring excess events on MOCK_PC_FLOW VaR with 9 events and 2 still open",
+      "category": "Excess recurrence",
+      "severity": "medium",
+      "confidence": 0.9,
+      "claim": "MOCK_PC_FLOW VaR (limit 7.0 MEUR) had 9 excess events between 2025-07-01 and 2026-04-07, with 2 still open as of 2026-06-30. Max recorded usage reached 121.67%. This indicates a recurring pattern of limit breaches on this perimeter.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-04-07"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=44:44",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=6:6",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Counted excess events per PC/metric from deterministic workflow analysis.",
+        "Identified open events and max usage."
+      ],
+      "alternative_explanations": [
+        "Recurrence may reflect normal market-making activity in a volatile period.",
+        "Some events may be duplicates or system artifacts."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "pending",
+      "recommendation": "Investigate the root cause of repeated breaches and consider whether the limit level is appropriate.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "RISK-F4",
+      "title": "Open excess events past recorded deadlines on multiple perimeters",
+      "category": "Excess governance",
+      "severity": "medium",
+      "confidence": 0.85,
+      "claim": "Seven excess events remain open as of 2026-06-30, and at least six of them have both explanation action deadlines and technical deadlines in the past (e.g., excess 590000 created 2025-07-01 with deadlines 2025-07-08 and 2025-07-15). This suggests unresolved or stale control items.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=9:9",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=16:16",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Identified open excess events with past deadlines from deterministic workflow analysis.",
+        "Confirmed open state and deadline dates."
+      ],
+      "alternative_explanations": [
+        "Extract may be stale; events may have been closed after the as-of date.",
+        "Deadlines may be system-generated and not contractual SLAs."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "pending",
+      "recommendation": "Confirm extract freshness and obtain closure evidence for these open events.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "RISK-F5",
+      "title": "Limit increase status APPROVED without increase ID on multiple excess records",
+      "category": "Data consistency",
+      "severity": "low",
+      "confidence": 0.9,
+      "claim": "At least 10 excess records have increaseWorkflowStatus 'APPROVED' but increaseId equals 0 (e.g., excess 590000, 590005, 590010). This is an internal consistency issue in the Colibris data.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=7:7",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=12:12",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Scanned excess records for increase status without ID from deterministic workflow analysis."
+      ],
+      "alternative_explanations": [
+        "Increase ID may be populated in a separate system not included.",
+        "Status may be inherited from a parent limit."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "pending",
+      "recommendation": "Verify the increase workflow data completeness and correct the mapping.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "RISK-F6",
+      "title": "Workflow date order mismatch on excess 880001 and 880002",
+      "category": "Data quality",
+      "severity": "low",
+      "confidence": 0.95,
+      "claim": "Excess records 880001 and 880002 have explanation and validation timestamps before the excess creation date, indicating a date order mismatch in the workflow data.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=32:32",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=42:42",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Identified date order mismatches from deterministic workflow analysis."
+      ],
+      "alternative_explanations": [
+        "Creation date may be a system processing date, not the event date.",
+        "Timestamps may be in different timezones."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "pending",
+      "recommendation": "Investigate the timestamp semantics and correct the data.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "RISK-F7",
+      "title": "Cross-source limit type mismatch between Colibris and SGMR for VaR limits",
+      "category": "Cross-source consistency",
+      "severity": "medium",
+      "confidence": 0.8,
+      "claim": "Colibris records for MOCK_PC_FLOW and MOCK_PC_HEDGE VaR excesses show limitType 'RELATIVE_THRESHOLD', while the matched SGMR limit definitions are 'ABSOLUTE_THRESHOLD'. This discrepancy affects the interpretation of the limit type and requires confirmation.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=10:10",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=1:1",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Compared limit types across sources from deterministic cross-source consistency analysis."
+      ],
+      "alternative_explanations": [
+        "Colibris may describe the event trigger type, not the limit type.",
+        "Different systems may use different terminology."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "pending",
+      "recommendation": "Clarify the meaning of limitType in each system and align definitions.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "RISK-F8",
+      "title": "Event-to-SGMR row reconciliation unresolved due to missing unique bridge",
+      "category": "Reconciliation",
+      "severity": "info",
+      "confidence": 0.9,
+      "claim": "Only 25 of 50 Colibris events have semantic date matches with SGMR rows, and no unique direct ID matches exist. The event-to-observation reconciliation is UNRESOLVED because a unique source-backed sgmrId bridge is required.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=1:1",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Reviewed cross-source consistency results showing unresolved reconciliation."
+      ],
+      "alternative_explanations": [
+        "Semantic matching may be ambiguous because one PC maps to multiple portfolios.",
+        "Weekend/holiday dates may legitimately lack SGMR rows."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "pending",
+      "recommendation": "Obtain a documented unique ID bridge between Colibris and SGMR to enable event-level reconciliation.",
+      "is_observation": true
+    }
+  ],
+  "verified_findings": [
+    {
+      "finding_id": "RISK-F1",
+      "title": "VaR limit breach on MOCK_PTF_ATLAS MOCK_PC_FLOW with 3 consecutive days above hard bound",
+      "category": "Limit breach",
+      "severity": "high",
+      "confidence": 0.95,
+      "claim": "MOCK_LIMIT_01_01 (VaR, MEUR, upper bound 7.0) was breached on 2026-03-25, 2026-03-26, and 2026-03-27, with worst value 7.55 on 2026-03-26 (utilization 107.86%). This is a hard-bound breach population of 3 observations, confirmed by deterministic analysis.",
+      "period": {
+        "start": "2026-03-25",
+        "end": "2026-03-27"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9169:9169",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9217:9217",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9265:9265",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Identified breach observations via deterministic limit consumption analysis.",
+        "Calculated utilization as consoValue/limMaxValue for each date."
+      ],
+      "alternative_explanations": [
+        "Market move or new activity could explain the spike.",
+        "Limit may have been temporarily increased but not reflected in the series."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9409:9409",
+          "quote": "current bounds changed to 9.0 effective 2026-04-01"
+        }
+      ],
+      "verifier_status": "passed",
+      "recommendation": "Review the cause of the breach and confirm whether the limit increase was approved before the breach dates.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "RISK-F2",
+      "title": "Limit increase effective before workflow approval after VaR breach on MOCK_PC_FLOW",
+      "category": "Governance",
+      "severity": "high",
+      "confidence": 0.8,
+      "claim": "MOCK_LIMIT_01_01 upper bound changed from 7.0 to 9.0 effective 2026-04-01, but the associated Colibris workflow (excess 880001) has request date 2026-04-02, trader approval 2026-04-12, and risk approval 2026-04-15. The effective date precedes the recorded approvals, and the change follows a 3-day breach in late March 2026. This is a material governance candidate.",
+      "period": {
+        "start": "2026-03-25",
+        "end": "2026-04-15"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9409:9409",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=42:42",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Compared effective date from SGMR with workflow dates from Colibris.",
+        "Identified that effective date precedes request and approval dates."
+      ],
+      "alternative_explanations": [
+        "Effective date may be backdated for legitimate reasons.",
+        "Workflow dates may be system processing dates, not approval dates."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=9169:9169",
+          "quote": "prior breach on 2026-03-25"
+        }
+      ],
+      "verifier_status": "passed",
+      "recommendation": "Obtain the limit change approval and effective-date history to confirm whether the change was retrospective.",
+      "is_observation": false
+    },
+    {
+      "finding_id": "RISK-F3",
+      "title": "Recurring excess events on MOCK_PC_FLOW VaR with 9 events and 2 still open",
+      "category": "Excess recurrence",
+      "severity": "medium",
+      "confidence": 0.9,
+      "claim": "MOCK_PC_FLOW VaR (limit 7.0 MEUR) had 9 excess events between 2025-07-01 and 2026-04-07, with 2 still open as of 2026-06-30. Max recorded usage reached 116% (excessMaxUsage=1.16). This indicates a recurring pattern of limit breaches on this perimeter.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-04-07"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=44:44",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=6:6",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Counted excess events per PC/indicator from Colibris.",
+        "Used deterministic max_last_usage value."
+      ],
+      "alternative_explanations": [
+        "Recurrence may reflect normal market-making activity in a volatile period.",
+        "Some events may be duplicates or system artifacts."
+      ],
+      "counter_evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": "limitType RELATIVE_THRESHOLD vs SGMR ABSOLUTE_THRESHOLD"
+        }
+      ],
+      "verifier_status": "passed",
+      "recommendation": "Investigate the root cause of repeated breaches and consider whether the limit level is appropriate.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "RISK-F5",
+      "title": "Limit increase status APPROVED without increase ID on multiple excess records",
+      "category": "Data consistency",
+      "severity": "low",
+      "confidence": 0.9,
+      "claim": "At least 10 excess records have increaseWorkflowStatus 'APPROVED' but increaseId equals 0 (e.g., excess 590000, 590005, 590010). This is an internal consistency issue in the Colibris data.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=7:7",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=12:12",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Filtered records with increaseWorkflowStatus APPROVED and increaseId=0.",
+        "Counted occurrences from deterministic analysis."
+      ],
+      "alternative_explanations": [
+        "Increase ID may be populated in a separate system not included.",
+        "Status may be inherited from a parent limit."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "passed",
+      "recommendation": "Verify the increase workflow data completeness and correct the mapping.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "RISK-F6",
+      "title": "Workflow date order mismatch on excess 880001 and 880002",
+      "category": "Data quality",
+      "severity": "low",
+      "confidence": 0.95,
+      "claim": "Excess records 880001 and 880002 have explanation and validation timestamps before the excess creation date, indicating a date order mismatch in the workflow data.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=32:32",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=42:42",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Compared creation date with explanation and validation timestamps.",
+        "Identified timestamps preceding creation date."
+      ],
+      "alternative_explanations": [
+        "Creation date may be a system processing date, not the event date.",
+        "Timestamps may be in different timezones."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "passed",
+      "recommendation": "Investigate the timestamp semantics and correct the data.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "RISK-F7",
+      "title": "Cross-source limit type mismatch between Colibris and SGMR for VaR limits",
+      "category": "Cross-source consistency",
+      "severity": "medium",
+      "confidence": 0.8,
+      "claim": "Colibris records for MOCK_PC_FLOW and MOCK_PC_HEDGE VaR excesses show limitType 'RELATIVE_THRESHOLD', while the matched SGMR limit definitions are 'ABSOLUTE_THRESHOLD'. This discrepancy affects the interpretation of the limit type and requires confirmation.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=10:10",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=1:1",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Matched Colibris limit definitions to SGMR by PC and indicator.",
+        "Compared limitType fields across sources."
+      ],
+      "alternative_explanations": [
+        "Colibris may describe the event trigger type, not the limit type.",
+        "Different systems may use different terminology."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "passed",
+      "recommendation": "Clarify the meaning of limitType in each system and align definitions.",
+      "is_observation": true
+    },
+    {
+      "finding_id": "RISK-F8",
+      "title": "Event-to-SGMR row reconciliation unresolved due to missing unique bridge",
+      "category": "Reconciliation",
+      "severity": "info",
+      "confidence": 0.9,
+      "claim": "Only 25 of 50 Colibris events have semantic date matches with SGMR rows, and no unique direct ID matches exist. The event-to-observation reconciliation is UNRESOLVED because a unique source-backed sgmrId bridge is required.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/SGMR_consumption_combined_2025-07-01-2026-06-30.parquet#rows=1:1",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Attempted to match Colibris events to SGMR rows using semantic dates.",
+        "Checked for unique ID matches; none found."
+      ],
+      "alternative_explanations": [
+        "Semantic matching may be ambiguous because one PC maps to multiple portfolios.",
+        "Weekend/holiday dates may legitimately lack SGMR rows."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "passed",
+      "recommendation": "Obtain a documented unique ID bridge between Colibris and SGMR to enable event-level reconciliation.",
+      "is_observation": true
+    }
+  ],
+  "rejected_findings": [],
+  "unresolved_findings": [
+    {
+      "finding_id": "RISK-F4",
+      "title": "Open excess events past recorded deadlines on multiple perimeters",
+      "category": "Excess governance",
+      "severity": "medium",
+      "confidence": 0.85,
+      "claim": "At least three excess events remain open as of 2026-06-30 with both explanation action deadlines and technical deadlines in the past (e.g., excess 590000 created 2025-07-01 with deadlines 2025-07-08 and 2025-07-15). This suggests unresolved or stale control items.",
+      "period": {
+        "start": "2025-07-01",
+        "end": "2026-06-30"
+      },
+      "evidence": [
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=2:2",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=9:9",
+          "quote": null
+        },
+        {
+          "locator": "source://risk_metrics/Filtered_Colibris_All_Maket_Excesses_with_llm_tags.csv#rows=16:16",
+          "quote": null
+        }
+      ],
+      "analysis_performed": [
+        "Identified open excess events with past deadlines from deterministic analysis.",
+        "Confirmed as-of date 2026-06-30 from analysis context."
+      ],
+      "alternative_explanations": [
+        "Extract may be stale; events may have been closed after the as-of date.",
+        "Deadlines may be system-generated and not contractual SLAs."
+      ],
+      "counter_evidence": [],
+      "verifier_status": "unresolved",
+      "recommendation": "Confirm extract freshness and obtain closure evidence for these open events.",
+      "is_observation": true
+    }
+  ],
+  "citation_failures": []
+}

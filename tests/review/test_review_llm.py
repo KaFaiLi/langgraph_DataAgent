@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from langchain_core.runnables import RunnableLambda
 from pydantic import BaseModel
 
 from data_agent.config import Settings
@@ -52,9 +53,9 @@ def test_deepseek_review_provider_maps_cost_roles_to_v4_models(monkeypatch) -> N
     calls: list[dict] = []
 
     class FakeModel:
-        def with_structured_output(self, schema):
-            calls.append({"schema": schema})
-            return (self, schema)
+        def with_structured_output(self, schema, **kwargs):
+            calls.append({"schema": schema, **kwargs})
+            return RunnableLambda(lambda messages: messages)
 
     def fake_get_chat_model(**kwargs):
         calls.append(kwargs)
@@ -69,12 +70,18 @@ def test_deepseek_review_provider_maps_cost_roles_to_v4_models(monkeypatch) -> N
     provider = DeepSeekReviewProvider(settings)
 
     provider(ModelTier.LOW_COST)
-    provider(ModelTier.HIGH_COST, _Payload)
+    runnable = provider(ModelTier.HIGH_COST, _Payload)
 
     assert calls[0]["model"] == "deepseek-v4-flash"
     assert calls[0]["provider"] == "deepseek"
+    assert calls[0]["max_retries"] == 5
+    assert calls[0]["extra_body"] == {"thinking": {"type": "disabled"}}
     assert calls[1]["model"] == "deepseek-v4-pro"
-    assert calls[2] == {"schema": _Payload}
+    assert calls[1]["max_retries"] == 5
+    assert calls[1]["extra_body"] == {"thinking": {"type": "disabled"}}
+    assert calls[2] == {"schema": _Payload, "method": "json_mode"}
+    messages = runnable.invoke([])
+    assert '"value"' in messages[-1].content
 
 
 def test_configured_review_provider_respects_shared_provider_setting() -> None:

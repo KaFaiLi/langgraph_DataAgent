@@ -1,0 +1,38 @@
+{
+  "width": 1280,
+  "height": 720,
+  "files": [
+    {
+      "file": "01_cover.png",
+      "sha256": "1f0beafe5b97daeef7a4b0d6b8de9c85321d6c2dc71ec673518d15d45d1f680b"
+    },
+    {
+      "file": "02_summary.png",
+      "sha256": "69f7090329e5c3d86247f32bc68fb127fc607dc4b4aa32533c2948138180ddb0"
+    },
+    {
+      "file": "03_specialist.png",
+      "sha256": "a2891e10c09e826859fecee541702c2dfc398e32d07fb91f1d76f64adf2da5e3"
+    },
+    {
+      "file": "04_specialist.png",
+      "sha256": "4f67b501210af0626d173e36a2d6c5c0cfb20604975088dc4afb878678e99bcd"
+    },
+    {
+      "file": "05_specialist.png",
+      "sha256": "59b581d9e15b5f0e4a99d7e42c2baf8920ef4fa6946dff487e50d456b41c78ba"
+    },
+    {
+      "file": "06_specialist.png",
+      "sha256": "553ed717d4a1ef3b7b6ab71de5db1460d64064e04e14dd2907d39786e53c7945"
+    },
+    {
+      "file": "07_synthesis.png",
+      "sha256": "f1351a0b394c67a449b43272740110e2959843670641d6f9e52c1f928bf77233"
+    },
+    {
+      "file": "08_closing.png",
+      "sha256": "d136d82d815f428f7520d506d31469d456f11ca7bc591b62999670c9591e07c0"
+    }
+  ]
+}

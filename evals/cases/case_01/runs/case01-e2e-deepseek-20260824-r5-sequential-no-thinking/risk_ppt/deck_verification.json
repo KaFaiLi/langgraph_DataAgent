@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "summary": "All eight slides are present. All planned finding and overview IDs appear in visible text or notes. Claims are supported by the reviewed corpus. Overview fingerprints and source locators appear in notes. Deterministic quality and conversion reports passed.",
+  "missing_finding_ids": [],
+  "missing_overview_ids": [],
+  "unsupported_claims": [],
+  "traceability_issues": []
+}

@@ -9,12 +9,9 @@ from pydantic import BaseModel
 from data_agent.review.domain.domains import SOURCE_DOMAINS, SpecialistDomain
 from data_agent.review.domain.review import ReviewTask, SourceCoverage
 from data_agent.review.domain.source import SourceManifest
+from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.review.llm.models import ModelTier
 from data_agent.review.llm.structured import invoke_structured
-from data_agent.review.orchestration.specialist_graph import (
-    DEFAULT_LLM_PROVIDER,
-    LLMProvider,
-)
 from data_agent.review.orchestration.state import ParentState
 from data_agent.skills.registry import SPECIALISTS, specialist_domain_for
 
@@ -41,7 +38,7 @@ class ClassificationOutput(BaseModel):
     domains: list[SpecialistDomain]
 
 
-def _provider(config: RunnableConfig) -> LLMProvider:
+def _provider(config: RunnableConfig) -> ReviewLLMProvider:
     provider = (config or {}).get("configurable", {}).get("llm_provider")
     if provider is None:
         return DEFAULT_LLM_PROVIDER
@@ -49,7 +46,7 @@ def _provider(config: RunnableConfig) -> LLMProvider:
 
 
 def _classify_source(
-    provider: LLMProvider, source_id: str, path: str, columns: list[str]
+    provider: ReviewLLMProvider, source_id: str, path: str, columns: list[str]
 ) -> list[SpecialistDomain]:
     runnable = provider(ModelTier.LOW_COST, ClassificationOutput)
     user = (

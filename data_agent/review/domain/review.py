@@ -1,4 +1,4 @@
-"""Review-run contracts: run status, coverage gate, review tasks."""
+"""Review-run persistence contracts and specialist review tasks."""
 
 from __future__ import annotations
 
@@ -18,10 +18,6 @@ CoverageStatus = Literal["pending", "reviewed", "irrelevant", "unsupported"]
 class RunStatus(StrEnum):
     COMPLETED = "completed"
     FAILED = "failed"
-
-
-class CoverageError(RuntimeError):
-    """Raised when the coverage gate blocks synthesis (never silent)."""
 
 
 class SourceCoverage(BaseModel):
@@ -64,7 +60,7 @@ class RunContext(BaseModel):
 
 
 class ReviewRun(BaseModel):
-    """Top-level run record with the hard source-coverage gate."""
+    """Persisted top-level run record."""
 
     run_id: str
     status: RunStatus
@@ -77,26 +73,5 @@ class ReviewRun(BaseModel):
     tasks: list[ReviewTask] = Field(default_factory=list)
 
     failure_reason: str | None = None
-
-    def pending_sources(self) -> list[SourceCoverage]:
-        return [entry for entry in self.coverage if not entry.is_settled()]
-
-    def assert_full_coverage(self) -> None:
-        """Raise ``CoverageError`` while any source is still pending review."""
-        pending = self.pending_sources()
-        if pending:
-            ids = ", ".join(sorted(entry.source_id for entry in pending))
-            raise CoverageError(f"coverage gate failed: {len(pending)} source(s) unreviewed: {ids}")
-
-    def coverage_for(self, source_id: str) -> SourceCoverage:
-        for entry in self.coverage:
-            if entry.source_id == source_id:
-                return entry
-        raise KeyError(f"no coverage entry for source {source_id!r}")
-
-    def mark_failed(self, reason: str) -> None:
-        """Record an explicit failure; runs never fail silently (spec section 41)."""
-        self.status = RunStatus.FAILED
-        self.failure_reason = reason
 
 

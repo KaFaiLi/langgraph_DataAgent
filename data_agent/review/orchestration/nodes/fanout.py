@@ -14,14 +14,12 @@ from data_agent.review.domain.finding import Finding
 from data_agent.review.domain.reports import SpecialistReport
 from data_agent.review.domain.source import SourceManifest
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
-from data_agent.review.orchestration.specialist_graph import (
-    DEFAULT_LLM_PROVIDER,
-    LLMProvider,
-    _sanitize_finding_references,
-)
+from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
+from data_agent.review.orchestration.finding_policy import sanitize_finding_references
 from data_agent.review.orchestration.state import ParentState
 from data_agent.skills.registry import build_specialist, get_specialist
 from data_agent.tools.review_context import ToolContext
+
 
 def _sanitize_verification_collection(
     items: list[dict[str, Any]], validator: EvidenceValidator
@@ -30,7 +28,7 @@ def _sanitize_verification_collection(
     citation_failures: list[dict[str, Any]] = []
     for item in items:
         finding = Finding.model_validate(item)
-        clean, failures = _sanitize_finding_references(finding, validator)
+        clean, failures = sanitize_finding_references(finding, validator)
         sanitized.append(clean.model_dump(mode="json"))
         citation_failures.extend(
             {
@@ -58,7 +56,7 @@ class _SpecialistOutcome:
     failure_reason: str | None = None
 
 
-def _provider(config: RunnableConfig) -> LLMProvider:
+def _provider(config: RunnableConfig) -> ReviewLLMProvider:
     provider = (config or {}).get("configurable", {}).get("llm_provider")
     if provider is None:
         return DEFAULT_LLM_PROVIDER
@@ -105,7 +103,7 @@ def _specialist_config(
 def _run_specialist(
     task_data: dict,
     *,
-    provider: LLMProvider,
+    provider: ReviewLLMProvider,
     manifest: SourceManifest,
     ctx: ToolContext,
     state: ParentState,

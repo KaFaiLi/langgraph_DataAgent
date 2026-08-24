@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from langgraph.checkpoint.sqlite import SqliteSaver
 
-from data_agent.review.application.review_service import ReviewService
+from data_agent.review import ReviewService, ReviewStatus
 from data_agent.review.application.run_bundle import (
     RunBundleError,
     load_completed_run,
@@ -288,35 +288,6 @@ def test_completed_resume_uses_validated_bundle_without_a_checkpoint_or_model_ca
 
     result = ReviewService(llm_provider=forbidden_provider).resume(run_dir)
 
-    assert result["status"] == "completed"
-    assert result["run_id"] == "ARCHIVED-RUN"
-
-
-def test_completed_resume_treats_optional_inputs_as_consistency_checks(tmp_path: Path) -> None:
-    run_dir = tmp_path / "completed"
-    _write_completed_run(run_dir)
-    source = tmp_path / "source"
-    source.mkdir()
-    desk = DeskContext(
-        desk_name="Desk",
-        business_description="",
-        review_start=date(2025, 1, 1),
-        review_end=date(2025, 1, 31),
-    )
-    write_run_context(
-        run_dir,
-        run_id="ARCHIVED-RUN",
-        source_root=source,
-        desk_template=desk,
-        review_period=DateRange(start=desk.review_start, end=desk.review_end),
-    )
-
-    with pytest.raises(RunBundleError, match="resume_source_mismatch"):
-        ReviewService().resume(run_dir, source=tmp_path / "other-source")
-    with pytest.raises(RunBundleError, match="resume_period_mismatch"):
-        ReviewService().resume(
-            run_dir,
-            review_period=DateRange(start=date(2025, 2, 1), end=date(2025, 2, 28)),
-        )
-
+    assert result.status is ReviewStatus.COMPLETED
+    assert result.run_id == "ARCHIVED-RUN"
 

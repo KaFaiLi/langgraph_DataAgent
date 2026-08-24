@@ -1,0 +1,176 @@
+[
+  {
+    "page": 1,
+    "slide": {
+      "role": "cover",
+      "title": "Cross-Asset Market Making Desk \u2014 Independent Trading-Desk Risk Review",
+      "takeaway": "Independent review of risk metrics, PnL, post-trade controls, and risk commentary for the Cross-Asset Market Making Desk.",
+      "finding_ids": [],
+      "overview_id": null,
+      "emphasis": "neutral",
+      "limitation": ""
+    },
+    "copy": {
+      "eyebrow": "Independent Risk Review",
+      "headline": "Cross-Asset Market Making Desk \u2014 Independent Trading-Desk Risk Review",
+      "commentary": "2025-07-01 to 2026-06-30",
+      "why_it_matters": "Cross-Asset Market Making Desk"
+    }
+  },
+  {
+    "page": 2,
+    "slide": {
+      "role": "summary",
+      "title": "Material VaR limit breach and governance concerns require immediate follow-up",
+      "takeaway": "VaR breach on MOCK_PC_FLOW followed by limit increase effective before approvals; recurring excess events and data inconsistencies raise governance concerns.",
+      "finding_ids": [
+        "LF-001",
+        "LF-002",
+        "LF-003",
+        "LF-004"
+      ],
+      "overview_id": null,
+      "emphasis": "focus",
+      "limitation": "No direct evidence of unauthorized activity; data gaps limit full reconciliation."
+    },
+    "copy": {
+      "eyebrow": "Risk Governance Alert",
+      "headline": "Material VaR limit breach and governance concerns require immediate follow-up",
+      "commentary": "VaR breach on MOCK_PC_FLOW followed by limit increase effective before approvals; recurring excess events and data inconsistencies raise governance concerns.",
+      "why_it_matters": "No direct evidence of unauthorized activity; data gaps limit full reconciliation."
+    }
+  },
+  {
+    "page": 3,
+    "slide": {
+      "role": "specialist",
+      "title": "VaR limit breach and recurring excess events indicate limit framework misalignment",
+      "takeaway": "MOCK_PC_FLOW VaR breached on three consecutive days; limit increase effective before approvals; 9 excess events with 2 open.",
+      "finding_ids": [
+        "LF-001",
+        "LF-002",
+        "LF-003",
+        "LF-004"
+      ],
+      "overview_id": "risk-metrics.limit-utilization",
+      "emphasis": "focus",
+      "limitation": "Utilization uses recorded directional bound; position direction not established."
+    },
+    "copy": {
+      "eyebrow": "VaR Limit Breach",
+      "headline": "VaR limit breach and recurring excess events indicate limit framework misalignment",
+      "commentary": "VaR breached three consecutive days; limit increase effective before approvals; 9 excess events with 2 open.",
+      "why_it_matters": "Misaligned limits and governance gaps undermine risk control, requiring immediate review and remediation."
+    }
+  },
+  {
+    "page": 4,
+    "slide": {
+      "role": "specialist",
+      "title": "Large year-end freeze adjustment and period-end concentration warrant review",
+      "takeaway": "Adjustment 96600008 (-6.25M EUR, z-score -3.28) is largest; period-end concentration in Dec-2025, Mar-2026, Jun-2026.",
+      "finding_ids": [
+        "LF-005",
+        "LF-006"
+      ],
+      "overview_id": "pnl.adjustment-profile",
+      "emphasis": "watch",
+      "limitation": "Absolute amounts do not preserve adjustment direction; EUR conversion mismatches possible."
+    },
+    "copy": {
+      "eyebrow": "Year-End Adjustment Review",
+      "headline": "Large year-end freeze adjustment and period-end concentration warrant review",
+      "commentary": "Adjustment 96600008 is -6.25M EUR with z-score -3.28, the largest in the period.",
+      "why_it_matters": "Period-end concentration in Dec-2025, Mar-2026, Jun-2026 may signal routine accruals but needs scrutiny."
+    }
+  },
+  {
+    "page": 5,
+    "slide": {
+      "role": "specialist",
+      "title": "Post-trade controls show no approval gaps or unresolved breaches",
+      "takeaway": "All 14 breaches have approval references; no unresolved breaches; mean closure time unavailable due to data limitations.",
+      "finding_ids": [],
+      "overview_id": "post-trade-controls.breaches-over-time",
+      "emphasis": "positive",
+      "limitation": "Each row treated as one breach; status inferred only from valid closure date."
+    },
+    "copy": {
+      "eyebrow": "Post-Trade Controls",
+      "headline": "No approval gaps or unresolved breaches",
+      "commentary": "All 14 breaches have approval references; none unresolved. Mean closure time unavailable due to data limitations.",
+      "why_it_matters": "Approval coverage is complete, but closure tracking needs better data to assess timeliness."
+    }
+  },
+  {
+    "page": 6,
+    "slide": {
+      "role": "specialist",
+      "title": "Commentary claim of VaR within appetite conflicts with breach evidence",
+      "takeaway": "Validated commentary on 2026-03-27 states no escalation required, but VaR breach occurred same day; 10 records pending validation.",
+      "finding_ids": [
+        "LF-008"
+      ],
+      "overview_id": "risk-commentary.extract-coverage",
+      "emphasis": "watch",
+      "limitation": "Coverage counts finalized extracts only; underlying commentary completeness not implied."
+    },
+    "copy": {
+      "eyebrow": "Risk Commentary",
+      "headline": "Commentary claim of VaR within appetite conflicts with breach evidence",
+      "commentary": "Validated commentary on 2026-03-27 states no escalation required, but VaR breach occurred same day; 10 records pending validation.",
+      "why_it_matters": "Conflicting claims undermine trust in commentary; pending validation may hide further discrepancies."
+    }
+  },
+  {
+    "page": 7,
+    "slide": {
+      "role": "synthesis",
+      "title": "Moderate risk profile with isolated high-severity governance concerns",
+      "takeaway": "VaR breach and limit increase timing suggest potential control circumvention; post-trade controls robust; data gaps require follow-up.",
+      "finding_ids": [
+        "LF-001",
+        "LF-002",
+        "LF-003",
+        "LF-004",
+        "LF-005",
+        "LF-006",
+        "LF-008"
+      ],
+      "overview_id": null,
+      "emphasis": "focus",
+      "limitation": "Unresolved data gaps and missing unique identifiers limit full reconciliation."
+    },
+    "copy": {
+      "eyebrow": "Risk Review",
+      "headline": "Moderate risk profile with isolated high-severity governance concerns",
+      "commentary": "VaR breach and limit increase timing suggest potential control circumvention; post-trade controls robust; data gaps require follow-up.",
+      "why_it_matters": "Unresolved data gaps and missing unique identifiers limit full reconciliation."
+    }
+  },
+  {
+    "page": 8,
+    "slide": {
+      "role": "closing",
+      "title": "Immediate actions: investigate limit change, resolve data inconsistencies, validate commentary",
+      "takeaway": "Obtain limit approval history; investigate recurring breaches; verify Colibris data; review large adjustment; follow up on pending validations.",
+      "finding_ids": [
+        "LF-001",
+        "LF-002",
+        "LF-003",
+        "LF-004",
+        "LF-005",
+        "LF-008"
+      ],
+      "overview_id": null,
+      "emphasis": "focus",
+      "limitation": "Actions based on available evidence; further investigation may reveal additional issues."
+    },
+    "copy": {
+      "eyebrow": "Immediate actions",
+      "headline": "Immediate actions: investigate limit change, resolve data inconsistencies, validate commentary",
+      "commentary": "Obtain limit approval history; investigate recurring breaches; verify Colibris data; review large adjustment; follow up on pending validations.",
+      "why_it_matters": "Act now to correct governance gaps and ensure risk data integrity."
+    }
+  }
+]
