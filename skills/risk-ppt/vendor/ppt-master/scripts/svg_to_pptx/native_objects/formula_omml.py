@@ -58,56 +58,230 @@ _MAX_OMML_LENGTH = 1_048_576
 _MAX_OMML_DEPTH = 256
 _FORBIDDEN_XML_RE = re.compile(r"<!\s*(?:DOCTYPE|ENTITY)\b", re.IGNORECASE)
 
-_MATH_ELEMENTS = frozenset({
-    "acc", "accPr", "bar", "barPr", "baseJc", "begChr", "box", "boxPr",
-    "borderBox", "borderBoxPr", "chr", "count", "ctrlPr", "d", "deg", "degHide",
-    "den", "dPr", "e", "endChr", "eqArr", "eqArrPr", "f", "fName",
-    "fPr", "func", "funcPr", "groupChr", "groupChrPr", "grow", "hideBot",
-    "hideLeft", "hideRight", "hideTop", "jc", "lim", "limLoc", "limLow",
-    "limLowPr", "limUpp", "limUppPr", "lit", "m", "mc", "mcPr", "mcs",
-    "mPr", "mr", "nary", "naryPr", "nor", "num", "oMath", "oMathPara",
-    "oMathParaPr", "phant", "phantPr", "plcHide", "pos", "r", "rad",
-    "radPr", "rPr", "scr", "sepChr", "show", "sPre", "sPrePr", "opEmu",
-    "sSub", "sSubSup", "sSup", "strikeBLTR", "strikeTLBR",
-    "sty", "sub", "subHide", "sup", "supHide", "t",
-    "type", "vertJc", "zeroAsc", "zeroDesc", "zeroWid",
-})
-_DRAWING_ELEMENTS = frozenset({
-    "cs", "ea", "latin", "rPr", "solidFill", "srgbClr",
-})
-_DRAWING_ATTRIBUTES = frozenset({
-    "b", "dirty", "i", "lang", "sz", "typeface", "val",
-})
-_ARGUMENT_ELEMENTS = frozenset({
-    "acc", "bar", "borderBox", "box", "d", "eqArr", "f", "func", "groupChr",
-    "limLow", "limUpp", "m", "nary", "phant", "r", "rad", "sPre",
-    "sSub", "sSubSup", "sSup",
-})
-_ARGUMENT_CONTAINERS = frozenset({
-    "deg", "den", "e", "fName", "lim", "num", "oMath", "sub", "sup",
-})
-_ON_OFF_ELEMENTS = frozenset({
-    "degHide", "grow", "hideBot", "hideLeft", "hideRight", "hideTop", "nor",
-    "lit", "opEmu", "plcHide", "show", "strikeBLTR", "strikeTLBR", "subHide", "supHide",
-    "zeroAsc", "zeroDesc", "zeroWid",
-})
-_VALUE_ELEMENTS = frozenset({
-    "baseJc", "begChr", "chr", "count", "degHide", "endChr", "grow",
-    "hideBot", "hideLeft", "hideRight", "hideTop", "jc", "limLoc",
-    "lit", "nor", "opEmu", "plcHide", "pos", "scr", "sepChr", "show", "strikeBLTR",
-    "strikeTLBR", "sty", "subHide", "supHide", "type", "vertJc", "zeroAsc",
-    "zeroDesc", "zeroWid",
-})
-_EMPTY_PROPERTY_ELEMENTS = frozenset({
-    "funcPr", "limLowPr", "limUppPr", "sPrePr",
-})
+_MATH_ELEMENTS = frozenset(
+    {
+        "acc",
+        "accPr",
+        "bar",
+        "barPr",
+        "baseJc",
+        "begChr",
+        "box",
+        "boxPr",
+        "borderBox",
+        "borderBoxPr",
+        "chr",
+        "count",
+        "ctrlPr",
+        "d",
+        "deg",
+        "degHide",
+        "den",
+        "dPr",
+        "e",
+        "endChr",
+        "eqArr",
+        "eqArrPr",
+        "f",
+        "fName",
+        "fPr",
+        "func",
+        "funcPr",
+        "groupChr",
+        "groupChrPr",
+        "grow",
+        "hideBot",
+        "hideLeft",
+        "hideRight",
+        "hideTop",
+        "jc",
+        "lim",
+        "limLoc",
+        "limLow",
+        "limLowPr",
+        "limUpp",
+        "limUppPr",
+        "lit",
+        "m",
+        "mc",
+        "mcPr",
+        "mcs",
+        "mPr",
+        "mr",
+        "nary",
+        "naryPr",
+        "nor",
+        "num",
+        "oMath",
+        "oMathPara",
+        "oMathParaPr",
+        "phant",
+        "phantPr",
+        "plcHide",
+        "pos",
+        "r",
+        "rad",
+        "radPr",
+        "rPr",
+        "scr",
+        "sepChr",
+        "show",
+        "sPre",
+        "sPrePr",
+        "opEmu",
+        "sSub",
+        "sSubSup",
+        "sSup",
+        "strikeBLTR",
+        "strikeTLBR",
+        "sty",
+        "sub",
+        "subHide",
+        "sup",
+        "supHide",
+        "t",
+        "type",
+        "vertJc",
+        "zeroAsc",
+        "zeroDesc",
+        "zeroWid",
+    }
+)
+_DRAWING_ELEMENTS = frozenset(
+    {
+        "cs",
+        "ea",
+        "latin",
+        "rPr",
+        "solidFill",
+        "srgbClr",
+    }
+)
+_DRAWING_ATTRIBUTES = frozenset(
+    {
+        "b",
+        "dirty",
+        "i",
+        "lang",
+        "sz",
+        "typeface",
+        "val",
+    }
+)
+_ARGUMENT_ELEMENTS = frozenset(
+    {
+        "acc",
+        "bar",
+        "borderBox",
+        "box",
+        "d",
+        "eqArr",
+        "f",
+        "func",
+        "groupChr",
+        "limLow",
+        "limUpp",
+        "m",
+        "nary",
+        "phant",
+        "r",
+        "rad",
+        "sPre",
+        "sSub",
+        "sSubSup",
+        "sSup",
+    }
+)
+_ARGUMENT_CONTAINERS = frozenset(
+    {
+        "deg",
+        "den",
+        "e",
+        "fName",
+        "lim",
+        "num",
+        "oMath",
+        "sub",
+        "sup",
+    }
+)
+_ON_OFF_ELEMENTS = frozenset(
+    {
+        "degHide",
+        "grow",
+        "hideBot",
+        "hideLeft",
+        "hideRight",
+        "hideTop",
+        "nor",
+        "lit",
+        "opEmu",
+        "plcHide",
+        "show",
+        "strikeBLTR",
+        "strikeTLBR",
+        "subHide",
+        "supHide",
+        "zeroAsc",
+        "zeroDesc",
+        "zeroWid",
+    }
+)
+_VALUE_ELEMENTS = frozenset(
+    {
+        "baseJc",
+        "begChr",
+        "chr",
+        "count",
+        "degHide",
+        "endChr",
+        "grow",
+        "hideBot",
+        "hideLeft",
+        "hideRight",
+        "hideTop",
+        "jc",
+        "limLoc",
+        "lit",
+        "nor",
+        "opEmu",
+        "plcHide",
+        "pos",
+        "scr",
+        "sepChr",
+        "show",
+        "strikeBLTR",
+        "strikeTLBR",
+        "sty",
+        "subHide",
+        "supHide",
+        "type",
+        "vertJc",
+        "zeroAsc",
+        "zeroDesc",
+        "zeroWid",
+    }
+)
+_EMPTY_PROPERTY_ELEMENTS = frozenset(
+    {
+        "funcPr",
+        "limLowPr",
+        "limUppPr",
+        "sPrePr",
+    }
+)
 _PROPERTY_ORDER = {
     "accPr": ("chr", "ctrlPr"),
     "barPr": ("pos", "ctrlPr"),
     "boxPr": ("opEmu", "ctrlPr"),
     "borderBoxPr": (
-        "hideTop", "hideBot", "hideLeft", "hideRight", "strikeBLTR",
-        "strikeTLBR", "ctrlPr",
+        "hideTop",
+        "hideBot",
+        "hideLeft",
+        "hideRight",
+        "strikeBLTR",
+        "strikeTLBR",
+        "ctrlPr",
     ),
     "dPr": ("begChr", "sepChr", "endChr", "grow", "ctrlPr"),
     "eqArrPr": ("baseJc",),
@@ -116,7 +290,12 @@ _PROPERTY_ORDER = {
     "mPr": ("baseJc", "plcHide", "mcs"),
     "mcPr": ("count",),
     "naryPr": (
-        "chr", "limLoc", "grow", "subHide", "supHide", "ctrlPr",
+        "chr",
+        "limLoc",
+        "grow",
+        "subHide",
+        "supHide",
+        "ctrlPr",
     ),
     "oMathParaPr": ("jc",),
     "phantPr": ("show", "zeroWid", "zeroAsc", "zeroDesc"),
@@ -187,8 +366,10 @@ def _append_run(
 ) -> None:
     if not value:
         return
-    if style is not None and style.script == "script" and any(
-        not character.isupper() for character in value
+    if (
+        style is not None
+        and style.script == "script"
+        and any(not character.isupper() for character in value)
     ):
         start = 0
         uppercase = value[0].isupper()
@@ -196,12 +377,16 @@ def _append_run(
             current = value[index].isupper() if index < len(value) else not uppercase
             if current == uppercase:
                 continue
-            segment_style = style if uppercase else RunStyle(
-                normal=style.normal,
-                color=style.color,
-                bold=style.bold,
-                italic=style.italic,
-                typeface=style.typeface,
+            segment_style = (
+                style
+                if uppercase
+                else RunStyle(
+                    normal=style.normal,
+                    color=style.color,
+                    bold=style.bold,
+                    italic=style.italic,
+                    typeface=style.typeface,
+                )
             )
             _append_run(
                 parent,
@@ -213,9 +398,7 @@ def _append_run(
             uppercase = current
         return
     run = _math_element(parent, "r")
-    if literal or (
-        style is not None and (style.style or style.normal or style.script)
-    ):
+    if literal or (style is not None and (style.style or style.normal or style.script)):
         properties = _math_element(run, "rPr")
         if literal:
             _math_element(properties, "lit", val="on")
@@ -308,7 +491,9 @@ def _append_node(
         numerator = _math_element(fraction, "num")
         _append_sequence(numerator, node.numerator, inherited_style, display=display)
         denominator = _math_element(fraction, "den")
-        _append_sequence(denominator, node.denominator, inherited_style, display=display)
+        _append_sequence(
+            denominator, node.denominator, inherited_style, display=display
+        )
         return
     if isinstance(node, Radical):
         radical = _math_element(parent, "rad")
@@ -432,7 +617,9 @@ def _append_node(
         body = _math_element(border, "e")
         _append_sequence(body, node.body, inherited_style, display=display)
         return
-    raise FormulaCompileError(f"Unsupported internal formula node: {type(node).__name__}")
+    raise FormulaCompileError(
+        f"Unsupported internal formula node: {type(node).__name__}"
+    )
 
 
 def _append_script(
@@ -455,7 +642,9 @@ def _append_script(
         _append_sequence(subscript, node.subscript, inherited_style, display=display)
     if node.superscript is not None:
         superscript = _math_element(script, "sup")
-        _append_sequence(superscript, node.superscript, inherited_style, display=display)
+        _append_sequence(
+            superscript, node.superscript, inherited_style, display=display
+        )
 
 
 def _append_prescript(
@@ -472,7 +661,9 @@ def _append_prescript(
         _append_sequence(subscript, node.subscript, inherited_style, display=display)
     superscript = _math_element(script, "sup")
     if node.superscript is not None:
-        _append_sequence(superscript, node.superscript, inherited_style, display=display)
+        _append_sequence(
+            superscript, node.superscript, inherited_style, display=display
+        )
     base = _math_element(script, "e")
     _append_node(base, node.base, inherited_style, display=display)
 
@@ -505,7 +696,9 @@ def _append_nary(
         _append_sequence(subscript, node.subscript, inherited_style, display=display)
     superscript = _math_element(nary, "sup")
     if node.superscript is not None:
-        _append_sequence(superscript, node.superscript, inherited_style, display=display)
+        _append_sequence(
+            superscript, node.superscript, inherited_style, display=display
+        )
     body = _math_element(nary, "e")
     if node.body is not None:
         _append_sequence(body, node.body, inherited_style, display=display)
@@ -629,9 +822,8 @@ def _require_repeated_children(
 ) -> None:
     element_name = _qualified_name(element.tag)[1]
     actual = _child_names(element)
-    if (
-        not minimum <= len(actual) <= maximum
-        or any(name != child_name for name in actual)
+    if not minimum <= len(actual) <= maximum or any(
+        name != child_name for name in actual
     ):
         raise FormulaCompileError(
             f"m:{element_name} must contain {minimum}..{maximum} "
@@ -652,12 +844,12 @@ def _validate_property_children(element: ET.Element, element_name: str) -> None:
     order = [expected_order.index(name) for name in actual]
     if order != sorted(order):
         raise FormulaCompileError(f"m:{element_name} properties are out of order")
-    if element_name == "rPr" and "nor" in actual and (
-        "scr" in actual or "sty" in actual
+    if (
+        element_name == "rPr"
+        and "nor" in actual
+        and ("scr" in actual or "sty" in actual)
     ):
-        raise FormulaCompileError(
-            "m:rPr cannot combine m:nor with m:scr or m:sty"
-        )
+        raise FormulaCompileError("m:rPr cannot combine m:nor with m:scr or m:sty")
 
 
 def _math_value(element: ET.Element) -> str:
@@ -676,8 +868,12 @@ def _validate_math_value(element: ET.Element, element_name: str) -> None:
         "limLoc": {"subSup", "undOvr"},
         "pos": {"top", "bot"},
         "scr": {
-            "roman", "sans-serif", "monospace", "double-struck",
-            "script", "fraktur",
+            "roman",
+            "sans-serif",
+            "monospace",
+            "double-struck",
+            "script",
+            "fraktur",
         },
         "sty": {"p", "b", "i", "bi"},
         "type": {"bar", "lin", "noBar", "skw"},
@@ -701,9 +897,7 @@ def _validate_math_value(element: ET.Element, element_name: str) -> None:
         return
     allowed = allowed_values.get(element_name)
     if allowed is not None and value not in allowed:
-        raise FormulaCompileError(
-            f"m:{element_name} has invalid value: {value!r}"
-        )
+        raise FormulaCompileError(f"m:{element_name} has invalid value: {value!r}")
 
 
 def _validate_drawing_element(element: ET.Element, element_name: str) -> None:
@@ -719,11 +913,14 @@ def _validate_drawing_element(element: ET.Element, element_name: str) -> None:
             )
         for name in ("b", "dirty", "i"):
             if name in attributes and attributes[name] not in {
-                "on", "off", "true", "false", "1", "0",
+                "on",
+                "off",
+                "true",
+                "false",
+                "1",
+                "0",
             }:
-                raise FormulaCompileError(
-                    f"a:rPr@{name} has invalid on/off value"
-                )
+                raise FormulaCompileError(f"a:rPr@{name} has invalid on/off value")
         if "sz" in attributes and (
             not attributes["sz"].isascii()
             or not attributes["sz"].isdigit()
@@ -744,8 +941,10 @@ def _validate_drawing_element(element: ET.Element, element_name: str) -> None:
             raise FormulaCompileError("a:solidFill must contain one a:srgbClr")
         return
     if element_name == "srgbClr":
-        if children or set(attributes) != {"val"} or not re.fullmatch(
-            r"[0-9A-Fa-f]{6}", attributes["val"]
+        if (
+            children
+            or set(attributes) != {"val"}
+            or not re.fullmatch(r"[0-9A-Fa-f]{6}", attributes["val"])
         ):
             raise FormulaCompileError("a:srgbClr@val must be six hexadecimal digits")
         return
@@ -836,12 +1035,8 @@ def _validate_math_structure(element: ET.Element, element_name: str) -> None:
         return
     if element_name == "ctrlPr":
         children = [(_qualified_name(child.tag), child) for child in element]
-        if len(children) > 1 or (
-            children and children[0][0] != (DRAWING_NS, "rPr")
-        ):
-            raise FormulaCompileError(
-                "m:ctrlPr may contain only one optional a:rPr"
-            )
+        if len(children) > 1 or (children and children[0][0] != (DRAWING_NS, "rPr")):
+            raise FormulaCompileError("m:ctrlPr may contain only one optional a:rPr")
         return
     if element_name in _PROPERTY_ORDER:
         _validate_property_children(element, element_name)
@@ -941,9 +1136,10 @@ def _validate_xml_tree(root: ET.Element) -> None:
         else:
             _validate_drawing_element(element, element_name)
         if element.text:
-            if not (
-                element_namespace == MATH_NS and element_name == "t"
-            ) and element.text.strip():
+            if (
+                not (element_namespace == MATH_NS and element_name == "t")
+                and element.text.strip()
+            ):
                 raise FormulaCompileError(
                     f"OMML text is only allowed inside m:t, found in {element_name!r}"
                 )
@@ -956,9 +1152,7 @@ def _validate_xml_tree(root: ET.Element) -> None:
     _validate_matrix_dimensions(root)
     if local_name == "oMathPara":
         direct_expressions = [
-            child
-            for child in root
-            if _qualified_name(child.tag) == (MATH_NS, "oMath")
+            child for child in root if _qualified_name(child.tag) == (MATH_NS, "oMath")
         ]
         if len(direct_expressions) != 1:
             raise FormulaCompileError(
@@ -971,9 +1165,7 @@ def _validate_xml_depth(root: ET.Element) -> None:
     while pending:
         element, depth = pending.pop()
         if depth > _MAX_OMML_DEPTH:
-            raise FormulaCompileError(
-                f"OMML nesting exceeds {_MAX_OMML_DEPTH} levels"
-            )
+            raise FormulaCompileError(f"OMML nesting exceeds {_MAX_OMML_DEPTH} levels")
         pending.extend((child, depth + 1) for child in reversed(element))
 
 
@@ -987,7 +1179,9 @@ def _parse_omml_with_resource_limits(xml: str) -> ET.Element:
             f"OMML fragment exceeds the {_MAX_OMML_LENGTH}-character limit"
         )
     if _FORBIDDEN_XML_RE.search(xml):
-        raise FormulaCompileError("DOCTYPE and ENTITY declarations are forbidden in OMML")
+        raise FormulaCompileError(
+            "DOCTYPE and ENTITY declarations are forbidden in OMML"
+        )
     try:
         root = ET.fromstring(xml)
     except (ET.ParseError, RecursionError) as exc:
@@ -1002,7 +1196,9 @@ def _serialize_omml_with_resource_limits(root: ET.Element) -> str:
     try:
         canonical = ET.tostring(root, encoding="unicode", short_empty_elements=True)
     except RecursionError as exc:
-        raise FormulaCompileError("OMML nesting exceeds the XML serializer limit") from exc
+        raise FormulaCompileError(
+            "OMML nesting exceeds the XML serializer limit"
+        ) from exc
     if len(canonical) > _MAX_OMML_LENGTH:
         raise FormulaCompileError(
             f"Canonical OMML exceeds the {_MAX_OMML_LENGTH}-character limit"

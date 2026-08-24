@@ -7,7 +7,12 @@ from datetime import date
 import pytest
 
 from data_agent.review.domain.domains import SpecialistDomain
-from data_agent.review.domain.source import DateRange, Source, SourceManifest, SourceType
+from data_agent.review.domain.source import (
+    DateRange,
+    Source,
+    SourceManifest,
+    SourceType,
+)
 
 
 def make_source(source_id: str = "SRC-001", path: str = "risk_metrics/risk.xlsx") -> Source:
@@ -59,5 +64,3 @@ class TestSourceManifest:
     def test_source_ids(self) -> None:
         manifest = SourceManifest(sources=[make_source("SRC-001"), make_source("SRC-002", "b.csv")])
         assert manifest.source_ids == ["SRC-001", "SRC-002"]
-
-

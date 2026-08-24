@@ -27,61 +27,63 @@ ROUTE_STATUSES = frozenset({"reconstruction-only"})
 REPLACEMENT_KINDS = frozenset({"chart", "formula", "table"})
 # Closed importer outputs from chart_to_svg, chartex_to_svg, and tbl_to_svg.
 # This includes codes forwarded through their dynamic ``status`` parameters.
-REPLACEMENT_STATUS_CODES = frozenset({
-    "unsupported-3d-chart",
-    "unsupported-chart-analysis-features",
-    "unsupported-chart-axis-number-format",
-    "unsupported-chart-axis-options",
-    "unsupported-chart-axis-titles",
-    "unsupported-chart-bar-options",
-    "unsupported-chart-bubble-options",
-    "unsupported-chart-cache",
-    "unsupported-chart-category-format",
-    "unsupported-chart-data-labels",
-    "unsupported-chart-data-table",
-    "unsupported-chart-doughnut-options",
-    "unsupported-chart-legend-position",
-    "unsupported-chart-line-style",
-    "unsupported-chart-of-pie-options",
-    "unsupported-chart-parse",
-    "unsupported-chart-part",
-    "unsupported-chart-pie-options",
-    "unsupported-chart-plot",
-    "unsupported-chart-point-labels",
-    "unsupported-chart-radar-style",
-    "unsupported-chart-reference",
-    "unsupported-chart-relationship",
-    "unsupported-chart-scatter-style",
-    "unsupported-chart-schema",
-    "unsupported-chart-series-data-labels",
-    "unsupported-chart-series-order",
-    "unsupported-chart-series-style",
-    "unsupported-chart-type",
-    "unsupported-chart-uri",
-    "unsupported-chartex-cache",
-    "unsupported-chartex-data-id",
-    "unsupported-chartex-dimension",
-    "unsupported-chartex-parse",
-    "unsupported-chartex-part",
-    "unsupported-chartex-schema",
-    "unsupported-chartex-series",
-    "unsupported-chartex-structure",
-    "unsupported-chartex-type",
-    "unsupported-combo-category-format",
-    "unsupported-combo-category-layout",
-    "unsupported-combo-chart",
-    "unsupported-combo-series-order",
-    "unsupported-date-axis",
-    "unsupported-date-system",
-    "unsupported-formatted-category-cache",
-    "unsupported-merge-topology",
-    "unsupported-native-transform",
-    "unsupported-stock-chart",
-    "unsupported-table-direct-formatting",
-    "unsupported-table-geometry",
-    "unsupported-table-size",
-    "unsupported-table-style",
-})
+REPLACEMENT_STATUS_CODES = frozenset(
+    {
+        "unsupported-3d-chart",
+        "unsupported-chart-analysis-features",
+        "unsupported-chart-axis-number-format",
+        "unsupported-chart-axis-options",
+        "unsupported-chart-axis-titles",
+        "unsupported-chart-bar-options",
+        "unsupported-chart-bubble-options",
+        "unsupported-chart-cache",
+        "unsupported-chart-category-format",
+        "unsupported-chart-data-labels",
+        "unsupported-chart-data-table",
+        "unsupported-chart-doughnut-options",
+        "unsupported-chart-legend-position",
+        "unsupported-chart-line-style",
+        "unsupported-chart-of-pie-options",
+        "unsupported-chart-parse",
+        "unsupported-chart-part",
+        "unsupported-chart-pie-options",
+        "unsupported-chart-plot",
+        "unsupported-chart-point-labels",
+        "unsupported-chart-radar-style",
+        "unsupported-chart-reference",
+        "unsupported-chart-relationship",
+        "unsupported-chart-scatter-style",
+        "unsupported-chart-schema",
+        "unsupported-chart-series-data-labels",
+        "unsupported-chart-series-order",
+        "unsupported-chart-series-style",
+        "unsupported-chart-type",
+        "unsupported-chart-uri",
+        "unsupported-chartex-cache",
+        "unsupported-chartex-data-id",
+        "unsupported-chartex-dimension",
+        "unsupported-chartex-parse",
+        "unsupported-chartex-part",
+        "unsupported-chartex-schema",
+        "unsupported-chartex-series",
+        "unsupported-chartex-structure",
+        "unsupported-chartex-type",
+        "unsupported-combo-category-format",
+        "unsupported-combo-category-layout",
+        "unsupported-combo-chart",
+        "unsupported-combo-series-order",
+        "unsupported-date-axis",
+        "unsupported-date-system",
+        "unsupported-formatted-category-cache",
+        "unsupported-merge-topology",
+        "unsupported-native-transform",
+        "unsupported-stock-chart",
+        "unsupported-table-direct-formatting",
+        "unsupported-table-geometry",
+        "unsupported-table-size",
+        "unsupported-table-style",
+    }
+)
 
 
 def native_marker_status_errors(elem: ET.Element) -> list[str]:
@@ -136,7 +138,9 @@ def native_marker_status_errors(elem: ET.Element) -> list[str]:
             f"{LEGACY_FALLBACK_KIND_ATTR} must not contain surrounding whitespace"
         )
     if route_raw is not None and route_raw != route:
-        errors.append(f"{LEGACY_ROUTE_STATUS_ATTR} must not contain surrounding whitespace")
+        errors.append(
+            f"{LEGACY_ROUTE_STATUS_ATTR} must not contain surrounding whitespace"
+        )
     if visual is not None and visual not in VISUAL_STATUSES:
         errors.append(f"unsupported {FALLBACK_KIND_ATTR} value: {visual!r}")
     if route is not None and route not in ROUTE_STATUSES:
@@ -148,9 +152,7 @@ def native_marker_status_errors(elem: ET.Element) -> list[str]:
         if not fallback:
             errors.append(f"{REPLACEMENT_STATUS_ATTR} must not be empty")
         elif fallback not in REPLACEMENT_STATUS_CODES:
-            errors.append(
-                f"unsupported {REPLACEMENT_STATUS_ATTR} value: {fallback!r}"
-            )
+            errors.append(f"unsupported {REPLACEMENT_STATUS_ATTR} value: {fallback!r}")
     if any(raw is not None for raw in import_source_raw_values.values()):
         source = native_import_source(elem)
         if source != "pptx":

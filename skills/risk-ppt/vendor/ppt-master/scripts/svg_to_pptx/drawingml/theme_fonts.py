@@ -139,8 +139,7 @@ def load_master_text_style_spec(project_path: Path) -> MasterTextStyleSpec:
     missing = [field for field in ("title", "body") if field not in rows]
     if missing:
         raise ThemeFontError(
-            "Master export requires spec_lock.md typography rows: "
-            + ", ".join(missing)
+            "Master export requires spec_lock.md typography rows: " + ", ".join(missing)
         )
     return MasterTextStyleSpec(
         title_hpt=_font_size_hpt(rows["title"], "title"),
@@ -203,7 +202,9 @@ def apply_theme_font_spec(extract_dir: Path, spec: ThemeFontSpec) -> None:
         major = font_scheme.find(f"{{{DML_NS}}}majorFont")
         minor = font_scheme.find(f"{{{DML_NS}}}minorFont")
         if major is None or minor is None:
-            raise ThemeFontError(f"Theme has no major/minor font collection: {theme_path}")
+            raise ThemeFontError(
+                f"Theme has no major/minor font collection: {theme_path}"
+            )
         font_scheme.set("name", "PPT Master")
         _patch_font_collection(major, spec.major)
         _patch_font_collection(minor, spec.minor)
@@ -224,13 +225,9 @@ def _style_level_run_properties(
     """Return direct level 1-9 defaults from one Master text style."""
     levels: list[ET.Element] = []
     for level in range(1, 10):
-        run_properties = style.find(
-            f"{{{DML_NS}}}lvl{level}pPr/{{{DML_NS}}}defRPr"
-        )
+        run_properties = style.find(f"{{{DML_NS}}}lvl{level}pPr/{{{DML_NS}}}defRPr")
         if run_properties is None:
-            raise ThemeFontError(
-                f"slide master {label} has no level-{level} a:defRPr"
-            )
+            raise ThemeFontError(f"slide master {label} has no level-{level} a:defRPr")
         levels.append(run_properties)
     return tuple(levels)
 
@@ -258,9 +255,7 @@ def apply_master_text_style_spec(
 
         title_style = text_styles.find(f"{{{PML_NS}}}titleStyle")
         if title_style is None:
-            raise ThemeFontError(
-                f"Slide master has no p:titleStyle: {master_path}"
-            )
+            raise ThemeFontError(f"Slide master has no p:titleStyle: {master_path}")
         for run_properties in _style_run_properties(
             title_style,
             "p:titleStyle",
@@ -324,7 +319,6 @@ def apply_master_text_style_spec(
                 )
             if actual_sizes != tuple(str(size) for size in expected_sizes):
                 raise ThemeFontError(
-                    f"Slide master p:{style_name} size read-back failed: "
-                    f"{master_path}"
+                    f"Slide master p:{style_name} size read-back failed: {master_path}"
                 )
     return len(master_paths)

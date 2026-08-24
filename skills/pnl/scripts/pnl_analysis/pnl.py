@@ -50,9 +50,7 @@ def _pnl_overviews(pnl: list[PnlRow]) -> list[DataOverview]:
                 summary="No compatible finalized PnL series was available for charting.",
                 status=OverviewStatus.UNAVAILABLE,
                 primary_for_deck=True,
-                limitations=[
-                    "Rerun the review with a recognized AIR accumulated-PnL table."
-                ],
+                limitations=["Rerun the review with a recognized AIR accumulated-PnL table."],
             )
         ]
 
@@ -69,9 +67,7 @@ def _pnl_overviews(pnl: list[PnlRow]) -> list[DataOverview]:
             points: list[OverviewPoint] = []
             for item in year_rows:
                 running += item.dtd
-                points.append(
-                    OverviewPoint(label=item.day.isoformat(), value=round(running, 6))
-                )
+                points.append(OverviewPoint(label=item.day.isoformat(), value=round(running, 6)))
             series.append(OverviewSeries(name=str(year), points=points))
             metrics.append(
                 OverviewMetric(
@@ -82,11 +78,7 @@ def _pnl_overviews(pnl: list[PnlRow]) -> list[DataOverview]:
                 )
             )
         digest = hashlib.sha256("|".join(key).encode("utf-8")).hexdigest()[:10]
-        overview_id = (
-            "pnl.cumulative-by-year"
-            if index == 0
-            else f"pnl.cumulative-by-year-{digest}"
-        )
+        overview_id = "pnl.cumulative-by-year" if index == 0 else f"pnl.cumulative-by-year-{digest}"
         limitation = (
             "No aggregation across currencies, notions, versions, or PTFs was performed."
             if len(grouped) == 1
@@ -255,9 +247,7 @@ def _pnl_patterns(pnl: list[PnlRow]) -> AnalysisResult:
                 outlier_matches.append((item, z))
 
         reversal_matches: list[tuple[PnlRow, PnlRow, float, float]] = []
-        for index, (first, second) in enumerate(
-            zip(ordered, ordered[1:], strict=False)
-        ):
+        for index, (first, second) in enumerate(zip(ordered, ordered[1:], strict=False)):
             if first.dtd * second.dtd >= 0 or first.dtd == 0:
                 continue
             first_z = abs(scores[index])
@@ -296,14 +286,10 @@ def _pnl_patterns(pnl: list[PnlRow]) -> AnalysisResult:
             month = (item.day.year, item.day.month)
             last_by_month[month] = max(last_by_month.get(month, item.day), item.day)
         period_end = [
-            item
-            for item in ordered
-            if item.day == last_by_month[(item.day.year, item.day.month)]
+            item for item in ordered if item.day == last_by_month[(item.day.year, item.day.month)]
         ]
         other = [
-            item
-            for item in ordered
-            if item.day != last_by_month[(item.day.year, item.day.month)]
+            item for item in ordered if item.day != last_by_month[(item.day.year, item.day.month)]
         ]
         end_mean = mean([abs(item.dtd) for item in period_end]) if period_end else 0.0
         other_mean = mean([abs(item.dtd) for item in other]) if other else 0.0

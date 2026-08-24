@@ -71,9 +71,7 @@ def test_evidence_reference_canonicalizes() -> None:
     assert ref.locator == "source://risk.xlsx#sheet=DailyRisk&rows=120:128"
     assert ref.parsed.rows == (120, 128)
     # Equivalent reference written in the same canonical form compares equal.
-    assert ref == EvidenceReference(
-        locator="source://risk.xlsx#sheet=DailyRisk&rows=120:128"
-    )
+    assert ref == EvidenceReference(locator="source://risk.xlsx#sheet=DailyRisk&rows=120:128")
 
 
 def test_evidence_reference_rejects_invalid_locator() -> None:
@@ -84,5 +82,3 @@ def test_evidence_reference_rejects_invalid_locator() -> None:
 def test_evidence_reference_optional_quote() -> None:
     ref = EvidenceReference(locator="source://comments.pdf#page=14", quote="within limits")
     assert ref.quote == "within limits"
-
-

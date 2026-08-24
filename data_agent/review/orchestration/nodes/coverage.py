@@ -14,10 +14,6 @@ def coverage_gate(state: ParentState, config: RunnableConfig) -> dict:
         ids = ", ".join(sorted(entry["source_id"] for entry in pending))
         return {
             "status": "failed",
-            "failure_reason": (
-                f"coverage gate failed: {len(pending)} source(s) unreviewed: {ids}"
-            ),
+            "failure_reason": (f"coverage gate failed: {len(pending)} source(s) unreviewed: {ids}"),
         }
     return {}
-
-

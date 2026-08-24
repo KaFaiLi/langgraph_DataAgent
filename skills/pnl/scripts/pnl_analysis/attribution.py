@@ -138,15 +138,12 @@ def _shares(totals: dict[str, float]) -> dict[str, float]:
     return {driver: value / total for driver, value in totals.items()}
 
 
-def _overview_evidence(
-    ctx: ToolContext, view: AttributionView
-) -> EvidenceReference:
+def _overview_evidence(ctx: ToolContext, view: AttributionView) -> EvidenceReference:
     source = ctx.manifest.by_path(view.path)
     first_row = tabular_row_offset(source.source_type)
     sheet = (
         source.sheet_names[0]
-        if source.source_type in {SourceType.XLSX, SourceType.XLSM}
-        and len(source.sheet_names) == 1
+        if source.source_type in {SourceType.XLSX, SourceType.XLSM} and len(source.sheet_names) == 1
         else None
     )
     return EvidenceReference(
@@ -354,9 +351,7 @@ def unexpected_drivers(ctx: ToolContext, source_paths: list[str]) -> AnalysisRes
         matched_shares: list[float] = []
         for driver in sorted(totals):
             lowered = driver.lower()
-            token = next(
-                (name for name in _UNEXPECTED_TOKENS if name in lowered), None
-            )
+            token = next((name for name in _UNEXPECTED_TOKENS if name in lowered), None)
             if token is None:
                 continue
             matched.append(
@@ -454,7 +449,10 @@ def income_source_shifts(ctx: ToolContext, source_paths: list[str]) -> AnalysisR
         f"{len(flags)} driver shift(s) flagged by code."
     )
     return AnalysisResult(
-        name="income_source_shifts", summary=summary, tables=tables, flag_candidates=flags
+        name="income_source_shifts",
+        summary=summary,
+        tables=tables,
+        flag_candidates=flags,
     )
 
 
@@ -484,9 +482,7 @@ def risk_consistency(ctx: ToolContext, source_paths: list[str]) -> AnalysisResul
         ]
         if len(pairs) < _MIN_PAIRS:
             continue
-        correlation = pearson_correlation(
-            [value for value, _ in pairs], [var for _, var in pairs]
-        )
+        correlation = pearson_correlation([value for value, _ in pairs], [var for _, var in pairs])
         tables.append(
             {
                 "path": path,

@@ -16,20 +16,12 @@ from hyperlink_contract import (
 )
 
 
-PACKAGE_REL_NS = (
-    "http://schemas.openxmlformats.org/package/2006/relationships"
-)
+PACKAGE_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 _RELATIONSHIPS_TAG = f"{{{PACKAGE_REL_NS}}}Relationships"
 _RELATIONSHIP_TAG = f"{{{PACKAGE_REL_NS}}}Relationship"
-_DRAWINGML_NS = (
-    "http://schemas.openxmlformats.org/drawingml/2006/main"
-)
-_PRESENTATIONML_NS = (
-    "http://schemas.openxmlformats.org/presentationml/2006/main"
-)
-_OFFICE_REL_NS = (
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-)
+_DRAWINGML_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
+_PRESENTATIONML_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
+_OFFICE_REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 _OPC_UNRESERVED = frozenset(
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
 )
@@ -63,20 +55,16 @@ def canonical_opc_part_path(path: str) -> str | None:
             index + 2 >= len(path)
             or re.fullmatch(
                 r"[0-9A-Fa-f]{2}",
-                path[index + 1:index + 3],
+                path[index + 1 : index + 3],
             )
             is None
         ):
             return None
-        value = int(path[index + 1:index + 3], 16)
+        value = int(path[index + 1 : index + 3], 16)
         decoded = chr(value)
         if value in {0, ord("/"), ord("\\")}:
             return None
-        output.append(
-            decoded
-            if decoded in _OPC_UNRESERVED
-            else f"%{value:02X}"
-        )
+        output.append(decoded if decoded in _OPC_UNRESERVED else f"%{value:02X}")
         index += 3
 
     decoded_path = "".join(output)
@@ -99,11 +87,7 @@ def _source_part_for_rels(rels_path: str) -> str | None:
         return None
     source_dir = posixpath.dirname(posixpath.dirname(rels_path))
     source_name = filename.removesuffix(".rels")
-    return (
-        posixpath.join(source_dir, source_name)
-        if source_dir
-        else source_name
-    )
+    return posixpath.join(source_dir, source_name) if source_dir else source_name
 
 
 def resolve_internal_opc_target(
@@ -130,11 +114,7 @@ def resolve_internal_opc_target(
         resolved = parsed.path[1:]
     elif parsed.path:
         base_dir = posixpath.dirname(source_part) if source_part else ""
-        resolved = (
-            posixpath.join(base_dir, parsed.path)
-            if base_dir
-            else parsed.path
-        )
+        resolved = posixpath.join(base_dir, parsed.path) if base_dir else parsed.path
     elif source_part and "#" in target:
         resolved = source_part
     else:
@@ -168,8 +148,7 @@ def _presentation_slide_roster(extract_dir: Path) -> set[str]:
     roster: set[str] = set()
     rels_rel = presentation_rels.relative_to(extract_dir).as_posix()
     for slide_id in root.findall(
-        f"{{{_PRESENTATIONML_NS}}}sldIdLst/"
-        f"{{{_PRESENTATIONML_NS}}}sldId"
+        f"{{{_PRESENTATIONML_NS}}}sldIdLst/{{{_PRESENTATIONML_NS}}}sldId"
     ):
         relationship_id = slide_id.attrib.get(f"{{{_OFFICE_REL_NS}}}id")
         relationship = rels.get(relationship_id or "")
@@ -268,9 +247,7 @@ def verify_internal_relationships(extract_dir: Path) -> list[str]:
     for path in extract_dir.rglob("*"):
         if not path.is_file():
             continue
-        key = canonical_opc_part_path(
-            path.relative_to(extract_dir).as_posix()
-        )
+        key = canonical_opc_part_path(path.relative_to(extract_dir).as_posix())
         if key is not None:
             package_parts.add(key)
 
@@ -280,46 +257,34 @@ def verify_internal_relationships(extract_dir: Path) -> list[str]:
         try:
             root = ET.parse(rels_path).getroot()
         except ET.ParseError as exc:
-            problems.append(
-                f"{rels_rel} -> <invalid relationships XML: {exc}>"
-            )
+            problems.append(f"{rels_rel} -> <invalid relationships XML: {exc}>")
             continue
         if root.tag != _RELATIONSHIPS_TAG:
-            problems.append(
-                f"{rels_rel} -> <invalid Relationships namespace>"
-            )
+            problems.append(f"{rels_rel} -> <invalid Relationships namespace>")
             continue
 
         seen_ids: set[str] = set()
         for element in root:
             if element.tag != _RELATIONSHIP_TAG:
                 problems.append(
-                    f"{rels_rel} -> <invalid relationships child "
-                    f"{element.tag!r}>"
+                    f"{rels_rel} -> <invalid relationships child {element.tag!r}>"
                 )
                 continue
             relationship_id = (element.attrib.get("Id") or "").strip()
-            relationship_type = (
-                element.attrib.get("Type") or ""
-            ).strip()
+            relationship_type = (element.attrib.get("Type") or "").strip()
             target = (element.attrib.get("Target") or "").strip()
-            target_mode = (
-                element.attrib.get("TargetMode") or ""
-            ).strip()
+            target_mode = (element.attrib.get("TargetMode") or "").strip()
 
             if not relationship_id:
                 problems.append(f"{rels_rel} -> <missing relationship Id>")
             elif relationship_id in seen_ids:
                 problems.append(
-                    f"{rels_rel} -> <duplicate relationship Id "
-                    f"{relationship_id!r}>"
+                    f"{rels_rel} -> <duplicate relationship Id {relationship_id!r}>"
                 )
             else:
                 seen_ids.add(relationship_id)
             if not relationship_type:
-                problems.append(
-                    f"{rels_rel} -> <missing relationship Type>"
-                )
+                problems.append(f"{rels_rel} -> <missing relationship Type>")
             if not target:
                 problems.append(f"{rels_rel} -> <missing Target>")
                 continue
@@ -327,19 +292,14 @@ def verify_internal_relationships(extract_dir: Path) -> list[str]:
                 "internal",
                 "external",
             }:
-                problems.append(
-                    f"{rels_rel} -> <invalid TargetMode "
-                    f"{target_mode!r}>"
-                )
+                problems.append(f"{rels_rel} -> <invalid TargetMode {target_mode!r}>")
                 continue
             if target_mode.lower() == "external":
                 continue
 
             resolved = resolve_internal_opc_target(rels_rel, target)
             if resolved is None:
-                problems.append(
-                    f"{rels_rel} -> <invalid Target {target!r}>"
-                )
+                problems.append(f"{rels_rel} -> <invalid Target {target!r}>")
             elif resolved not in package_parts:
                 problems.append(f"{rels_rel} -> {resolved}")
     problems.extend(verify_hyperlink_relationships(extract_dir))

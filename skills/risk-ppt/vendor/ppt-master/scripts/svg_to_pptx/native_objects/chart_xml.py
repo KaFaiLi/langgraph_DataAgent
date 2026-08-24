@@ -68,7 +68,7 @@ def _number_cache(
         for idx, value in enumerate(values)
     )
     return (
-        f'<c:numCache><c:formatCode>{_xml_escape(number_format)}</c:formatCode>'
+        f"<c:numCache><c:formatCode>{_xml_escape(number_format)}</c:formatCode>"
         f'<c:ptCount val="{len(values)}"/>{points}</c:numCache>'
     )
 
@@ -113,31 +113,42 @@ def _series_color_xml(
         )
     line_xml = (
         f'<a:ln{line_width_xml}><a:solidFill><a:srgbClr val="{clean}"/></a:solidFill></a:ln>'
-        if line else '<a:ln><a:noFill/></a:ln>'
+        if line
+        else "<a:ln><a:noFill/></a:ln>"
     )
     return (
         "<c:spPr>"
         f'<a:solidFill><a:srgbClr val="{clean}">{alpha_xml}</a:srgbClr></a:solidFill>'
-        f'{line_xml}'
+        f"{line_xml}"
         "</c:spPr>"
     )
 
 
 def _data_label_flags_xml(config: dict[str, Any]) -> str:
     show_value = _chart_bool(
-        _first_present(config.get("show_value"), config.get("showValue"), config.get("value")),
+        _first_present(
+            config.get("show_value"), config.get("showValue"), config.get("value")
+        ),
         True,
     )
     show_category = _chart_bool(
-        _first_present(config.get("show_category"), config.get("showCategory"), config.get("category")),
+        _first_present(
+            config.get("show_category"),
+            config.get("showCategory"),
+            config.get("category"),
+        ),
         False,
     )
     show_series = _chart_bool(
-        _first_present(config.get("show_series"), config.get("showSeries"), config.get("series")),
+        _first_present(
+            config.get("show_series"), config.get("showSeries"), config.get("series")
+        ),
         False,
     )
     show_percent = _chart_bool(
-        _first_present(config.get("show_percent"), config.get("showPercent"), config.get("percent")),
+        _first_present(
+            config.get("show_percent"), config.get("showPercent"), config.get("percent")
+        ),
         False,
     )
     return (
@@ -173,7 +184,9 @@ def _data_labels_xml(
     leader_lines_xml = f'<c:showLeaderLines val="{_bool_attr(show_leader_lines)}"/>'
     position = _data_label_position(config.get("position"), chart_type, grouping)
     raw_font_size = _first_present(config.get("font_size"), config.get("fontSize"))
-    label_font_size = _font_size_hpt(raw_font_size, 12) if raw_font_size is not None else font_size
+    label_font_size = (
+        _font_size_hpt(raw_font_size, 12) if raw_font_size is not None else font_size
+    )
     color = _hex_or_none(config.get("color")) or default_color
     bold = _chart_bool(config.get("bold"), False)
     font_face = _chart_text_entry_font_face(config, default_font_face)
@@ -191,7 +204,8 @@ def _data_labels_xml(
     )
     num_fmt_xml = (
         f'<c:numFmt formatCode="{_xml_escape(str(num_fmt))}" sourceLinked="0"/>'
-        if num_fmt else ""
+        if num_fmt
+        else ""
     )
     flags_xml = _data_label_flags_xml(config)
     point_items = _data_label_point_items(
@@ -206,12 +220,17 @@ def _data_labels_xml(
         for idx in range(point_count):
             item = selected_items.get(idx)
             if item is None:
-                point_label_xml += f'<c:dLbl><c:idx val="{idx}"/><c:delete val="1"/></c:dLbl>'
+                point_label_xml += (
+                    f'<c:dLbl><c:idx val="{idx}"/><c:delete val="1"/></c:dLbl>'
+                )
                 continue
-            item_font_size_raw = _first_present(item.get("font_size"), item.get("fontSize"))
+            item_font_size_raw = _first_present(
+                item.get("font_size"), item.get("fontSize")
+            )
             item_font_size = (
                 _font_size_hpt(item_font_size_raw, 12)
-                if item_font_size_raw is not None else label_font_size
+                if item_font_size_raw is not None
+                else label_font_size
             )
             item_color = _hex_or_none(item.get("color")) or color
             item_font_face = _chart_text_entry_font_face(item, font_face)
@@ -228,10 +247,13 @@ def _data_labels_xml(
             )
             item_num_fmt_xml = (
                 f'<c:numFmt formatCode="{_xml_escape(str(item_num_fmt))}" sourceLinked="0"/>'
-                if item_num_fmt else ""
+                if item_num_fmt
+                else ""
             )
             item_bold = _chart_bool(item.get("bold"), bold)
-            item_position_xml = f'<c:dLblPos val="{item_position}"/>' if item_position else ""
+            item_position_xml = (
+                f'<c:dLblPos val="{item_position}"/>' if item_position else ""
+            )
             item_text_properties_xml = _chart_tx_pr_xml(
                 item_font_size,
                 item_color,
@@ -252,12 +274,18 @@ def _data_labels_xml(
     label_colors = [
         _clean_hex(item, "#404040")
         for item in _chart_list(
-            _first_present(config.get("colors"), config.get("label_colors"), config.get("labelColors")),
+            _first_present(
+                config.get("colors"),
+                config.get("label_colors"),
+                config.get("labelColors"),
+            ),
             "data_labels.colors",
         )
     ]
     if label_colors and len(label_colors) != point_count:
-        raise RuntimeError("Native PPTX chart data_labels.colors must match point count")
+        raise RuntimeError(
+            "Native PPTX chart data_labels.colors must match point count"
+        )
     point_label_xml = ""
     for idx, label_color in enumerate(label_colors):
         position_xml = f'<c:dLblPos val="{position}"/>' if position else ""
@@ -276,7 +304,7 @@ def _data_labels_xml(
         f"{num_fmt_xml}{tx_pr_xml}"
         f"{position_xml}"
         f"{flags_xml}"
-        f'{leader_lines_xml}'
+        f"{leader_lines_xml}"
         "</c:dLbls>"
     )
 
@@ -306,7 +334,7 @@ def _data_point_colors_xml(
     invert_xml = '<c:invertIfNegative val="0"/>' if disable_negative_invert else ""
     return "".join(
         f'<c:dPt><c:idx val="{idx}"/>{invert_xml}'
-        f'{_series_color_xml(_chart_color(colors, idx))}</c:dPt>'
+        f"{_series_color_xml(_chart_color(colors, idx))}</c:dPt>"
         for idx in range(count)
     )
 
@@ -356,9 +384,7 @@ def _series_xml(
             else start_index + offset
         )
         color_index = (
-            color_start_index
-            if color_start_index is not None
-            else start_index
+            color_start_index if color_start_index is not None else start_index
         ) + offset
         column_index = offset + start_column
         fill_opacity = item.get("fill_opacity") if chart_type == "area" else None
@@ -374,9 +400,7 @@ def _series_xml(
         if chart_type in {"doughnut", "of_pie", "pie"}:
             color_xml = ""
             point_count = (
-                len(categories) + 1
-                if chart_type == "of_pie"
-                else len(categories)
+                len(categories) + 1 if chart_type == "of_pie" else len(categories)
             )
             point_colors_xml = _data_point_colors_xml(
                 point_count,
@@ -398,7 +422,9 @@ def _series_xml(
                     line=False,
                 )
             marker_xml = _marker_xml(radar_marker_style)
-        invert_xml = '<c:invertIfNegative val="0"/>' if chart_type in {"bar", "column"} else ""
+        invert_xml = (
+            '<c:invertIfNegative val="0"/>' if chart_type in {"bar", "column"} else ""
+        )
         data_labels_xml = (
             _data_labels_xml(
                 data_labels,
@@ -442,21 +468,14 @@ def _chart_title_paragraph_xml(
     font_face: str | None = None,
     primary_language: str | None = None,
 ) -> str:
-    fill_xml = (
-        f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
-        if color else ""
-    )
+    fill_xml = f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>' if color else ""
     lang = detect_text_lang(text, primary_language)
-    rtl_attr = (
-        ' rtl="1"'
-        if text_uses_rtl(text, primary_language)
-        else ''
-    )
-    run_rtl = '<a:rtl val="1"/>' if text_has_rtl_characters(text) else ''
+    rtl_attr = ' rtl="1"' if text_uses_rtl(text, primary_language) else ""
+    run_rtl = '<a:rtl val="1"/>' if text_has_rtl_characters(text) else ""
     return (
         f'<a:p><a:pPr{rtl_attr}/><a:r><a:rPr lang="{lang}" '
         f'sz="{font_size}">{fill_xml}{_font_face_xml(font_face)}'
-        f'{run_rtl}</a:rPr>'
+        f"{run_rtl}</a:rPr>"
         f"<a:t>{_xml_escape(text)}</a:t></a:r></a:p>"
     )
 
@@ -478,26 +497,32 @@ def _chart_title_xml(
     paragraphs = []
     if title_entry is not None:
         text, item = title_entry
-        paragraphs.append(_chart_title_paragraph_xml(
-            text,
-            font_size=_chart_text_entry_font_size(item, font_size),
-            color=_chart_text_entry_color(item, color),
-            font_face=_chart_text_entry_font_face(item, font_face),
-            primary_language=primary_language,
-        ))
+        paragraphs.append(
+            _chart_title_paragraph_xml(
+                text,
+                font_size=_chart_text_entry_font_size(item, font_size),
+                color=_chart_text_entry_color(item, color),
+                font_face=_chart_text_entry_font_face(item, font_face),
+                primary_language=primary_language,
+            )
+        )
     if subtitle_entry is not None:
         text, item = subtitle_entry
-        paragraphs.append(_chart_title_paragraph_xml(
-            text,
-            font_size=_chart_text_entry_font_size(item, subtitle_font_size or font_size),
-            color=_chart_text_entry_color(item, color),
-            font_face=_chart_text_entry_font_face(item, font_face),
-            primary_language=primary_language,
-        ))
+        paragraphs.append(
+            _chart_title_paragraph_xml(
+                text,
+                font_size=_chart_text_entry_font_size(
+                    item, subtitle_font_size or font_size
+                ),
+                color=_chart_text_entry_color(item, color),
+                font_face=_chart_text_entry_font_face(item, font_face),
+                primary_language=primary_language,
+            )
+        )
     return (
         "<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/>"
         f"{''.join(paragraphs)}"
-        "</c:rich></c:tx><c:layout/><c:overlay val=\"0\"/></c:title>"
+        '</c:rich></c:tx><c:layout/><c:overlay val="0"/></c:title>'
         '<c:autoTitleDeleted val="0"/>'
     )
 
@@ -533,7 +558,9 @@ def _chart_legend_xml(
     show_legend = payload.get("show_legend", style.get("show_legend", False))
     if not show_legend:
         return ""
-    position_key = _compact_key(payload.get("legend_position") or style.get("legend_position") or "bottom")
+    position_key = _compact_key(
+        payload.get("legend_position") or style.get("legend_position") or "bottom"
+    )
     positions = {
         "bottom": "b",
         "b": "b",
@@ -548,8 +575,8 @@ def _chart_legend_xml(
     return (
         f'<c:legend><c:legendPos val="{position}"/><c:layout/>'
         '<c:overlay val="0"/>'
-        f'{_chart_tx_pr_xml(font_size, color, font_face=font_face, language=primary_language)}'
-        '</c:legend>'
+        f"{_chart_tx_pr_xml(font_size, color, font_face=font_face, language=primary_language)}"
+        "</c:legend>"
     )
 
 
@@ -584,7 +611,9 @@ def _xy_series_xml(
         marker_xml = ""
         smooth_xml = ""
         if chart_type == "scatter":
-            color_xml, marker_xml, smooth_xml = _scatter_series_style_xml(scatter_style, color)
+            color_xml, marker_xml, smooth_xml = _scatter_series_style_xml(
+                scatter_style, color
+            )
         invert_xml = '<c:invertIfNegative val="0"/>' if chart_type == "bubble" else ""
         size_xml = ""
         if chart_type == "bubble":
@@ -594,7 +623,7 @@ def _xy_series_xml(
                 f"<c:f>Sheet1!${_excel_col(size_col)}${first_row}:"
                 f"${_excel_col(size_col)}${last_row}</c:f>"
                 f"{_number_cache(item['sizes'])}"
-                "</c:numRef></c:bubbleSize><c:bubble3D val=\"0\"/>"
+                '</c:numRef></c:bubbleSize><c:bubble3D val="0"/>'
             )
         parts.append(
             "<c:ser>"
@@ -634,11 +663,11 @@ def _bar_chart_group_xml(
     data_labels_xml: str = "",
 ) -> str:
     bar_dir = "bar" if chart_type == "bar" else "col"
-    vary_colors_xml = '<c:varyColors val="1"/>' if vary_colors else '<c:varyColors val="0"/>'
+    vary_colors_xml = (
+        '<c:varyColors val="1"/>' if vary_colors else '<c:varyColors val="0"/>'
+    )
     overlap_xml = (
-        '<c:overlap val="100"/>'
-        if grouping in {"stacked", "percentStacked"}
-        else ""
+        '<c:overlap val="100"/>' if grouping in {"stacked", "percentStacked"} else ""
     )
     return (
         "<c:barChart>"
@@ -663,7 +692,9 @@ def _line_area_chart_group_xml(
     data_labels_xml: str = "",
 ) -> str:
     tag = "lineChart" if chart_type == "line" else "areaChart"
-    line_tail_xml = '<c:marker val="1"/><c:smooth val="0"/>' if chart_type == "line" else ""
+    line_tail_xml = (
+        '<c:marker val="1"/><c:smooth val="0"/>' if chart_type == "line" else ""
+    )
     return (
         f'<c:{tag}><c:grouping val="{grouping}"/><c:varyColors val="0"/>'
         f"{ser_xml}"
@@ -678,13 +709,17 @@ def _axis_scaling_xml(config: dict[str, Any]) -> str:
     orientation = "maxMin" if config.get("reverse") else "minMax"
     maximum = (
         f'<c:max val="{config["maximum"]}"/>'
-        if config.get("maximum") is not None else ""
+        if config.get("maximum") is not None
+        else ""
     )
     minimum = (
         f'<c:min val="{config["minimum"]}"/>'
-        if config.get("minimum") is not None else ""
+        if config.get("minimum") is not None
+        else ""
     )
-    return f'<c:scaling><c:orientation val="{orientation}"/>{maximum}{minimum}</c:scaling>'
+    return (
+        f'<c:scaling><c:orientation val="{orientation}"/>{maximum}{minimum}</c:scaling>'
+    )
 
 
 def _axis_position(config: dict[str, Any], default: str) -> str:
@@ -712,7 +747,9 @@ def _axis_number_format_xml(
     number_format = config.get("number_format", default)
     if number_format is None:
         return ""
-    return f'<c:numFmt formatCode="{_xml_escape(str(number_format))}" sourceLinked="0"/>'
+    return (
+        f'<c:numFmt formatCode="{_xml_escape(str(number_format))}" sourceLinked="0"/>'
+    )
 
 
 def _axis_major_gridlines_xml(
@@ -744,7 +781,9 @@ def _axis_pair_xml(
     value_role = "secondary_value" if secondary else "value"
     category = axes.get(category_role, {})
     value = axes.get(value_role, {})
-    category_kind = str(category.get("kind") or ("date" if chart_type == "stock" else "text"))
+    category_kind = str(
+        category.get("kind") or ("date" if chart_type == "stock" else "text")
+    )
     category_tag = "dateAx" if category_kind == "date" else "catAx"
     default_cat_pos = "l" if chart_type == "bar" else "b"
     default_val_pos = "r" if secondary else ("b" if chart_type == "bar" else "l")
@@ -768,12 +807,16 @@ def _axis_pair_xml(
         font_face=chart_style.get("font_face"),
         language=primary_language,
     )
-    cat_title_xml = "" if secondary else _axis_title_xml(
-        _first_present(axis_titles.get("category"), axis_titles.get("x")),
-        font_size=axis_title_font_size,
-        color=chart_style.get("text_color"),
-        font_face=chart_style.get("font_face"),
-        primary_language=primary_language,
+    cat_title_xml = (
+        ""
+        if secondary
+        else _axis_title_xml(
+            _first_present(axis_titles.get("category"), axis_titles.get("x")),
+            font_size=axis_title_font_size,
+            color=chart_style.get("text_color"),
+            font_face=chart_style.get("font_face"),
+            primary_language=primary_language,
+        )
     )
     value_title_key = "secondary_value" if secondary else "value"
     value_title = axis_titles.get(value_title_key)
@@ -797,7 +840,9 @@ def _axis_pair_xml(
         color=chart_style.get("grid_color"),
     )
     if category_kind == "date":
-        category_tail = '<c:auto val="1"/><c:lblOffset val="100"/><c:baseTimeUnit val="days"/>'
+        category_tail = (
+            '<c:auto val="1"/><c:lblOffset val="100"/><c:baseTimeUnit val="days"/>'
+        )
     else:
         category_tail = (
             '<c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/>'
@@ -811,7 +856,8 @@ def _axis_pair_xml(
         cross_between = '<c:crossBetween val="between"/>'
     major_unit = (
         f'<c:majorUnit val="{value["major_unit"]}"/>'
-        if value.get("major_unit") is not None else ""
+        if value.get("major_unit") is not None
+        else ""
     )
     value_crosses = "max" if secondary else "autoZero"
     return (
@@ -904,7 +950,9 @@ def _combo_plot_xml(
         category_role = "secondary_category" if axis == "secondary" else "category"
         category_number_format = axes.get(category_role, {}).get("number_format")
         start_index = int(plot.get("start_index", 0))
-        grouping = plot.get("grouping") or ("clustered" if chart_type == "column" else "standard")
+        grouping = plot.get("grouping") or (
+            "clustered" if chart_type == "column" else "standard"
+        )
         ser_xml = _series_xml(
             categories,
             plot["series"],
@@ -941,28 +989,38 @@ def _combo_plot_xml(
             else ""
         )
         if chart_type == "column":
-            parts.append(_bar_chart_group_xml(
-                chart_type,
-                grouping,
-                ser_xml,
-                cat_ax_id=cat_ax_id,
-                val_ax_id=val_ax_id,
-                vary_colors=any(item.get("point_colors") for item in plot["series"]),
-                data_labels_xml=data_labels_xml,
-            ))
+            parts.append(
+                _bar_chart_group_xml(
+                    chart_type,
+                    grouping,
+                    ser_xml,
+                    cat_ax_id=cat_ax_id,
+                    val_ax_id=val_ax_id,
+                    vary_colors=any(
+                        item.get("point_colors") for item in plot["series"]
+                    ),
+                    data_labels_xml=data_labels_xml,
+                )
+            )
         elif chart_type in {"area", "line"}:
-            parts.append(_line_area_chart_group_xml(
-                chart_type,
-                grouping,
-                ser_xml,
-                cat_ax_id=cat_ax_id,
-                val_ax_id=val_ax_id,
-                data_labels_xml=data_labels_xml,
-            ))
+            parts.append(
+                _line_area_chart_group_xml(
+                    chart_type,
+                    grouping,
+                    ser_xml,
+                    cat_ax_id=cat_ax_id,
+                    val_ax_id=val_ax_id,
+                    data_labels_xml=data_labels_xml,
+                )
+            )
         else:
-            raise RuntimeError("Native PPTX combo plots support column, line, and area only")
+            raise RuntimeError(
+                "Native PPTX combo plots support column, line, and area only"
+            )
 
-    has_secondary_axis = any(plot.get("axis") == "secondary" for plot in chart_data["plots"])
+    has_secondary_axis = any(
+        plot.get("axis") == "secondary" for plot in chart_data["plots"]
+    )
     axes_xml = _axis_xml(
         primary_cat_ax_id,
         primary_val_ax_id,
@@ -1064,8 +1122,7 @@ def _chart_plot_xml(
         stock_category_format = None
         if stock_axes:
             stock_category_format = (
-                stock_axes.get("category", {}).get("number_format")
-                or "m/d/yyyy"
+                stock_axes.get("category", {}).get("number_format") or "m/d/yyyy"
             )
         stock_series_xml = _stock_series_xml(
             categories,
@@ -1085,7 +1142,7 @@ def _chart_plot_xml(
         return (
             "<c:stockChart>"
             f"{stock_series_xml}"
-            '<c:hiLowLines/>'
+            "<c:hiLowLines/>"
             '<c:upDownBars><c:gapWidth val="150"/><c:upBars/><c:downBars/></c:upDownBars>'
             f'<c:axId val="{stock_cat_ax_id}"/><c:axId val="{stock_val_ax_id}"/>'
             "</c:stockChart>"
@@ -1188,7 +1245,9 @@ def _chart_plot_xml(
             show_value_axis_labels=chart_data.get("show_value_axis_labels", True),
             axes=chart_data.get("axes") or {},
         )
-        line_tail_xml = '<c:marker val="1"/><c:smooth val="0"/>' if chart_type == "line" else ""
+        line_tail_xml = (
+            '<c:marker val="1"/><c:smooth val="0"/>' if chart_type == "line" else ""
+        )
         return (
             f'<c:{tag}><c:grouping val="{grouping}"/><c:varyColors val="0"/>'
             f"{ser_xml}"
@@ -1323,7 +1382,8 @@ def _xy_axis_xml(
         tick_label_position = _axis_label_position(config, "nextTo")
         major_unit = (
             f'<c:majorUnit val="{config["major_unit"]}"/>'
-            if config.get("major_unit") is not None else ""
+            if config.get("major_unit") is not None
+            else ""
         )
         return (
             "<c:valAx>"
@@ -1372,7 +1432,7 @@ def _stock_series_xml(
             f"<c:f>Sheet1!${_excel_col(column_index)}$1</c:f>"
             f"{_string_cache([str(item['name'])])}"
             "</c:strRef></c:tx>"
-            '<c:spPr><a:ln><a:noFill/></a:ln></c:spPr>'
+            "<c:spPr><a:ln><a:noFill/></a:ln></c:spPr>"
             '<c:marker><c:symbol val="none"/></c:marker>'
             "<c:cat><c:numRef>"
             f"<c:f>Sheet1!$A$2:$A${len(categories) + 1}</c:f>"

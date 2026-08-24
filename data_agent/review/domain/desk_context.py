@@ -111,5 +111,3 @@ class DeskContext(BaseModel):
 
     def effective_controls(self, on: date) -> list[ControlDefinition]:
         return [control for control in self.controls if control.effective_on(on)]
-
-

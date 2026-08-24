@@ -108,15 +108,11 @@ def parse_project_viewbox(
             f"{context} contains an invalid numeric value; got {raw!r}"
         ) from exc
     if not all(value.is_finite() for value in values):
-        raise CanvasContractError(
-            f"{context} values must be finite; got {raw!r}"
-        )
+        raise CanvasContractError(f"{context} values must be finite; got {raw!r}")
 
     x, y, width, height = values
     if x != 0 or y != 0:
-        raise CanvasContractError(
-            f'{context} origin must be "0 0"; got {raw!r}'
-        )
+        raise CanvasContractError(f'{context} origin must be "0 0"; got {raw!r}')
     if width <= 0 or height <= 0:
         raise CanvasContractError(
             f"{context} width and height must be positive; got {raw!r}"
@@ -132,7 +128,9 @@ def read_project_viewbox(svg_path: str | Path) -> ProjectViewBox:
     try:
         root = ET.parse(path).getroot()
     except (OSError, ET.ParseError) as exc:
-        raise CanvasContractError(f"{path.name}: unable to parse root SVG: {exc}") from exc
+        raise CanvasContractError(
+            f"{path.name}: unable to parse root SVG: {exc}"
+        ) from exc
     return parse_project_svg_root(
         root,
         context=path.name,
@@ -162,9 +160,7 @@ def require_powerpoint_slide_size(
     # Reject before converting to int so an adversarial exponent cannot force
     # construction of an enormous Python integer or fixed-point string.
     values = viewbox.width, viewbox.height
-    outside_coarse_bound = any(
-        value > Decimal(PPTX_SLIDE_EMU_MAX) for value in values
-    )
+    outside_coarse_bound = any(value > Decimal(PPTX_SLIDE_EMU_MAX) for value in values)
     scaled = () if outside_coarse_bound else viewbox._scaled_emu_values()
     outside_emu_bound = outside_coarse_bound or not all(
         Decimal(PPTX_SLIDE_EMU_MIN) - Decimal("0.5")

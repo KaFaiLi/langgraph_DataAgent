@@ -1,4 +1,4 @@
-'''Example tools and guidelines for shared tool development.
+"""Example tools and guidelines for shared tool development.
 
 ============================================================================
  HOW TO WRITE A GREAT TOOL  (read this before adding your own)
@@ -29,7 +29,7 @@ Checklist (the `context_lab.tool_linter` enforces most of these):
 
 Delete these examples once you have your own tools -- they exist to show the
 patterns above, not to ship in production.
-'''
+"""
 
 from __future__ import annotations
 
@@ -76,9 +76,7 @@ def register(mcp: FastMCP) -> None:
     @mcp.tool
     def search_items(
         query: Annotated[str, Field(description="Free-text search string.")],
-        limit: Annotated[
-            int, Field(ge=1, le=50, description="Max results to return (1-50).")
-        ] = 5,
+        limit: Annotated[int, Field(ge=1, le=50, description="Max results to return (1-50).")] = 5,
     ) -> dict[str, Any]:
         """Search a demo catalog and return matching items.
 

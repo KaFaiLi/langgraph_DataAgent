@@ -21,9 +21,7 @@ _AMBER = "#d97706"
 _RED = "#dc2626"
 _SLATE = "#64748b"
 
-_FONT = (
-    "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
-)
+_FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 _MONO = "'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace"
 _CARD = (
     "border:1px solid rgba(127,127,127,.25);border-radius:12px;"
@@ -45,7 +43,7 @@ def _html_obj(markup: str):
 def _badge(text: str, color: str) -> str:
     return (
         f'<span style="display:inline-block;padding:2px 9px;border-radius:9999px;'
-        f'background:{color};color:#fff;font-size:11px;font-weight:600;'
+        f"background:{color};color:#fff;font-size:11px;font-weight:600;"
         f'white-space:nowrap;">{_esc(text)}</span>'
     )
 
@@ -67,7 +65,7 @@ def banner(title: str, subtitle: str = ""):
     )
     return _html_obj(
         f'<div style="background:linear-gradient(135deg,{_INDIGO},{_VIOLET});'
-        f'color:#fff;border-radius:14px;padding:20px 22px;font-family:{_FONT};'
+        f"color:#fff;border-radius:14px;padding:20px 22px;font-family:{_FONT};"
         f'box-shadow:0 6px 20px rgba(99,102,241,.25);">'
         f'<div style="font-size:20px;font-weight:700;letter-spacing:.2px;">{_esc(title)}</div>'
         f"{sub}</div>"
@@ -142,7 +140,7 @@ def tool_catalog(tools: list[Any], title: str = "Tool catalog"):
         f'<div style="{_CARD}">'
         f'<div style="font-weight:700;margin-bottom:8px;color:{_INDIGO};">'
         f'{_esc(title)} <span style="color:{_SLATE};font-weight:400;">'
-        f'({len(tools)})</span></div>'
+        f"({len(tools)})</span></div>"
         '<table style="border-collapse:collapse;width:100%;">'
         f"{head}{''.join(body)}</table></div>"
     )
@@ -157,7 +155,7 @@ def skills_cards(skills: list[Any], title: str = "Skills"):
             '<div style="border:1px solid rgba(127,127,127,.22);border-radius:10px;'
             'padding:10px 12px;background:rgba(127,127,127,.04);">'
             f'<div style="font-family:{_MONO};font-weight:700;color:{_VIOLET};">'
-            f'{_esc(s.name)}</div>'
+            f"{_esc(s.name)}</div>"
             f'<div style="font-size:12.5px;margin-top:3px;">{_esc(s.description)}</div></div>'
             for s in skills
         )
@@ -186,12 +184,12 @@ def token_meter(label: str, tokens: int, soft_limit: int = 500):
         f'<div style="display:flex;justify-content:space-between;font-size:13px;'
         f'margin-bottom:6px;"><span>{_esc(label)}</span>'
         f'<span style="font-family:{_MONO};color:{color};font-weight:700;">'
-        f'{tokens} tokens</span></div>'
+        f"{tokens} tokens</span></div>"
         '<div style="height:10px;border-radius:9999px;background:rgba(127,127,127,.18);'
         'overflow:hidden;">'
         f'<div style="height:100%;width:{pct:.0f}%;background:{color};"></div></div>'
         f'<div style="color:{_SLATE};font-size:11px;margin-top:5px;">'
-        f'soft budget: {soft_limit} tokens</div></div>'
+        f"soft budget: {soft_limit} tokens</div></div>"
     )
 
 
@@ -219,7 +217,6 @@ def command_box(command: str, note: str = ""):
     return _html_obj(
         f'<div style="{_CARD}">{note_html}'
         f'<pre style="margin:0;font-family:{_MONO};font-size:12.5px;'
-        'background:rgba(127,127,127,.14);padding:10px 12px;border-radius:8px;'
+        "background:rgba(127,127,127,.14);padding:10px 12px;border-radius:8px;"
         f'white-space:pre-wrap;">{_esc(command)}</pre></div>'
     )
-

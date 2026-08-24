@@ -74,9 +74,7 @@ def _income_attribution_driver_profile(
 
     total_absolute = sum(absolute.values())
     shares = (
-        {name: value / total_absolute for name, value in absolute.items()}
-        if total_absolute
-        else {}
+        {name: value / total_absolute for name, value in absolute.items()} if total_absolute else {}
     )
     ordered = sorted(shares.items(), key=lambda pair: (-pair[1], pair[0]))
     top_three = sum(share for _, share in ordered[:3])
@@ -310,9 +308,9 @@ def _income_attribution_reconciliation(
     rows: list[IncomeAttributionRow],
 ) -> AnalysisResult:
     """Compare DTD totals to the supplied cumulative total within each hierarchy series."""
-    grouped: dict[
-        tuple[str, str | None, tuple[str, ...]], list[IncomeAttributionRow]
-    ] = defaultdict(list)
+    grouped: dict[tuple[str, str | None, tuple[str, ...]], list[IncomeAttributionRow]] = (
+        defaultdict(list)
+    )
     for item in rows:
         grouped[(item.path, item.sheet, item.entity)].append(item)
     tables: list[dict[str, object]] = []
@@ -411,8 +409,7 @@ def _income_attribution_status(rows: list[IncomeAttributionRow]) -> AnalysisResu
                     asofdate=item.day.isoformat(),
                     gop=item.entity[-1],
                     detail=(
-                        "reported processing state requires workflow-state and SLA "
-                        "interpretation"
+                        "reported processing state requires workflow-state and SLA interpretation"
                     ),
                 )
             )

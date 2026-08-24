@@ -78,9 +78,7 @@ def test_source_ids_are_deterministic(tmp_path, source_tree) -> None:
 def test_sha256_matches_raw_file(tmp_path, source_tree) -> None:
     manifest = build_catalog(tmp_path / "source")
     for source in manifest.sources:
-        raw = hashlib.sha256(
-            (tmp_path / "source" / source.path).read_bytes()
-        ).hexdigest()
+        raw = hashlib.sha256((tmp_path / "source" / source.path).read_bytes()).hexdigest()
         assert source.sha256 == raw
 
 
@@ -116,10 +114,6 @@ def test_iter_source_files_skips_hidden(tmp_path) -> None:
 
 
 def test_guess_domains_from_path() -> None:
-    assert guess_domains_from_path("risk_metrics/var/daily.csv") == [
-        SpecialistDomain.RISK_METRICS
-    ]
+    assert guess_domains_from_path("risk_metrics/var/daily.csv") == [SpecialistDomain.RISK_METRICS]
     assert guess_domains_from_path("pnl/daily.xlsx") == [SpecialistDomain.PNL]
     assert guess_domains_from_path("misc/unknown.csv") == []
-
-

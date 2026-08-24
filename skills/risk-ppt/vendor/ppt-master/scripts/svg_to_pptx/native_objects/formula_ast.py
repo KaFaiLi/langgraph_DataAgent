@@ -284,9 +284,7 @@ def _rows_vertical_extent(
         row_extent = _max_vertical_extent(
             *(_node_vertical_extent(cell) for cell in cells)
         )
-        row_heights.append(
-            max(_BASE_VERTICAL_EXTENT.height_em, row_extent.height_em)
-        )
+        row_heights.append(max(_BASE_VERTICAL_EXTENT.height_em, row_extent.height_em))
     if not row_heights:
         return _BASE_VERTICAL_EXTENT
     total_height = sum(row_heights) + 0.18 * (len(row_heights) - 1)
@@ -340,7 +338,8 @@ def _node_vertical_extent(node: Node) -> FormulaVerticalExtent:
         base = _max_vertical_extent(
             FormulaVerticalExtent(1.05, 0.45),
             _node_vertical_extent(node.body)
-            if node.body is not None else FormulaVerticalExtent(0.0, 0.0),
+            if node.body is not None
+            else FormulaVerticalExtent(0.0, 0.0),
         )
         if node.limit_modifier == "limits":
             return _limit_vertical_extent(
@@ -426,7 +425,9 @@ def formula_vertical_extent(root: Node) -> FormulaVerticalExtent:
     )
 
 
-def merge_run_styles(base: RunStyle | None, override: RunStyle | None) -> RunStyle | None:
+def merge_run_styles(
+    base: RunStyle | None, override: RunStyle | None
+) -> RunStyle | None:
     """Merge inherited and local run style without clearing unrelated fields."""
     if base is None:
         return override
@@ -441,9 +442,7 @@ def merge_run_styles(base: RunStyle | None, override: RunStyle | None) -> RunSty
             bold=base.bold if base.bold is not None else override.bold,
             italic=base.italic if base.italic is not None else override.italic,
             typeface=(
-                base.typeface
-                if base.typeface is not None
-                else override.typeface
+                base.typeface if base.typeface is not None else override.typeface
             ),
             is_default=base.is_default,
         )
@@ -455,9 +454,7 @@ def merge_run_styles(base: RunStyle | None, override: RunStyle | None) -> RunSty
         bold=override.bold if override.bold is not None else base.bold,
         italic=override.italic if override.italic is not None else base.italic,
         typeface=(
-            override.typeface
-            if override.typeface is not None
-            else base.typeface
+            override.typeface if override.typeface is not None else base.typeface
         ),
         is_default=override.is_default,
     )
@@ -534,14 +531,17 @@ def formula_node_count(root: Node, *, maximum: int) -> int:
                 pending.extend(reversed(row))
         elif isinstance(node, EquationArray):
             pending.extend(reversed(node.rows))
-        elif isinstance(node, (
-            Accent,
-            Bar,
-            GroupChar,
-            OperatorEmulator,
-            Phantom,
-            BorderBox,
-        )):
+        elif isinstance(
+            node,
+            (
+                Accent,
+                Bar,
+                GroupChar,
+                OperatorEmulator,
+                Phantom,
+                BorderBox,
+            ),
+        ):
             pending.append(node.body)
         elif isinstance(node, Limit):
             pending.append(node.base)

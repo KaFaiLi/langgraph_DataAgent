@@ -67,7 +67,9 @@ async def test_stdio_server_exposes_tools():
     names = {t.name for t in tools}
 
     expected = MIGRATED_TOOL_NAMES | TEMPLATE_TOOL_NAMES
-    assert names == expected, f"tool catalog mismatch; missing={sorted(expected - names)}, extra={sorted(names - expected)}"
+    assert names == expected, (
+        f"tool catalog mismatch; missing={sorted(expected - names)}, extra={sorted(names - expected)}"
+    )
 
 
 @pytest.mark.asyncio
@@ -102,9 +104,7 @@ async def test_all_migrated_tools_are_exposed_and_callable(tmp_path: Path):
     from data_agent.mcp_server.server import build_server
 
     (tmp_path / "notes.md").write_text("alpha\nbeta\n", encoding="utf-8")
-    (tmp_path / "sales.csv").write_text(
-        "desk,amount\nA,10\nB,5\n", encoding="utf-8"
-    )
+    (tmp_path / "sales.csv").write_text("desk,amount\nA,10\nB,5\n", encoding="utf-8")
     server = build_server(Settings(source_root=str(tmp_path)))
     tools = {tool.name for tool in await server.list_tools()}
 

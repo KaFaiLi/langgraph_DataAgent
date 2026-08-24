@@ -107,9 +107,7 @@ def require_fresh_native_fallback(
     """Fail Chart/Table replacement when a recorded fallback is stale."""
     expected, invalid = _expected_native_fallback_hash(elem)
     if invalid:
-        raise RuntimeError(
-            f"{NATIVE_FALLBACK_SHA256_ATTR} must be a 64-digit SHA-256"
-        )
+        raise RuntimeError(f"{NATIVE_FALLBACK_SHA256_ATTR} must be a 64-digit SHA-256")
     if expected is None:
         return
     if _native_fallback_is_fresh(
@@ -155,7 +153,10 @@ def _native_fallback_is_fresh(
             return True
         if snapshot in {"0", "invalid"}:
             return False
-    return svg_native_fallback_fingerprint(
-        elem,
-        document_root=document_root,
-    ) == expected
+    return (
+        svg_native_fallback_fingerprint(
+            elem,
+            document_root=document_root,
+        )
+        == expected
+    )

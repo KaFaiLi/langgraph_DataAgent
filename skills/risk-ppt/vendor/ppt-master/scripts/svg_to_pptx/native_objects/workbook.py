@@ -30,19 +30,20 @@ def _xlsx_cell(value: Any, row: int, col: int) -> str:
     ref = _xlsx_cell_ref(row, col)
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         return f'<c r="{ref}"><v>{value}</v></c>'
-    return (
-        f'<c r="{ref}" t="inlineStr"><is><t>{_xml_escape(str(value))}</t></is></c>'
-    )
+    return f'<c r="{ref}" t="inlineStr"><is><t>{_xml_escape(str(value))}</t></is></c>'
 
 
 def _minimal_workbook(rows: list[list[Any]]) -> bytes:
     if XlsxWriterWorkbook is not None:
         buffer = io.BytesIO()
-        workbook = XlsxWriterWorkbook(buffer, {
-            "in_memory": True,
-            "strings_to_formulas": False,
-            "strings_to_urls": False,
-        })
+        workbook = XlsxWriterWorkbook(
+            buffer,
+            {
+                "in_memory": True,
+                "strings_to_formulas": False,
+                "strings_to_urls": False,
+            },
+        )
         worksheet = workbook.add_worksheet("Sheet1")
         for row_index, row in enumerate(rows):
             for col_index, value in enumerate(row):
@@ -73,7 +74,7 @@ def _minimal_workbook(rows: list[list[Any]]) -> bytes:
         sheet_rows.append(f'<row r="{row_index}">{cells}</row>')
 
     entries = {
-        "[Content_Types].xml": '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        "[Content_Types].xml": """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
 <Default Extension="xml" ContentType="application/xml"/>
@@ -83,19 +84,19 @@ def _minimal_workbook(rows: list[list[Any]]) -> bytes:
           ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 <Override PartName="/xl/styles.xml"
           ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-</Types>''',
-        "_rels/.rels": '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+</Types>""",
+        "_rels/.rels": """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1"
               Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
               Target="xl/workbook.xml"/>
-</Relationships>''',
-        "xl/workbook.xml": '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+</Relationships>""",
+        "xl/workbook.xml": """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
           xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
 <sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets>
-</workbook>''',
-        "xl/_rels/workbook.xml.rels": '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+</workbook>""",
+        "xl/_rels/workbook.xml.rels": """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1"
               Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"
@@ -103,20 +104,20 @@ def _minimal_workbook(rows: list[list[Any]]) -> bytes:
 <Relationship Id="rId2"
               Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"
               Target="styles.xml"/>
-</Relationships>''',
-        "xl/worksheets/sheet1.xml": f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+</Relationships>""",
+        "xl/worksheets/sheet1.xml": f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-<sheetData>{''.join(sheet_rows)}</sheetData>
-</worksheet>''',
-        "xl/styles.xml": '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sheetData>{"".join(sheet_rows)}</sheetData>
+</worksheet>""",
+        "xl/styles.xml": """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
 <fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>
 <fills count="1"><fill><patternFill patternType="none"/></fill></fills>
 <borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
 <cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs>
-</styleSheet>''',
+</styleSheet>""",
     }
 
     buffer = io.BytesIO()
@@ -130,8 +131,7 @@ def _minimal_category_chart_workbook(chart_data: dict[str, Any]) -> bytes:
     if chart_data.get("kind") == "combo" and chart_data.get("independent_categories"):
         plots = chart_data["plots"]
         column_count = max(
-            int(plot["start_column"]) + len(plot["series"]) - 1
-            for plot in plots
+            int(plot["start_column"]) + len(plot["series"]) - 1 for plot in plots
         )
         rows: list[list[Any]] = [[None] * column_count]
         for plot in plots:
@@ -144,9 +144,9 @@ def _minimal_category_chart_workbook(chart_data: dict[str, Any]) -> bytes:
                     rows.append([None] * column_count)
                 rows[point_index][category_column] = category
                 for offset, series in enumerate(plot["series"]):
-                    rows[point_index][start_column + offset] = (
-                        series["values"][point_index - 1]
-                    )
+                    rows[point_index][start_column + offset] = series["values"][
+                        point_index - 1
+                    ]
         return _minimal_workbook(rows)
 
     categories = chart_data["categories"]
@@ -186,12 +186,16 @@ def _minimal_chart_ex_workbook(chart_data: dict[str, Any]) -> bytes:
     chart_type = chart_data["type"]
     if chart_type in {"sunburst", "treemap"}:
         levels = chart_data["levels"]
-        rows: list[list[Any]] = [[f"Level {idx + 1}" for idx in range(len(levels))] + ["Value"]]
+        rows: list[list[Any]] = [
+            [f"Level {idx + 1}" for idx in range(len(levels))] + ["Value"]
+        ]
         for row_idx, value in enumerate(chart_data["values"]):
             rows.append([level[row_idx] for level in levels] + [value])
         return _minimal_workbook(rows)
     if chart_type == "histogram":
-        return _minimal_workbook([["Value"]] + [[value] for value in chart_data["values"]])
+        return _minimal_workbook(
+            [["Value"]] + [[value] for value in chart_data["values"]]
+        )
     if chart_type in {"funnel", "pareto", "waterfall"}:
         rows = [["Category", "Value"]]
         rows.extend(
@@ -213,4 +217,6 @@ def _minimal_chart_ex_workbook(chart_data: dict[str, Any]) -> bytes:
                     row.extend(["", ""])
             rows.append(row)
         return _minimal_workbook(rows)
-    raise RuntimeError(f"Native PPTX {chart_type} chart is outside current basic chart support")
+    raise RuntimeError(
+        f"Native PPTX {chart_type} chart is outside current basic chart support"
+    )

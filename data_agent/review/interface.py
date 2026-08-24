@@ -58,4 +58,3 @@ class ReviewRunStatus(BaseModel):
     output_dir: Path
     failure_reason: str | None = None
     completed_specialists: list[str] = Field(default_factory=list)
-

@@ -38,4 +38,3 @@ def setup_logging(level: str = "INFO") -> None:
 def get_logger(name: str) -> logging.Logger:
     """Return a namespaced logger (call :func:`setup_logging` first)."""
     return logging.getLogger(name)
-

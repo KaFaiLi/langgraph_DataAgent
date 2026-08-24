@@ -110,16 +110,16 @@ _BRAND_FORBIDDEN_SECTIONS = (
     "Page Roster",
     "Signature Design Elements",
 )
-_BRAND_ALLOWED_FRONTMATTER_FIELDS = frozenset({
-    "brand_id",
-    "kind",
-    "summary",
-    "primary_color",
-})
-_BRAND_PROVENANCE_VALUES = {"fact", "approx", "user"}
-_BRAND_ASSET_REF_RE = re.compile(
-    r"`((?:\.\./)+(?:images|icons)/[^`]+)`"
+_BRAND_ALLOWED_FRONTMATTER_FIELDS = frozenset(
+    {
+        "brand_id",
+        "kind",
+        "summary",
+        "primary_color",
+    }
 )
+_BRAND_PROVENANCE_VALUES = {"fact", "approx", "user"}
+_BRAND_ASSET_REF_RE = re.compile(r"`((?:\.\./)+(?:images|icons)/[^`]+)`")
 _STYLE_REQUIRED_SECTIONS = (
     ("I", "Style Overview"),
     ("II", "Communication Method"),
@@ -235,12 +235,14 @@ _STYLE_FORBIDDEN_FIELDS = (
     "Icon Style",
     "Assets",
 )
-_STYLE_ALLOWED_FRONTMATTER_FIELDS = frozenset({
-    "style_id",
-    "kind",
-    "summary",
-    "keywords",
-})
+_STYLE_ALLOWED_FRONTMATTER_FIELDS = frozenset(
+    {
+        "style_id",
+        "kind",
+        "summary",
+        "keywords",
+    }
+)
 _STYLE_REVIEW_TRIGGER_MARKER = "<!-- visual-review-trigger: explicit-user-only -->"
 _HEX_COLOR_RE = re.compile(r"#[0-9A-Fa-f]{6}")
 _PORTABLE_STYLE_ID_RE = re.compile(r"^\w[\w.-]*$")
@@ -249,6 +251,7 @@ _PORTABLE_STYLE_ID_RE = re.compile(r"^\w[\w.-]*$")
 # ---------------------------------------------------------------------------
 # design_spec.md parsing
 # ---------------------------------------------------------------------------
+
 
 class SpecParseError(RuntimeError):
     """Raised when a design_spec.md cannot be turned into an index entry."""
@@ -263,7 +266,7 @@ def _read_spec(spec_path: Path) -> tuple[dict | None, str]:
     if end == -1:
         return None, text
     fm_block = text[4:end]
-    body = text[end + 5:]
+    body = text[end + 5 :]
     if yaml is None:
         raise SpecParseError(
             "design_spec.md has YAML frontmatter but PyYAML is not installed; "
@@ -278,7 +281,9 @@ def _read_spec(spec_path: Path) -> tuple[dict | None, str]:
     return data, body
 
 
-def _extract_section_field(body: str, section_title: str, labels: list[str]) -> str | None:
+def _extract_section_field(
+    body: str, section_title: str, labels: list[str]
+) -> str | None:
     section_re = re.compile(
         rf"^##\s+{re.escape(section_title)}\b.*?(?=^##\s+|\Z)",
         re.MULTILINE | re.DOTALL,
@@ -291,14 +296,16 @@ def _extract_section_field(body: str, section_title: str, labels: list[str]) -> 
     for label in labels:
         row = re.search(
             rf"^\|\s*\*?\*?{re.escape(label)}\*?\*?\s*\|\s*(.+?)\s*\|",
-            section, re.MULTILINE | re.IGNORECASE,
+            section,
+            re.MULTILINE | re.IGNORECASE,
         )
         if row:
             return _clean_field_value(row.group(1))
 
         bullet = re.search(
             rf"^[-*]\s*\*?\*?{re.escape(label)}\*?\*?\s*[:：]\s*(.+?)\s*$",
-            section, re.MULTILINE | re.IGNORECASE,
+            section,
+            re.MULTILINE | re.IGNORECASE,
         )
         if bullet:
             return _clean_field_value(bullet.group(1))
@@ -320,7 +327,8 @@ def _find_first_color(section: str) -> str | None:
 def _extract_primary_color(body: str) -> str | None:
     section_match = re.search(
         r"^##\s+[IVX]+\.\s+Color Scheme\b.*?(?=^##\s+|\Z)",
-        body, re.MULTILINE | re.DOTALL,
+        body,
+        re.MULTILINE | re.DOTALL,
     )
     if section_match is None:
         return None
@@ -412,9 +420,7 @@ def _validate_spec_shape(template_dir: Path) -> list[tuple[Path, str]]:
             f"{template_dir}; rename the bare spec to its kind-qualified name"
         )
     kinds = [kind for _path, kind in qualified]
-    duplicate_kinds = sorted({
-        kind for kind in kinds if kinds.count(kind) > 1
-    })
+    duplicate_kinds = sorted({kind for kind in kinds if kinds.count(kind) > 1})
     if duplicate_kinds:
         raise SpecParseError(
             f"{template_dir} declares the same kind more than once: "
@@ -553,17 +559,12 @@ def _validate_brand_spec(
 
     declared_kind = str(frontmatter.get("kind") or "").strip()
     if declared_kind != "brand":
-        errors.append(
-            "frontmatter kind must be 'brand', "
-            f"got {declared_kind!r}"
-        )
+        errors.append(f"frontmatter kind must be 'brand', got {declared_kind!r}")
 
     if not str(frontmatter.get("summary") or "").strip():
         errors.append("frontmatter summary must be non-empty")
 
-    unexpected_fields = sorted(
-        set(frontmatter) - _BRAND_ALLOWED_FRONTMATTER_FIELDS
-    )
+    unexpected_fields = sorted(set(frontmatter) - _BRAND_ALLOWED_FRONTMATTER_FIELDS)
     if unexpected_fields:
         errors.append(
             "brand frontmatter contains non-identity field(s): "
@@ -578,11 +579,14 @@ def _validate_brand_spec(
         )
 
     for numeral, title in _BRAND_REQUIRED_SECTIONS:
-        if re.search(
-            rf"^##\s+{numeral}\.\s+{re.escape(title)}\s*$",
-            body,
-            re.MULTILINE,
-        ) is None:
+        if (
+            re.search(
+                rf"^##\s+{numeral}\.\s+{re.escape(title)}\s*$",
+                body,
+                re.MULTILINE,
+            )
+            is None
+        ):
             errors.append(f"missing required section: {numeral}. {title}")
 
     for title in _BRAND_FORBIDDEN_SECTIONS:
@@ -596,8 +600,7 @@ def _validate_brand_spec(
     declared_primary = str(frontmatter.get("primary_color") or "").strip()
     if _HEX_COLOR_RE.fullmatch(declared_primary) is None:
         errors.append(
-            "frontmatter primary_color must use #RRGGBB, "
-            f"got {declared_primary!r}"
+            f"frontmatter primary_color must use #RRGGBB, got {declared_primary!r}"
         )
 
     color_section = _numbered_section(body, "Color Scheme") or ""
@@ -613,18 +616,14 @@ def _validate_brand_spec(
         if role.lower() == "role" or re.fullmatch(r":?-+:?", role):
             continue
         if _HEX_COLOR_RE.fullmatch(raw_color) is None:
-            errors.append(
-                f"color row {role!r} must use #RRGGBB, "
-                f"got {raw_color!r}"
-            )
+            errors.append(f"color row {role!r} must use #RRGGBB, got {raw_color!r}")
             continue
         if role.lower() == "primary":
             primary_rows.append(raw_color.upper())
         provenance = cells[2].strip("` ").lower()
         if provenance not in _BRAND_PROVENANCE_VALUES:
             errors.append(
-                f"color {raw_color} must declare provenance as "
-                "fact, approx, or user"
+                f"color {raw_color} must declare provenance as fact, approx, or user"
             )
 
     if not primary_rows:
@@ -680,10 +679,7 @@ def _validate_style_spec(
             errors.append(
                 "frontmatter style_id must be a filesystem-safe portable slug"
             )
-        if (
-            expected_template_id is not None
-            and declared_id != expected_template_id
-        ):
+        if expected_template_id is not None and declared_id != expected_template_id:
             errors.append(
                 "frontmatter style_id must match directory "
                 f"{expected_template_id!r}, got {declared_id!r}"
@@ -692,15 +688,10 @@ def _validate_style_spec(
     raw_kind = frontmatter.get("kind")
     declared_kind = raw_kind.strip() if isinstance(raw_kind, str) else ""
     if declared_kind != "style":
-        errors.append(
-            "frontmatter kind must be 'style', "
-            f"got {declared_kind!r}"
-        )
+        errors.append(f"frontmatter kind must be 'style', got {declared_kind!r}")
 
     raw_summary = frontmatter.get("summary")
-    if not isinstance(raw_summary, str) or not _style_value_is_substantive(
-        raw_summary
-    ):
+    if not isinstance(raw_summary, str) or not _style_value_is_substantive(raw_summary):
         errors.append("frontmatter summary must be a non-empty string")
 
     non_string_fields = [key for key in frontmatter if not isinstance(key, str)]
@@ -726,17 +717,14 @@ def _validate_style_spec(
             for item in keywords
         )
     ):
-        errors.append(
-            "frontmatter keywords must contain 3-5 non-empty strings"
-        )
+        errors.append("frontmatter keywords must contain 3-5 non-empty strings")
     elif len({item.strip().casefold() for item in keywords}) != len(keywords):
         errors.append("frontmatter keywords must be unique")
 
     if pages and not _has_qualified_roster_spec(template_dir):
         errors.append(
             "style workspaces must not contain page SVGs without a sibling "
-            "Layout or Deck owner: "
-            + ", ".join(f"{page}.svg" for page in pages)
+            "Layout or Deck owner: " + ", ".join(f"{page}.svg" for page in pages)
         )
 
     # The one-file packaging rule describes a workspace whose templates/ Style
@@ -744,22 +732,19 @@ def _validate_style_spec(
     # rule there is only that Style itself contributes nothing but its spec.
     if (template_dir / "design_spec.md").is_file():
         unexpected_source_entries = sorted(
-            path.relative_to(template_dir).as_posix()
-            + ("/" if path.is_dir() else "")
+            path.relative_to(template_dir).as_posix() + ("/" if path.is_dir() else "")
             for path in template_dir.rglob("*")
             if path.relative_to(template_dir).as_posix() != "design_spec.md"
         )
         if unexpected_source_entries:
             errors.append(
                 "style workspaces must contain only templates/design_spec.md; "
-                "unexpected template entry(s): "
-                + ", ".join(unexpected_source_entries)
+                "unexpected template entry(s): " + ", ".join(unexpected_source_entries)
             )
 
     if expected_template_id is not None:
         unexpected_workspace_entries = sorted(
-            path.relative_to(template_root).as_posix()
-            + ("/" if path.is_dir() else "")
+            path.relative_to(template_root).as_posix() + ("/" if path.is_dir() else "")
             for path in template_root.rglob("*")
             if path.relative_to(template_root).as_posix()
             not in {"templates", "templates/design_spec.md"}
@@ -823,9 +808,7 @@ def _validate_style_spec(
         for label in labels:
             value = _extract_section_field(body, section_title, [label])
             if not _style_value_is_substantive(value):
-                errors.append(
-                    f"{section_title} must declare a non-empty {label} field"
-                )
+                errors.append(f"{section_title} must declare a non-empty {label} field")
 
     role_section = _numbered_section(body, "Page Role Vocabulary") or ""
     role_rows = [
@@ -834,8 +817,7 @@ def _validate_style_spec(
         if row and row[0].casefold() != "role"
     ]
     if not any(
-        len(row) >= 4
-        and all(_style_value_is_substantive(cell) for cell in row[:4])
+        len(row) >= 4 and all(_style_value_is_substantive(cell) for cell in row[:4])
         for row in role_rows
     ):
         errors.append(
@@ -884,8 +866,7 @@ def _validate_style_spec(
             )
         if not is_custom and _style_value_is_substantive(references):
             errors.append(
-                f"{references_label} is allowed only when "
-                f"{preferred_label} is custom"
+                f"{references_label} is allowed only when {preferred_label} is custom"
             )
         if (
             _style_value_is_substantive(preferred)
@@ -893,18 +874,15 @@ def _validate_style_spec(
             and preferred_text not in catalog_ids
         ):
             errors.append(
-                f"{preferred_label} references unknown catalog id "
-                f"{preferred_text!r}"
+                f"{preferred_label} references unknown catalog id {preferred_text!r}"
             )
         if is_custom and _style_value_is_substantive(references):
             catalog_references = [
-                _clean_field_value(item)
-                for item in (references or "").split(",")
+                _clean_field_value(item) for item in (references or "").split(",")
             ]
             if any(not item for item in catalog_references):
                 errors.append(
-                    f"{references_label} must be a comma-separated list of "
-                    "catalog ids"
+                    f"{references_label} must be a comma-separated list of catalog ids"
                 )
             duplicates = sorted(
                 item
@@ -961,13 +939,11 @@ def _validate_style_spec(
             if row and row[0].casefold() != "role"
         ]
         if not any(
-            len(row) >= 4
-            and all(_style_value_is_substantive(cell) for cell in row[:4])
+            len(row) >= 4 and all(_style_value_is_substantive(cell) for cell in row[:4])
             for row in typography_rows
         ):
             errors.append(
-                "Fallback Typography must contain at least one complete "
-                "four-column row"
+                "Fallback Typography must contain at least one complete four-column row"
             )
 
     review_section = _numbered_section(body, "Review Focus") or ""
@@ -1009,9 +985,7 @@ def _validate_svg_template_spec(
         )
     declared_kind = str(frontmatter.get("kind") or "").strip()
     if declared_kind != kind:
-        errors.append(
-            f"frontmatter kind must be {kind!r}, got {declared_kind!r}"
-        )
+        errors.append(f"frontmatter kind must be {kind!r}, got {declared_kind!r}")
     if not str(frontmatter.get("summary") or "").strip():
         errors.append("frontmatter summary must be non-empty")
     if not pages:
@@ -1048,9 +1022,7 @@ def _validate_svg_template_spec(
                 )
 
     if frontmatter.get("native_structure_mode") != "structured":
-        errors.append(
-            "frontmatter native_structure_mode must be 'structured'"
-        )
+        errors.append("frontmatter native_structure_mode must be 'structured'")
     if frontmatter.get("replication_mode") not in {
         "standard",
         "fidelity",
@@ -1064,8 +1036,7 @@ def _validate_svg_template_spec(
         raw_page_types = frontmatter.get("page_types")
         expected_page_types = _derive_page_types(pages)
         if not isinstance(raw_page_types, list) or not all(
-            isinstance(item, str) and item.strip()
-            for item in raw_page_types
+            isinstance(item, str) and item.strip() for item in raw_page_types
         ):
             errors.append("frontmatter page_types must be a non-empty string list")
         elif raw_page_types != expected_page_types:
@@ -1077,8 +1048,7 @@ def _validate_svg_template_spec(
         primary_color = str(frontmatter.get("primary_color") or "").strip()
         if _HEX_COLOR_RE.fullmatch(primary_color) is None:
             errors.append(
-                "frontmatter primary_color must use #RRGGBB, "
-                f"got {primary_color!r}"
+                f"frontmatter primary_color must use #RRGGBB, got {primary_color!r}"
             )
 
     svg_paths = [template_dir / f"{page}.svg" for page in pages]
@@ -1136,9 +1106,7 @@ def validate_shadowed_deck_spec(
         raise SpecParseError(
             "shadowed Deck validation requires design_spec.deck.<id>.md"
         )
-    _kind, filename_id, frontmatter, _body = validate_qualified_spec_identity(
-        path
-    )
+    _kind, filename_id, frontmatter, _body = validate_qualified_spec_identity(path)
     _validate_svg_template_spec(
         "deck",
         filename_id,
@@ -1152,6 +1120,7 @@ def validate_shadowed_deck_spec(
 # ---------------------------------------------------------------------------
 # Per-kind extraction
 # ---------------------------------------------------------------------------
+
 
 def _extract_entry(
     kind: str,
@@ -1191,9 +1160,12 @@ def _extract_entry(
         section_title = (
             "I. Brand Overview" if kind == "brand" else "I. Template Overview"
         )
-        summary = (_summary_from_use_cases(
-            _extract_section_field(body, section_title, ["Use Cases", "Use cases"])
-        ) or "").strip()
+        summary = (
+            _summary_from_use_cases(
+                _extract_section_field(body, section_title, ["Use Cases", "Use cases"])
+            )
+            or ""
+        ).strip()
 
     pages = _list_pages(template_dir)
     primary_color = fm.get("primary_color") or _extract_primary_color(body) or ""
@@ -1294,9 +1266,7 @@ def _resolve_spec_path(template_dir: Path, kind: str) -> Path:
     exact = template_dir / "design_spec.md"
     if exact.is_file():
         return exact
-    matches = sorted(
-        path for path, declared_kind in qualified if declared_kind == kind
-    )
+    matches = sorted(path for path, declared_kind in qualified if declared_kind == kind)
     if len(matches) == 1:
         return matches[0]
     if not matches:
@@ -1339,6 +1309,7 @@ def validate_style_workspace(template_root: str | Path) -> dict:
 # Index / README writers
 # ---------------------------------------------------------------------------
 
+
 def _load_index(path: Path) -> "OrderedDict[str, dict]":
     if not path.exists():
         return OrderedDict()
@@ -1362,7 +1333,8 @@ def _enumerate_ids(kind: str) -> list[str]:
     if not base.exists():
         return []
     return sorted(
-        p.name for p in base.iterdir()
+        p.name
+        for p in base.iterdir()
         if p.is_dir()
         and (
             (p / "templates" / "design_spec.md").is_file()
@@ -1371,7 +1343,9 @@ def _enumerate_ids(kind: str) -> list[str]:
     )
 
 
-def _print_completion_card(kind: str, template_id: str, entry: dict, extras: dict) -> None:
+def _print_completion_card(
+    kind: str, template_id: str, entry: dict, extras: dict
+) -> None:
     pretty_kind = {
         "layout": "Layout",
         "deck": "Deck",
@@ -1423,26 +1397,35 @@ def _print_completion_card(kind: str, template_id: str, entry: dict, extras: dic
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> int:
     require_skill_integrity()
     parser = argparse.ArgumentParser(
         description=(
-            "Register / refresh templates (brand / style / layout / deck) "
-            "in the index."
+            "Register / refresh templates (brand / style / layout / deck) in the index."
         )
     )
     parser.add_argument(
-        "template_id", nargs="?",
+        "template_id",
+        nargs="?",
         help="Template directory id (under templates/<kind_dir>/). Omit with --rebuild-all.",
     )
     parser.add_argument(
-        "--kind", choices=list(KIND_CONFIG.keys()), default="deck",
+        "--kind",
+        choices=list(KIND_CONFIG.keys()),
+        default="deck",
         help="Template kind (default: deck).",
     )
-    parser.add_argument("--rebuild-all", action="store_true",
-                        help="Rebuild every index entry within the chosen kind.")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="Show what would be written without modifying any files.")
+    parser.add_argument(
+        "--rebuild-all",
+        action="store_true",
+        help="Rebuild every index entry within the chosen kind.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be written without modifying any files.",
+    )
     args = parser.parse_args()
 
     if not args.template_id and not args.rebuild_all:
@@ -1461,7 +1444,9 @@ def main() -> int:
         ids = [args.template_id]
         spec_dir = base / args.template_id
         if not spec_dir.is_dir():
-            print(f"Error: {args.kind} directory not found: {spec_dir}", file=sys.stderr)
+            print(
+                f"Error: {args.kind} directory not found: {spec_dir}", file=sys.stderr
+            )
             return 1
 
     extracted: dict[str, dict] = {}

@@ -73,9 +73,7 @@ def _positive_number(value: Any, field_name: str) -> float:
     try:
         result = float(value)
     except (TypeError, ValueError, OverflowError) as exc:
-        raise RuntimeError(
-            f"Native PPTX formula {field_name} must be numeric"
-        ) from exc
+        raise RuntimeError(f"Native PPTX formula {field_name} must be numeric") from exc
     if not math.isfinite(result) or result <= 0:
         raise RuntimeError(
             f"Native PPTX formula {field_name} must be a positive finite number"
@@ -89,9 +87,7 @@ def _formula_language(payload: dict[str, Any], ctx: ConvertContext | None) -> st
         raw = ctx.primary_language
     language = str(raw or "en-US").strip()
     if len(language) > 35 or _LANGUAGE_RE.fullmatch(language) is None:
-        raise RuntimeError(
-            "Native PPTX formula language must be a compact BCP-47 tag"
-        )
+        raise RuntimeError("Native PPTX formula language must be a compact BCP-47 tag")
     return language
 
 
@@ -132,9 +128,7 @@ def validate_formula_payload(
     alignment = str(payload.get("align") or "center").strip().lower()
     if alignment not in _ALIGNMENTS:
         choices = ", ".join(sorted(_ALIGNMENTS))
-        raise RuntimeError(
-            f"Native PPTX formula align must be one of: {choices}"
-        )
+        raise RuntimeError(f"Native PPTX formula align must be one of: {choices}")
     paragraph_alignment, math_alignment = _ALIGNMENTS[alignment]
 
     try:

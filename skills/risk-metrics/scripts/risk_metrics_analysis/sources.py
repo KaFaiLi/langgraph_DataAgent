@@ -18,9 +18,7 @@ def _norm(value: str) -> str:
     return " ".join(value.upper().split())
 
 
-def _value(
-    raw: dict[str, object], columns: dict[str, str], normalized_name: str
-) -> object:
+def _value(raw: dict[str, object], columns: dict[str, str], normalized_name: str) -> object:
     column = columns.get(normalized_name)
     return None if column is None else raw.get(column)
 
@@ -112,8 +110,7 @@ def _flat_hierarchy_issue(
     mismatches = [
         key
         for key, column in mapping.items()
-        if key in flat
-        and _norm(_text(flat.get(key))) != _norm(_text(_value(raw, columns, column)))
+        if key in flat and _norm(_text(flat.get(key))) != _norm(_text(_value(raw, columns, column)))
     ]
     return {"mismatched_levels": mismatches} if mismatches else None
 
@@ -221,9 +218,7 @@ def _sgmr_rows(
                     last_day=_date(_value(raw, columns, "consolastvaluedate")),
                     created=created,
                     version=version,
-                    official_stamp=_text(
-                        _value(raw, columns, "consoofficialstampindic")
-                    ),
+                    official_stamp=_text(_value(raw, columns, "consoofficialstampindic")),
                     value=value,
                     value_eur=_float(_value(raw, columns, "consovalueeur")),
                     lower_limit=lower_limit,
@@ -318,23 +313,15 @@ def _excess_rows(
                     days_without_validation=_int(
                         _value(raw, columns, "dayswithoutvalidationtotal")
                     ),
-                    days_without_explanation=_int(
-                        _value(raw, columns, "dayswithoutexplanation")
-                    ),
+                    days_without_explanation=_int(_value(raw, columns, "dayswithoutexplanation")),
                     close_time=_datetime(_value(raw, columns, "excessclosedate")),
                     closing_day=_date(_value(raw, columns, "closingconsdate")),
                     explanation_time=_datetime(
                         _value(raw, columns, "lastexcessexplanationcreationdate")
                     ),
-                    explanation_cause=_text(
-                        _value(raw, columns, "lastexcessexplanationcause")
-                    ),
-                    action_plan=_text(
-                        _value(raw, columns, "lastexcessexplanationactionplan")
-                    ),
-                    action_deadline=_date(
-                        _value(raw, columns, "lastexcessexplanationdeadline")
-                    ),
+                    explanation_cause=_text(_value(raw, columns, "lastexcessexplanationcause")),
+                    action_plan=_text(_value(raw, columns, "lastexcessexplanationactionplan")),
+                    action_deadline=_date(_value(raw, columns, "lastexcessexplanationdeadline")),
                     solution=_text(_value(raw, columns, "lastexcessexplanationsolution")),
                     validation_time=_datetime(
                         _value(raw, columns, "lastexcessvalidationcreationdate")
@@ -353,9 +340,7 @@ def _excess_rows(
                     ),
                     increase_id=_text(_value(raw, columns, "increaseid")),
                     increase_status=_text(_value(raw, columns, "increaseworkflowstatus")),
-                    increase_created=_datetime(
-                        _value(raw, columns, "increasecreationdate")
-                    ),
+                    increase_created=_datetime(_value(raw, columns, "increasecreationdate")),
                     increase_trader_approved=_datetime(
                         _value(raw, columns, "increasevalidationtrddircreationdate")
                     ),

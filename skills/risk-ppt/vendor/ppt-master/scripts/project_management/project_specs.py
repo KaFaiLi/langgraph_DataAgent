@@ -126,6 +126,7 @@ _SCHEMA_MARKER_RE = re.compile(
     re.IGNORECASE,
 )
 
+
 def _normalize_schema_value(value: str) -> str:
     """Normalize a Markdown scalar before enum, pattern, and catalog checks."""
     normalized = value.strip()
@@ -161,7 +162,9 @@ def _parse_markdown_sections(
 
     for index, heading_match in enumerate(headings):
         body_start = heading_match.end()
-        body_end = headings[index + 1].start() if index + 1 < len(headings) else len(text)
+        body_end = (
+            headings[index + 1].start() if index + 1 < len(headings) else len(text)
+        )
         body = text[body_start:body_end]
         fields: dict[str, str] = {}
         field_names: dict[str, str] = {}
@@ -281,13 +284,9 @@ def parse_spec_lock_image_value(key: str, value: str) -> dict[str, str]:
         shown = ", ".join(repr(part) for part in unsupported_parts)
         raise ValueError(f"has unsupported metadata token(s) {shown}")
     if unknown_fields:
-        raise ValueError(
-            f"has unknown metadata field(s) {', '.join(unknown_fields)}"
-        )
+        raise ValueError(f"has unknown metadata field(s) {', '.join(unknown_fields)}")
     if missing_fields:
-        raise ValueError(
-            f"misses metadata field(s) {', '.join(missing_fields)}"
-        )
+        raise ValueError(f"misses metadata field(s) {', '.join(missing_fields)}")
     if not _looks_like_image_path(path_part):
         raise ValueError(f"has invalid image path {path_part!r}")
 
@@ -520,8 +519,7 @@ def _validate_section(
 
     required_fields = definition.get("required_fields", [])
     allow_empty = {
-        str(field_name)
-        for field_name in definition.get("allow_empty_fields", [])
+        str(field_name) for field_name in definition.get("allow_empty_fields", [])
     }
     if isinstance(required_fields, list):
         for field_name in required_fields:
@@ -531,9 +529,8 @@ def _validate_section(
                     f"{markdown_name} schema: section '{section_id}' is missing field "
                     f"'{field_name}'"
                 )
-            elif (
-                field_key not in allow_empty
-                and not _normalize_schema_value(str(fields[field_key]))
+            elif field_key not in allow_empty and not _normalize_schema_value(
+                str(fields[field_key])
             ):
                 errors.append(
                     f"{markdown_name} schema: section '{section_id}' field "
@@ -583,9 +580,7 @@ def _validate_section(
                 continue
             key_pattern = rule.get("key_pattern")
             value_pattern = rule.get("value_pattern")
-            if not isinstance(key_pattern, str) or not isinstance(
-                value_pattern, str
-            ):
+            if not isinstance(key_pattern, str) or not isinstance(value_pattern, str):
                 continue
             requirement = str(rule.get("requirement", "match its value grammar"))
             for field_name, raw_value in fields.items():
@@ -616,7 +611,10 @@ def _validate_section(
         )
 
     min_body_chars = definition.get("min_body_chars")
-    if isinstance(min_body_chars, int) and len(str(section["body"]).strip()) < min_body_chars:
+    if (
+        isinstance(min_body_chars, int)
+        and len(str(section["body"]).strip()) < min_body_chars
+    ):
         errors.append(
             f"{markdown_name} schema: section '{section_id}' must contain content"
         )
@@ -777,10 +775,7 @@ def _validate_condition(
             heading = str(rule.get("heading", ""))
             subheadings = target["subheadings"]
             assert isinstance(subheadings, list)
-            if not any(
-                str(item).startswith(heading)
-                for item in subheadings
-            ):
+            if not any(str(item).startswith(heading) for item in subheadings):
                 errors.append(
                     f"{markdown_name} schema: condition '{condition_id}' requires "
                     f"subheading '{heading}' in section '{target_id}'"
@@ -819,7 +814,7 @@ def _validate_slides(
             if index + 1 < len(heading_matches)
             else len(body)
         )
-        block = body[slide_match.end():block_end]
+        block = body[slide_match.end() : block_end]
         for field_name in required_fields:
             pattern = (
                 rf"^[ \t]*-[ \t]+(?:\*\*)?{re.escape(str(field_name))}"
@@ -895,11 +890,8 @@ def _validate_references(
             if isinstance(asset_pattern, str):
                 asset_value = reference_value
                 suffix_match = re.search(r"\{value\}(\.[A-Za-z0-9]+)$", asset_pattern)
-                if (
-                    suffix_match is not None
-                    and asset_value.casefold().endswith(
-                        suffix_match.group(1).casefold()
-                    )
+                if suffix_match is not None and asset_value.casefold().endswith(
+                    suffix_match.group(1).casefold()
                 ):
                     asset_value = asset_value[: -len(suffix_match.group(1))]
                 try:
@@ -940,7 +932,9 @@ def _validate_strict_data_surface(
         for section_id, section in matched.items()
         if section is not None
     }
-    first_offset = min((int(section["offset"]) for section in sections), default=len(text))
+    first_offset = min(
+        (int(section["offset"]) for section in sections), default=len(text)
+    )
     for line in text[:first_offset].splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("<!--") or stripped.startswith("# "):
@@ -984,9 +978,12 @@ def _validate_spec_lock_relations(
         assert isinstance(raw_fields, dict)
         return {str(key): str(value) for key, value in raw_fields.items()}
 
-    for section_id, selector_field, references_field, catalog_dir in (
-        _CUSTOM_REFERENCE_CATALOGS
-    ):
+    for (
+        section_id,
+        selector_field,
+        references_field,
+        catalog_dir,
+    ) in _CUSTOM_REFERENCE_CATALOGS:
         section_fields = fields(section_id)
         is_custom = (
             _normalize_schema_value(section_fields.get(selector_field, "")) == "custom"
@@ -1028,9 +1025,7 @@ def _validate_spec_lock_relations(
         try:
             parse_spec_lock_image_value(key, value)
         except ValueError as exc:
-            errors.append(
-                f"{markdown_name} schema: images row {key!r} {exc}"
-            )
+            errors.append(f"{markdown_name} schema: images row {key!r} {exc}")
 
     rhythm = fields("page_rhythm")
     layouts = fields("pptx_layouts")
@@ -1200,7 +1195,9 @@ def validate_markdown_schema(markdown_path: Path, schema_path: Path) -> list[str
     )
     definitions = contract.get("sections", [])
     if not isinstance(definitions, list):
-        return [f"Schema validation could not read {schema_path.name}: sections must be a list"]
+        return [
+            f"Schema validation could not read {schema_path.name}: sections must be a list"
+        ]
 
     markdown_name = markdown_path.name
     errors = [f"{markdown_name} schema: {message}" for message in parse_errors]
@@ -1334,8 +1331,7 @@ def validate_project_artifacts(
         artifacts.append((lock_path, SCHEMA_DIR / "spec_lock.schema.json", "lock"))
     elif isinstance(spec_name, str):
         errors.append(
-            "Communication trace: missing spec_lock.md with a "
-            "## communication section."
+            "Communication trace: missing spec_lock.md with a ## communication section."
         )
 
     legacy_design = False
@@ -1345,7 +1341,9 @@ def validate_project_artifacts(
         try:
             text = artifact_path.read_text(encoding="utf-8-sig")
         except (OSError, UnicodeError) as exc:
-            errors.append(f"Schema validation could not read {artifact_path.name}: {exc}")
+            errors.append(
+                f"Schema validation could not read {artifact_path.name}: {exc}"
+            )
             continue
         marker, marker_error = _extract_schema_marker(text)
         if marker_error is not None:

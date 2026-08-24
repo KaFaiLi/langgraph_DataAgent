@@ -93,7 +93,9 @@ class ReviewTelemetryHandler(BaseCallbackHandler):
         usage: dict[str, int] = {}
         for generations in response.generations:
             for generation in generations:
-                if isinstance(generation, ChatGeneration) and isinstance(generation.message, AIMessage):
+                if isinstance(generation, ChatGeneration) and isinstance(
+                    generation.message, AIMessage
+                ):
                     usage = dict(generation.message.usage_metadata or {})
                     break
         self._append(

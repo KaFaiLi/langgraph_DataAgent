@@ -101,7 +101,12 @@ def make_risky_tree(root: Path) -> dict[str, Path]:
         [
             {"date": "2025-01-02", "var": "3.1", "limit": "5.0"},
             {"date": "2025-01-03", "var": "4.2", "limit": "5.0"},
-            {"date": "2025-01-06", "var": "5.8", "limit": "5.0", "note": "noise 1899-12-31"},
+            {
+                "date": "2025-01-06",
+                "var": "5.8",
+                "limit": "5.0",
+                "note": "noise 1899-12-31",
+            },
         ],
     )
     pnl_xlsx = make_xlsx(
@@ -157,5 +162,3 @@ def make_risky_tree(root: Path) -> dict[str, Path]:
         "validation_pdf": validation_pdf,
         "adjustments_txt": adjustments_txt,
     }
-
-

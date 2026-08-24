@@ -30,8 +30,6 @@ def get_chat_model(
 
     return GenAIChatModel(
         model=model or settings.genai_model,
-        temperature=(
-            settings.genai_temperature if temperature is None else temperature
-        ),
+        temperature=(settings.genai_temperature if temperature is None else temperature),
         **kwargs,
     )

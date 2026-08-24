@@ -77,23 +77,17 @@ def test_skill_runner_profiles_commentary_and_retains_exact_locators(
     assert overview.primary_for_deck is True
     assert overview.visual is not None
     assert overview.visual.kind == "table"
-    assert overview.visual.rows == [
-        ["risk_commentary/quarterly_review.md", "7", "4", "4", "3"]
-    ]
+    assert overview.visual.rows == [["risk_commentary/quarterly_review.md", "7", "4", "4", "3"]]
     assert {metric.label: metric.value for metric in overview.metrics} == {
         "Extracts": "1",
         "Quoted records": "4",
         "Unique evidence IDs": "4",
         "Validation gaps": "3",
     }
-    assert overview.source_locators == [
-        "source://risk_commentary/quarterly_review.md#lines=1:7"
-    ]
+    assert overview.source_locators == ["source://risk_commentary/quarterly_review.md#lines=1:7"]
     contradiction = results["commentary_internal_consistency"].flag_candidates[0]
     assert contradiction["evidence_id"] == "certification:1"
-    assert contradiction["locator"] == (
-        "source://risk_commentary/quarterly_review.md#lines=4:4"
-    )
+    assert contradiction["locator"] == ("source://risk_commentary/quarterly_review.md#lines=4:4")
     repeated = results["commentary_repeated_explanations"].flag_candidates[0]
     assert repeated["unique_evidence_records"] == 3
 

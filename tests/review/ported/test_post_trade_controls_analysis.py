@@ -87,10 +87,7 @@ def ctx(tmp_path: Path) -> ToolContext:
 
 
 def _results(ctx: ToolContext, path: str = BREACH_PATH) -> dict:
-    return {
-        analysis.name: analysis
-        for analysis in run_post_trade_controls_analyses(ctx, [path])
-    }
+    return {analysis.name: analysis for analysis in run_post_trade_controls_analyses(ctx, [path])}
 
 
 def test_full_battery_runs(ctx: ToolContext) -> None:
@@ -110,9 +107,7 @@ def test_full_battery_runs(ctx: ToolContext) -> None:
 def test_all_analyses_deterministic(ctx: ToolContext) -> None:
     first = run_post_trade_controls_analyses(ctx, [BREACH_PATH])
     second = run_post_trade_controls_analyses(ctx, [BREACH_PATH])
-    assert [a.model_dump(mode="json") for a in first] == [
-        a.model_dump(mode="json") for a in second
-    ]
+    assert [a.model_dump(mode="json") for a in first] == [a.model_dump(mode="json") for a in second]
 
 
 def test_repeated_breaches_only_for_recurring_product(ctx: ToolContext) -> None:
@@ -162,9 +157,7 @@ def test_control_population_overviews_are_preserved(ctx: ToolContext) -> None:
         ("IRS", 2.0),
         ("MM", 1.0),
     ]
-    assert primary.source_locators == [
-        "source://post_trade_controls/breaches.csv#rows=2:13"
-    ]
+    assert primary.source_locators == ["source://post_trade_controls/breaches.csv#rows=2:13"]
 
 
 def test_product_recurrence_counts_and_cluster(ctx: ToolContext) -> None:

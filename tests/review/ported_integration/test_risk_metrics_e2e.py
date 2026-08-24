@@ -72,9 +72,7 @@ def test_end_to_end_review_writes_markdown(tool_ctx: ToolContext, tmp_path: Path
         ).model_dump(mode="json"),
         "review_period": {"start": "2025-01-01", "end": "2026-06-30"},
     }
-    result = graph.invoke(
-        state, config={"configurable": {"tool_ctx": tool_ctx}}
-    )
+    result = graph.invoke(state, config={"configurable": {"tool_ctx": tool_ctx}})
 
     # The report rehydrates into the domain contract without error.
     report = SpecialistReport.model_validate(result["report"])

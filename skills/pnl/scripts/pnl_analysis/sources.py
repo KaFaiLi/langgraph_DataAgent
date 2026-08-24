@@ -82,8 +82,7 @@ def _pnl_rows(
             row = int(str(raw["_source_row"]))
             day = date_value(raw.get(columns["value date"]))
             values = [
-                float_value(raw.get(columns[name]))
-                for name in ("dtd", "wtd", "mtd", "qtd", "ytd")
+                float_value(raw.get(columns[name])) for name in ("dtd", "wtd", "mtd", "qtd", "ytd")
             ]
             keys = {
                 name: text_value(raw.get(columns[name]))
@@ -327,9 +326,7 @@ def _income_attribution_rows(
                     components=components,
                     cumulative=cumulative,
                     total=float(total),
-                    status=text_value(raw.get(columns["status"]))
-                    if "status" in columns
-                    else "",
+                    status=text_value(raw.get(columns["status"])) if "status" in columns else "",
                     validated=text_value(raw.get(columns["validated"]))
                     if "validated" in columns
                     else "",
@@ -343,5 +340,3 @@ def _income_attribution_rows(
                 )
             )
     return parsed, issues
-
-

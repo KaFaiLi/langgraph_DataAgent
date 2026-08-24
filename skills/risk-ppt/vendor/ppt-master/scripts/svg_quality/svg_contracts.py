@@ -177,20 +177,49 @@ _CANONICAL_PAINT_ALPHA_PROPERTY = {
     "stop-color": "stop-opacity",
     "flood-color": "flood-opacity",
 }
-_SUPPORTED_INLINE_STYLE_PROPERTIES = frozenset({
-    "cx", "cy", "fill", "fill-opacity", "filter", "flood-color",
-    "flood-opacity", "font-family", "font-size", "font-style", "font-weight",
-    "height", "letter-spacing", "opacity", "r", "rx", "ry",
-    "shape-rendering", "stop-color", "stop-opacity", "stroke",
-    "stroke-dasharray", "stroke-linecap", "stroke-linejoin", "stroke-opacity",
-    "stroke-width", "text-anchor", "text-decoration", "vector-effect",
-    "width", "x", "y",
-})
-_BAKE_REQUIRED_VISUAL_PROPERTIES = frozenset({
-    "backdrop-filter",
-    "isolation",
-    "mix-blend-mode",
-})
+_SUPPORTED_INLINE_STYLE_PROPERTIES = frozenset(
+    {
+        "cx",
+        "cy",
+        "fill",
+        "fill-opacity",
+        "filter",
+        "flood-color",
+        "flood-opacity",
+        "font-family",
+        "font-size",
+        "font-style",
+        "font-weight",
+        "height",
+        "letter-spacing",
+        "opacity",
+        "r",
+        "rx",
+        "ry",
+        "shape-rendering",
+        "stop-color",
+        "stop-opacity",
+        "stroke",
+        "stroke-dasharray",
+        "stroke-linecap",
+        "stroke-linejoin",
+        "stroke-opacity",
+        "stroke-width",
+        "text-anchor",
+        "text-decoration",
+        "vector-effect",
+        "width",
+        "x",
+        "y",
+    }
+)
+_BAKE_REQUIRED_VISUAL_PROPERTIES = frozenset(
+    {
+        "backdrop-filter",
+        "isolation",
+        "mix-blend-mode",
+    }
+)
 _SHARED_FAIL_CLOSED_STYLE_PROPERTIES = frozenset({"mask"})
 
 
@@ -209,74 +238,93 @@ def check_forbidden_elements(
     # ============================================================
 
     # Style system
-    if 'style' in local_names:
-        result['errors'].append("Detected forbidden <style> element (use inline attributes instead)")
-    if re.search(r'\bclass\s*=', content):
-        result['errors'].append("Detected forbidden class attribute (use inline styles instead)")
+    if "style" in local_names:
+        result["errors"].append(
+            "Detected forbidden <style> element (use inline attributes instead)"
+        )
+    if re.search(r"\bclass\s*=", content):
+        result["errors"].append(
+            "Detected forbidden class attribute (use inline styles instead)"
+        )
     # id attribute: only report error when <style> also exists (id is harmful only with CSS selectors)
     # id inside <defs> for linearGradient/filter etc. is required, Inkscape also auto-adds id to elements,
     # standalone id attributes have no impact on PPT export
-    if 'style' in local_names and re.search(r'\bid\s*=', content):
-        result['errors'].append(
+    if "style" in local_names and re.search(r"\bid\s*=", content):
+        result["errors"].append(
             "Detected id attribute used with <style> (CSS selectors forbidden, use inline styles instead)"
         )
-    if re.search(r'<\?xml-stylesheet\b', content_lower):
-        result['errors'].append("Detected forbidden xml-stylesheet (external CSS references forbidden)")
+    if re.search(r"<\?xml-stylesheet\b", content_lower):
+        result["errors"].append(
+            "Detected forbidden xml-stylesheet (external CSS references forbidden)"
+        )
     if re.search(r'<link[^>]*rel\s*=\s*["\']stylesheet["\']', content_lower):
-        result['errors'].append("Detected forbidden <link rel=\"stylesheet\"> (external CSS references forbidden)")
-    if re.search(r'@import\s+', content_lower):
-        result['errors'].append("Detected forbidden @import (external CSS references forbidden)")
+        result["errors"].append(
+            'Detected forbidden <link rel="stylesheet"> (external CSS references forbidden)'
+        )
+    if re.search(r"@import\s+", content_lower):
+        result["errors"].append(
+            "Detected forbidden @import (external CSS references forbidden)"
+        )
     if _validate_inline_geometry_properties is None:
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import inline geometry validator; "
             "native export will still validate geometry styles."
         )
     else:
         geometry_errors = _validate_inline_geometry_properties(root)
         for error in geometry_errors:
-            result['errors'].append(f"Invalid inline geometry property: {error}")
+            result["errors"].append(f"Invalid inline geometry property: {error}")
         if not geometry_errors:
             _materialize_inline_geometry_properties(root)
 
     # Structure / nesting
-    if 'foreignobject' in local_names:
-        result['errors'].append(
-            "Detected forbidden <foreignObject> element (use <tspan> for manual line breaks)")
+    if "foreignobject" in local_names:
+        result["errors"].append(
+            "Detected forbidden <foreignObject> element (use <tspan> for manual line breaks)"
+        )
     has_generic_use = any(
-        _local_name(elem).lower() == 'use' and elem.get('data-icon') is None
+        _local_name(elem).lower() == "use" and elem.get("data-icon") is None
         for elem in elems
     )
     if has_generic_use:
         if _validate_local_use_references is None:
-            result['warnings'].append(
+            result["warnings"].append(
                 "Detected local <use> references, but the shared validator "
                 "could not be imported; native export will still validate them."
             )
         else:
             for error in _validate_local_use_references(root):
-                result['errors'].append(f"Invalid local <use> reference: {error}")
+                result["errors"].append(f"Invalid local <use> reference: {error}")
     # Text / fonts
-    if 'textpath' in local_names:
-        result['errors'].append("Detected forbidden <textPath> element (path text is incompatible with PPT)")
-    if '@font-face' in content_lower:
-        result['errors'].append("Detected forbidden @font-face (use system font stack)")
+    if "textpath" in local_names:
+        result["errors"].append(
+            "Detected forbidden <textPath> element (path text is incompatible with PPT)"
+        )
+    if "@font-face" in content_lower:
+        result["errors"].append("Detected forbidden @font-face (use system font stack)")
 
     # Animation / interaction
-    if any(name.startswith('animate') for name in local_names):
-        result['errors'].append(
+    if any(name.startswith("animate") for name in local_names):
+        result["errors"].append(
             "Detected forbidden SMIL animation element <animate*> "
             "(SVG animations are not exported)"
         )
-    if 'set' in local_names:
-        result['errors'].append("Detected forbidden SMIL animation element <set> (SVG animations are not exported)")
-    if 'script' in local_names:
-        result['errors'].append("Detected forbidden <script> element (scripts and event handlers forbidden)")
-    if re.search(r'\bon\w+\s*=', content):  # onclick, onload etc.
-        result['errors'].append("Detected forbidden event attributes (e.g., onclick, onload)")
+    if "set" in local_names:
+        result["errors"].append(
+            "Detected forbidden SMIL animation element <set> (SVG animations are not exported)"
+        )
+    if "script" in local_names:
+        result["errors"].append(
+            "Detected forbidden <script> element (scripts and event handlers forbidden)"
+        )
+    if re.search(r"\bon\w+\s*=", content):  # onclick, onload etc.
+        result["errors"].append(
+            "Detected forbidden event attributes (e.g., onclick, onload)"
+        )
 
     # Other discouraged elements
-    if 'iframe' in local_names:
-        result['errors'].append("Detected <iframe> element (should not appear in SVG)")
+    if "iframe" in local_names:
+        result["errors"].append("Detected <iframe> element (should not appear in SVG)")
 
 
 def check_paint_compatibility(
@@ -301,12 +349,12 @@ def check_paint_compatibility(
         _project_paint_errors,
     )
     if any(helper is None for helper in helpers):
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import svg_to_pptx paint parsers; skipped paint syntax check"
         )
         return
 
-    result['errors'].extend(_project_paint_errors(root))
+    result["errors"].extend(_project_paint_errors(root))
     recommendations: Counter[tuple[str, str, str]] = Counter()
     recommendation_examples: Dict[tuple[str, str, str], List[str]] = defaultdict(list)
 
@@ -326,20 +374,20 @@ def check_paint_compatibility(
         if _is_project_paint_default_form(raw_value, name):
             continue
 
-        source_label = f'{_element_label(elem)} {source}'
-        if kind == 'none':
+        source_label = f"{_element_label(elem)} {source}"
+        if kind == "none":
             replacement = f'{name}="none"'
-        elif kind == 'reference':
+        elif kind == "reference":
             replacement = f'{name}="url(#{normalized})"'
-        elif name in {'fill', 'stroke'} and raw_value.strip().lower() == 'transparent':
+        elif name in {"fill", "stroke"} and raw_value.strip().lower() == "transparent":
             replacement = f'{name}="none"'
         else:
             replacement = f'{name}="#{normalized}"'
             alpha_name = _CANONICAL_PAINT_ALPHA_PROPERTY.get(name)
             if color_alpha < 1.0 and alpha_name is not None:
-                style_values = _parse_inline_style(elem.get('style'))
-                existing_alpha_raw = (
-                    style_values.get(alpha_name) or elem.get(alpha_name)
+                style_values = _parse_inline_style(elem.get("style"))
+                existing_alpha_raw = style_values.get(alpha_name) or elem.get(
+                    alpha_name
                 )
                 if existing_alpha_raw is None:
                     existing_alpha = 1.0
@@ -355,16 +403,15 @@ def check_paint_compatibility(
                         existing_alpha = None
                 effective_alpha = (
                     color_alpha * existing_alpha
-                    if existing_alpha is not None else color_alpha
+                    if existing_alpha is not None
+                    else color_alpha
                 )
                 replacement += (
-                    f' {alpha_name}="'
-                    f'{_format_project_opacity(effective_alpha)}"'
+                    f' {alpha_name}="{_format_project_opacity(effective_alpha)}"'
                 )
             elif color_alpha < 1.0:
                 replacement += (
-                    '; put alpha on the matching pattern child fill/stroke '
-                    'opacity'
+                    "; put alpha on the matching pattern child fill/stroke opacity"
                 )
 
         key = (name, raw_value, replacement)
@@ -372,10 +419,8 @@ def check_paint_compatibility(
         remember_example(recommendation_examples, key, source_label)
 
     for (name, raw_value, replacement), count in sorted(recommendations.items()):
-        examples = ', '.join(
-            recommendation_examples[(name, raw_value, replacement)]
-        )
-        result['warnings'].append(
+        examples = ", ".join(recommendation_examples[(name, raw_value, replacement)])
+        result["warnings"].append(
             f"Recommendation: {name}={raw_value!r} is converter-compatible "
             f"in {count} location(s) ({examples}); generated SVG should "
             f"prefer {replacement}. No change is required for export."
@@ -385,16 +430,16 @@ def check_paint_compatibility(
 def check_reference_spelling(root: ET.Element, result: Dict) -> None:
     """Recommend SVG 2 ``href`` while retaining legacy XLink input."""
     labels = []
-    xlink_href = f'{{{XLINK_NS}}}href'
+    xlink_href = f"{{{XLINK_NS}}}href"
     for elem in root.iter():
-        if _local_name(elem).lower() not in {'a', 'image', 'use'}:
+        if _local_name(elem).lower() not in {"a", "image", "use"}:
             continue
         if elem.get(xlink_href) is not None:
             labels.append(_element_label(elem))
     if labels:
-        examples = ', '.join(labels[:3])
-        suffix = f' (+{len(labels) - 3} more)' if len(labels) > 3 else ''
-        result['warnings'].append(
+        examples = ", ".join(labels[:3])
+        suffix = f" (+{len(labels) - 3} more)" if len(labels) > 3 else ""
+        result["warnings"].append(
             f"Recommendation: legacy xlink:href is supported on {len(labels)} "
             f"reference(s) ({examples}{suffix}); generated SVG should prefer "
             "href. No change is required for export."
@@ -416,13 +461,13 @@ def check_opacity_values(
         _project_opacity_errors,
     )
     if any(helper is None for helper in helpers):
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import svg_to_pptx opacity validators; native "
             "export will still validate opacity syntax."
         )
         return
 
-    result['errors'].extend(_project_opacity_errors(root))
+    result["errors"].extend(_project_opacity_errors(root))
     recommendations: Counter[tuple[str, str, str]] = Counter()
     examples: Dict[tuple[str, str, str], List[str]] = defaultdict(list)
     fidelity_warnings: set[str] = set()
@@ -431,9 +476,7 @@ def check_opacity_values(
         try:
             value = _parse_project_opacity(
                 raw,
-                allow_percentage=(
-                    property_name in _PERCENTAGE_OPACITY_PROPERTIES
-                ),
+                allow_percentage=(property_name in _PERCENTAGE_OPACITY_PROPERTIES),
             )
         except ValueError:
             continue
@@ -442,17 +485,18 @@ def check_opacity_values(
         normalized = _format_project_opacity(value)
         key = (property_name, raw, normalized)
         recommendations[key] += 1
-        label = f'{_element_label(elem)} {source}'
+        label = f"{_element_label(elem)} {source}"
         if label not in examples[key] and len(examples[key]) < 3:
             examples[key].append(label)
 
     for elem in root.iter():
-        if _local_name(elem).lower() != 'g':
+        if _local_name(elem).lower() != "g":
             continue
-        style_values = _parse_inline_style(elem.get('style'))
+        style_values = _parse_inline_style(elem.get("style"))
         raw_opacity = (
-            style_values['opacity']
-            if 'opacity' in style_values else elem.get('opacity')
+            style_values["opacity"]
+            if "opacity" in style_values
+            else elem.get("opacity")
         )
         if raw_opacity is None:
             continue
@@ -470,20 +514,16 @@ def check_opacity_values(
                 "modification."
             )
 
-    for (property_name, raw, normalized), count in sorted(
-        recommendations.items()
-    ):
-        shown_examples = ', '.join(
-            examples[(property_name, raw, normalized)]
-        )
-        result['warnings'].append(
+    for (property_name, raw, normalized), count in sorted(recommendations.items()):
+        shown_examples = ", ".join(examples[(property_name, raw, normalized)])
+        result["warnings"].append(
             f"Recommendation: {property_name}={raw!r} is "
             f"converter-compatible in {count} location(s) "
             f"({shown_examples}); generated SVG should prefer "
             f'{property_name}="{normalized}". No change is required '
             "for export."
         )
-    result['warnings'].extend(sorted(fidelity_warnings))
+    result["warnings"].extend(sorted(fidelity_warnings))
 
 
 def check_authoring_property_contract(
@@ -496,25 +536,23 @@ def check_authoring_property_contract(
     validated_value_properties.update(_PAINT_PROPERTIES or ())
     for elem in root.iter():
         label = _element_label(elem)
-        for fragment in (elem.get('style') or '').split(';'):
+        for fragment in (elem.get("style") or "").split(";"):
             fragment = fragment.strip()
             if not fragment:
                 continue
-            if ':' not in fragment:
+            if ":" not in fragment:
                 if fragment.lower() not in validated_value_properties:
                     errors.add(
-                        f"{label} has malformed inline style declaration "
-                        f"{fragment!r}"
+                        f"{label} has malformed inline style declaration {fragment!r}"
                     )
                 continue
-            name, value = fragment.split(':', 1)
+            name, value = fragment.split(":", 1)
             name = name.strip().lower()
             value = value.strip()
             if not name or not value:
                 if name not in validated_value_properties:
                     errors.add(
-                        f"{label} has malformed inline style declaration "
-                        f"{fragment!r}"
+                        f"{label} has malformed inline style declaration {fragment!r}"
                     )
                 continue
             if name in _BAKE_REQUIRED_VISUAL_PROPERTIES:
@@ -530,20 +568,20 @@ def check_authoring_property_contract(
                     f"{label} uses unsupported inline style property {name!r}; "
                     "native PPTX export would ignore it"
                 )
-            if '!important' in value.lower():
+            if "!important" in value.lower():
                 errors.add(
                     f"{label} inline style property {name!r} cannot use !important"
                 )
 
         for attr_name in elem.attrib:
-            local_attr = attr_name.rsplit('}', 1)[-1]
+            local_attr = attr_name.rsplit("}", 1)[-1]
             if local_attr in _BAKE_REQUIRED_VISUAL_PROPERTIES:
                 errors.add(
                     f"{label} uses Bake-required visual attribute {local_attr!r}; "
                     "bake the effect or rebuild it with supported geometry"
                 )
 
-    result['errors'].extend(sorted(errors))
+    result["errors"].extend(sorted(errors))
 
 
 def check_text_property_contract(
@@ -552,7 +590,7 @@ def check_text_property_contract(
 ) -> None:
     """Validate text property names and values with the export contract."""
     if _project_text_property_diagnostics is None:
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import the shared text-property validator; native "
             "export will still validate text properties."
         )
@@ -562,7 +600,7 @@ def check_text_property_contract(
     recommendations: Counter[tuple[str, str, str]] = Counter()
     examples: Dict[tuple[str, str, str], List[str]] = defaultdict(list)
     for diagnostic in _project_text_property_diagnostics(root):
-        if diagnostic.severity == 'error':
+        if diagnostic.severity == "error":
             errors.add(diagnostic.message)
             continue
         if diagnostic.canonical is None:
@@ -573,16 +611,13 @@ def check_text_property_contract(
             diagnostic.canonical,
         )
         recommendations[key] += 1
-        if (
-            diagnostic.label not in examples[key]
-            and len(examples[key]) < 3
-        ):
+        if diagnostic.label not in examples[key] and len(examples[key]) < 3:
             examples[key].append(diagnostic.label)
 
-    result['errors'].extend(sorted(errors))
+    result["errors"].extend(sorted(errors))
     for (name, raw, canonical), count in sorted(recommendations.items()):
-        shown_examples = ', '.join(examples[(name, raw, canonical)])
-        result['warnings'].append(
+        shown_examples = ", ".join(examples[(name, raw, canonical)])
+        result["warnings"].append(
             f"Recommendation: text property {name}={raw!r} is "
             f"converter-compatible in {count} location(s) "
             f"({shown_examples}); generated SVG should prefer "
@@ -596,12 +631,12 @@ def check_definition_contract(
 ) -> None:
     """Require conditional definitions to be direct, uniquely identified defs."""
     if _project_definition_errors is None:
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import the shared definition validator; native "
             "export will still validate local definitions."
         )
         return
-    result['errors'].extend(_project_definition_errors(root))
+    result["errors"].extend(_project_definition_errors(root))
 
 
 def check_paint_reference_contract(
@@ -610,12 +645,12 @@ def check_paint_reference_contract(
 ) -> None:
     """Validate paint-server resolution and native target contexts."""
     if _project_paint_reference_errors is None:
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import the shared paint-reference validator; native "
             "export will still validate local paint references."
         )
         return
-    result['errors'].extend(_project_paint_reference_errors(root))
+    result["errors"].extend(_project_paint_reference_errors(root))
 
 
 def check_marker_contract(
@@ -624,12 +659,12 @@ def check_marker_contract(
 ) -> None:
     """Validate marker references against the native line-end contract."""
     if _project_marker_errors is None:
-        result['warnings'].append(
-            'Unable to import the shared marker validator; native export '
-            'will still validate line-end markers.'
+        result["warnings"].append(
+            "Unable to import the shared marker validator; native export "
+            "will still validate line-end markers."
         )
         return
-    result['errors'].extend(_project_marker_errors(root))
+    result["errors"].extend(_project_marker_errors(root))
 
 
 def check_clip_path_contract(
@@ -638,34 +673,34 @@ def check_clip_path_contract(
 ) -> None:
     """Validate image clip paths against the native picture geometry mapping."""
     if _project_clip_path_errors is None:
-        result['errors'].append(
-            'Unable to import the clip-path validator; cannot verify '
-            'native picture geometry references'
+        result["errors"].append(
+            "Unable to import the clip-path validator; cannot verify "
+            "native picture geometry references"
         )
         return
-    result['errors'].extend(_project_clip_path_errors(root))
+    result["errors"].extend(_project_clip_path_errors(root))
 
 
 def check_mask_contract(root: ET.Element, result: Dict) -> None:
     """Reject SVG masks through the native exporter's shared validator."""
     if _project_mask_errors is None:
-        result['errors'].append(
-            'Unable to import the shared mask validator; cannot verify '
-            'that native PPTX export will preserve all visible effects'
+        result["errors"].append(
+            "Unable to import the shared mask validator; cannot verify "
+            "that native PPTX export will preserve all visible effects"
         )
         return
-    result['errors'].extend(_project_mask_errors(root))
+    result["errors"].extend(_project_mask_errors(root))
 
 
 def check_filter_effects(root: ET.Element, result: Dict) -> None:
     """Validate filters against the native shadow/glow approximation."""
     if _project_filter_errors is None:
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import the shared filter validator; native export "
             "will still validate shadow/glow filters."
         )
         return
-    result['errors'].extend(_project_filter_errors(root))
+    result["errors"].extend(_project_filter_errors(root))
 
 
 def check_imported_effect_status(
@@ -679,31 +714,25 @@ def check_imported_effect_status(
             or elem.get(_EFFECT_REASON_ATTR) is not None
             for elem in root.iter()
         ):
-            result['errors'].append(
-                'Unable to import the PPTX effect-status validator; '
-                'cannot verify imported effect fidelity'
+            result["errors"].append(
+                "Unable to import the PPTX effect-status validator; "
+                "cannot verify imported effect fidelity"
             )
         return
-    result['errors'].extend(_project_effect_status_errors(root))
+    result["errors"].extend(_project_effect_status_errors(root))
 
 
 def check_gradient_interfaces(root: ET.Element, result: Dict) -> None:
     """Validate the normalized native gradient authoring interface."""
-    if (
-        _project_gradient_errors is None
-        or _project_gradient_geometry_errors is None
-    ):
-        result['warnings'].append(
+    if _project_gradient_errors is None or _project_gradient_geometry_errors is None:
+        result["warnings"].append(
             "Unable to import the shared gradient validator; native export "
             "will still validate gradient definitions."
         )
         return
     gradient_errors = set(_project_gradient_errors(root))
     gradient_errors.update(_project_gradient_geometry_errors(root))
-    if (
-        _expand_local_use_references is not None
-        and _UseExpansionError is not None
-    ):
+    if _expand_local_use_references is not None and _UseExpansionError is not None:
         expanded_root = copy.deepcopy(root)
         try:
             _expand_local_use_references(expanded_root)
@@ -711,10 +740,8 @@ def check_gradient_interfaces(root: ET.Element, result: Dict) -> None:
             # The local-reference check owns the actionable diagnostic.
             pass
         else:
-            gradient_errors.update(
-                _project_gradient_geometry_errors(expanded_root)
-            )
-    result['errors'].extend(sorted(gradient_errors))
+            gradient_errors.update(_project_gradient_geometry_errors(expanded_root))
+    result["errors"].extend(sorted(gradient_errors))
 
 
 def check_geometry_length_values(
@@ -728,7 +755,7 @@ def check_geometry_length_values(
         or _iter_project_geometry_lengths is None
         or _parse_project_geometry_length is None
     ):
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import svg_to_pptx geometry length validators; "
             "native export will still validate project geometry."
         )
@@ -739,7 +766,7 @@ def check_geometry_length_values(
     examples: Dict[tuple[str, str, str], List[str]] = defaultdict(list)
 
     for elem, attribute, raw, source in _iter_project_geometry_lengths(root):
-        label = f'{_element_label(elem)} {source}'
+        label = f"{_element_label(elem)} {source}"
         try:
             value = _parse_project_geometry_length(raw, attribute)
         except ValueError as exc:
@@ -753,10 +780,10 @@ def check_geometry_length_values(
         if label not in examples[key] and len(examples[key]) < 3:
             examples[key].append(label)
 
-    result['errors'].extend(sorted(errors))
+    result["errors"].extend(sorted(errors))
     for (attribute, raw, normalized), count in sorted(recommendations.items()):
-        shown_examples = ', '.join(examples[(attribute, raw, normalized)])
-        result['warnings'].append(
+        shown_examples = ", ".join(examples[(attribute, raw, normalized)])
+        result["warnings"].append(
             f"Recommendation: project geometry {attribute}={raw!r} is "
             f"converter-compatible in {count} location(s) ({shown_examples}); "
             f"generated SVG should prefer the unitless px spelling "
@@ -780,22 +807,22 @@ def check_stroke_style_values(
         _project_stroke_style_errors,
     )
     if any(helper is None for helper in helpers):
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import svg_to_pptx line-style validators; native "
             "export will still validate line-presentation syntax."
         )
         return
 
-    result['errors'].extend(_project_stroke_style_errors(root))
+    result["errors"].extend(_project_stroke_style_errors(root))
     recommendations: Counter[tuple[str, str, str, str]] = Counter()
     examples: Dict[tuple[str, str, str, str], List[str]] = defaultdict(list)
 
     for elem, attribute, raw, source in _iter_project_stroke_styles(root):
-        label = f'{_element_label(elem)} {source}'
+        label = f"{_element_label(elem)} {source}"
         normalized = None
-        reason = ''
+        reason = ""
 
-        if attribute == 'stroke-dasharray':
+        if attribute == "stroke-dasharray":
             try:
                 parsed = _parse_project_stroke_dasharray(
                     raw,
@@ -805,36 +832,35 @@ def check_stroke_style_values(
             except ValueError:
                 continue
             if parsed is None:
-                if raw != 'none':
-                    normalized = 'none'
-                    reason = 'remove surrounding whitespace'
+                if raw != "none":
+                    normalized = "none"
+                    reason = "remove surrounding whitespace"
             else:
                 preset, values = parsed
                 longer_custom = preset is None and len(values) > 2
                 if noncanonical or longer_custom or raw != raw.strip():
                     kept_values = values[:2] if longer_custom else values
-                    normalized = ' '.join(
-                        _format_project_geometry_length(value)
-                        for value in kept_values
+                    normalized = " ".join(
+                        _format_project_geometry_length(value) for value in kept_values
                     )
                     reasons = []
                     if noncanonical:
-                        reasons.append('use ordinary decimal numbers')
+                        reasons.append("use ordinary decimal numbers")
                     if longer_custom:
                         reasons.append(
-                            'make the first-pair export normalization explicit'
+                            "make the first-pair export normalization explicit"
                         )
                     if raw != raw.strip():
-                        reasons.append('remove surrounding whitespace')
-                    reason = '; '.join(reasons)
-        elif attribute == 'stroke-dashoffset':
+                        reasons.append("remove surrounding whitespace")
+                    reason = "; ".join(reasons)
+        elif attribute == "stroke-dashoffset":
             try:
                 value = _parse_project_geometry_length(raw, attribute)
             except ValueError:
                 continue
             if not _is_canonical_project_geometry_length(raw):
                 normalized = _format_project_geometry_length(value)
-                reason = 'use the unitless px spelling'
+                reason = "use the unitless px spelling"
         else:
             try:
                 value = _parse_project_stroke_enum(attribute, raw)
@@ -842,7 +868,7 @@ def check_stroke_style_values(
                 continue
             if raw != value:
                 normalized = value
-                reason = 'remove surrounding whitespace'
+                reason = "remove surrounding whitespace"
 
         if normalized is None:
             continue
@@ -851,13 +877,9 @@ def check_stroke_style_values(
         if label not in examples[key] and len(examples[key]) < 3:
             examples[key].append(label)
 
-    for (attribute, raw, normalized, reason), count in sorted(
-        recommendations.items()
-    ):
-        shown_examples = ', '.join(
-            examples[(attribute, raw, normalized, reason)]
-        )
-        result['warnings'].append(
+    for (attribute, raw, normalized, reason), count in sorted(recommendations.items()):
+        shown_examples = ", ".join(examples[(attribute, raw, normalized, reason)])
+        result["warnings"].append(
             f"Recommendation: line style {attribute}={raw!r} is "
             f"converter-compatible in {count} location(s) "
             f"({shown_examples}); generated SVG should prefer "
@@ -878,13 +900,13 @@ def check_image_aspect_ratio_values(
         _project_image_aspect_ratio_errors,
     )
     if any(helper is None for helper in helpers):
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import svg_to_pptx image aspect-ratio validators; "
             "native export will still validate image fit/crop syntax."
         )
         return
 
-    result['errors'].extend(_project_image_aspect_ratio_errors(root))
+    result["errors"].extend(_project_image_aspect_ratio_errors(root))
     recommendations: Counter[tuple[str, str]] = Counter()
     examples: Dict[tuple[str, str], List[str]] = defaultdict(list)
 
@@ -903,8 +925,8 @@ def check_image_aspect_ratio_values(
             examples[key].append(label)
 
     for (raw, normalized), count in sorted(recommendations.items()):
-        shown_examples = ', '.join(examples[(raw, normalized)])
-        result['warnings'].append(
+        shown_examples = ", ".join(examples[(raw, normalized)])
+        result["warnings"].append(
             f"Recommendation: image preserveAspectRatio={raw!r} is "
             f"converter-compatible in {count} location(s) "
             f"({shown_examples}); generated SVG should prefer "
@@ -919,12 +941,12 @@ def check_nested_svg_crop_contract(
 ) -> None:
     """Reserve nested SVG for the imported picture-crop transport."""
     if _project_nested_svg_crop_errors is None:
-        result['errors'].append(
-            'Unable to import the nested SVG crop validator; cannot '
-            'verify imported picture-crop wrappers'
+        result["errors"].append(
+            "Unable to import the nested SVG crop validator; cannot "
+            "verify imported picture-crop wrappers"
         )
         return
-    result['errors'].extend(_project_nested_svg_crop_errors(root))
+    result["errors"].extend(_project_nested_svg_crop_errors(root))
 
 
 def check_freeform_geometry_values(
@@ -939,7 +961,7 @@ def check_freeform_geometry_values(
         _noncanonical_points_numbers,
     )
     if any(helper is None for helper in helpers):
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import svg_to_pptx freeform geometry validators; "
             "native export will still validate path and points syntax."
         )
@@ -954,8 +976,8 @@ def check_freeform_geometry_values(
         try:
             if raw is None:
                 tag = _local_name(elem)
-                raise ValueError(f'<{tag}> requires {attribute}')
-            if attribute == 'd':
+                raise ValueError(f"<{tag}> requires {attribute}")
+            if attribute == "d":
                 compatible_numbers = _noncanonical_path_numbers(raw)
             else:
                 required_points = min_points or 2
@@ -964,7 +986,7 @@ def check_freeform_geometry_values(
                     min_points=required_points,
                 )
         except ValueError as exc:
-            errors.add(f'{label} {attribute}: {exc}')
+            errors.add(f"{label} {attribute}: {exc}")
             continue
 
         for number in compatible_numbers:
@@ -974,10 +996,10 @@ def check_freeform_geometry_values(
             if label not in examples[key] and len(examples[key]) < 3:
                 examples[key].append(label)
 
-    result['errors'].extend(sorted(errors))
+    result["errors"].extend(sorted(errors))
     for (attribute, raw, normalized), count in sorted(recommendations.items()):
-        shown_examples = ', '.join(examples[(attribute, raw, normalized)])
-        result['warnings'].append(
+        shown_examples = ", ".join(examples[(attribute, raw, normalized)])
+        result["warnings"].append(
             f"Recommendation: freeform geometry {attribute} numeric token "
             f"{raw!r} is converter-compatible in {count} occurrence(s) "
             f"({shown_examples}); generated SVG should prefer the ordinary "
@@ -997,7 +1019,7 @@ def check_transform_values(
         _project_transform_errors,
     )
     if any(helper is None for helper in helpers):
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import svg_to_pptx transform validators; "
             "native export will still validate transform syntax."
         )
@@ -1017,9 +1039,8 @@ def check_transform_values(
             pass
         else:
             transform_errors.update(_project_transform_errors(expanded_root))
-    result['errors'].extend(
-        f'Invalid SVG transform: {error}'
-        for error in sorted(transform_errors)
+    result["errors"].extend(
+        f"Invalid SVG transform: {error}" for error in sorted(transform_errors)
     )
 
     recommendations: Counter[tuple[str, str]] = Counter()
@@ -1038,8 +1059,8 @@ def check_transform_values(
                 examples[key].append(label)
 
     for (raw, normalized), count in sorted(recommendations.items()):
-        shown_examples = ', '.join(examples[(raw, normalized)])
-        result['warnings'].append(
+        shown_examples = ", ".join(examples[(raw, normalized)])
+        result["warnings"].append(
             f"Recommendation: transform numeric token {raw!r} is "
             f"converter-compatible in {count} occurrence(s) "
             f"({shown_examples}); generated SVG should prefer the ordinary "
@@ -1049,17 +1070,19 @@ def check_transform_values(
 
 def check_font_size_values(content: str, result: Dict) -> None:
     """Keep supported font-size units compatible and recommend unitless px."""
-    canonical_re = re.compile(r'^(?:\d+(?:\.\d+)?|\.\d+)$')
+    canonical_re = re.compile(r"^(?:\d+(?:\.\d+)?|\.\d+)$")
     values = set()
 
-    for match in re.finditer(r'\bfont-size\s*=\s*(["\'])(.*?)\1', content, re.IGNORECASE):
+    for match in re.finditer(
+        r'\bfont-size\s*=\s*(["\'])(.*?)\1', content, re.IGNORECASE
+    ):
         values.add(match.group(2).strip())
 
     for match in re.finditer(r'\bfont-size\s*:\s*([^;"\']+)', content, re.IGNORECASE):
         values.add(match.group(1).strip())
 
     if _parse_export_length is None:
-        result['warnings'].append(
+        result["warnings"].append(
             "Unable to import svg_to_pptx length parser; skipped font-size syntax check"
         )
         return
@@ -1087,20 +1110,20 @@ def check_font_size_values(content: str, result: Dict) -> None:
 
     if unsupported:
         shown_values = sorted(unsupported)
-        shown = ', '.join(shown_values[:5])
+        shown = ", ".join(shown_values[:5])
         more = len(shown_values) - 5
         suffix = f" (+{more} more)" if more > 0 else ""
-        result['errors'].append(
+        result["errors"].append(
             f"Unsupported font-size value(s): {shown}{suffix}. Use a finite "
             "non-negative SVG length supported by svg_to_pptx."
         )
 
     if drawingml_out_of_range:
         shown_values = sorted(drawingml_out_of_range)
-        shown = ', '.join(shown_values[:5])
+        shown = ", ".join(shown_values[:5])
         more = len(shown_values) - 5
         suffix = f" (+{more} more)" if more > 0 else ""
-        result['errors'].append(
+        result["errors"].append(
             f"font-size value(s) {shown}{suffix} are outside the DrawingML "
             f"range sz={_DRAWINGML_TEXT_FONT_SIZE_MIN}.."
             f"{_DRAWINGML_TEXT_FONT_SIZE_MAX} (1..4000pt); PowerPoint would "
@@ -1111,11 +1134,11 @@ def check_font_size_values(content: str, result: Dict) -> None:
 
     if compatible_noncanonical:
         shown_values = sorted(compatible_noncanonical)
-        shown = ', '.join(shown_values[:5])
+        shown = ", ".join(shown_values[:5])
         more = len(shown_values) - 5
         suffix = f" (+{more} more)" if more > 0 else ""
-        result['warnings'].append(
+        result["warnings"].append(
             f"Recommendation: font-size value(s) {shown}{suffix} are "
             "converter-compatible; generated SVG should prefer unitless px "
-            "values such as font-size=\"28\". No change is required for export."
+            'values such as font-size="28". No change is required for export.'
         )

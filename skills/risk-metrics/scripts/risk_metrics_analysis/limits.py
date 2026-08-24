@@ -14,9 +14,7 @@ def _utilization(item: SgmrRow) -> float | None:
     return None if item.lower_limit >= 0 else abs(item.value) / abs(item.lower_limit)
 
 
-def _longest_streak(
-    rows: list[SgmrRow], predicate: Callable[[SgmrRow], bool]
-) -> list[SgmrRow]:
+def _longest_streak(rows: list[SgmrRow], predicate: Callable[[SgmrRow], bool]) -> list[SgmrRow]:
     longest: list[SgmrRow] = []
     current: list[SgmrRow] = []
     for item in rows:
@@ -91,17 +89,16 @@ def _limit_consumption(sgmr: list[SgmrRow]) -> AnalysisResult:
         threshold_values = {
             item.warning_threshold
             for item in rows
-            if item.warning_threshold is not None
-            and 0 < item.warning_threshold < 1
+            if item.warning_threshold is not None and 0 < item.warning_threshold < 1
         }
         threshold = (
             current_item.warning_threshold
-            if current_item.warning_threshold is not None
-            and 0 < current_item.warning_threshold < 1
+            if current_item.warning_threshold is not None and 0 < current_item.warning_threshold < 1
             else NEAR_LIMIT_DEFAULT
         )
         breaches = [(item, value) for item, value in valid if value > 1.0]
         proximity = [(item, value) for item, value in valid if value >= threshold]
+
         def exceeds_threshold(item: SgmrRow, *, _threshold: float = threshold) -> bool:
             utilization = _utilization(item)
             return (utilization if utilization is not None else float("-inf")) >= _threshold
@@ -144,13 +141,11 @@ def _limit_consumption(sgmr: list[SgmrRow]) -> AnalysisResult:
             OverviewPoint(label=day, value=round(value, 6))
             for day, (_, value) in zip(dates, valid, strict=True)
         ]
-        warning_points = [
-            OverviewPoint(label=day, value=round(threshold, 6)) for day in dates
-        ]
+        warning_points = [OverviewPoint(label=day, value=round(threshold, 6)) for day in dates]
         limit_points = [OverviewPoint(label=day, value=1.0) for day in dates]
-        digest = hashlib.sha256(
-            "|".join(str(part) for part in key).encode("utf-8")
-        ).hexdigest()[:10]
+        digest = hashlib.sha256("|".join(str(part) for part in key).encode("utf-8")).hexdigest()[
+            :10
+        ]
         overviews.append(
             DataOverview(
                 overview_id=(
@@ -231,8 +226,7 @@ def _limit_consumption(sgmr: list[SgmrRow]) -> AnalysisResult:
                     worst_value=worst_item.value,
                     worst_utilization=round(worst_util, 4),
                     locators=[
-                        _locator(item.path, item.sheet, item.row)
-                        for item, _ in breaches[:5]
+                        _locator(item.path, item.sheet, item.row) for item, _ in breaches[:5]
                     ],
                 )
             )
@@ -252,14 +246,10 @@ def _limit_consumption(sgmr: list[SgmrRow]) -> AnalysisResult:
                     streak_observations=len(streak),
                     first_date=streak[0].day.isoformat(),
                     last_date=end.day.isoformat(),
-                    locators=[
-                        _locator(item.path, item.sheet, item.row) for item in streak[:5]
-                    ],
+                    locators=[_locator(item.path, item.sheet, item.row) for item in streak[:5]],
                 )
             )
-        limit_levels = {
-            (round(item.lower_limit, 10), round(item.upper_limit, 10)) for item in rows
-        }
+        limit_levels = {(round(item.lower_limit, 10), round(item.upper_limit, 10)) for item in rows}
         if len(limit_levels) > 1:
             changed = next(
                 item
@@ -342,8 +332,7 @@ def _limit_consumption(sgmr: list[SgmrRow]) -> AnalysisResult:
                 )
             )
         if len(threshold_values) > 1 or any(
-            item.warning_threshold is not None
-            and not 0 < item.warning_threshold < 1
+            item.warning_threshold is not None and not 0 < item.warning_threshold < 1
             for item in rows
         ):
             item = rows[0]

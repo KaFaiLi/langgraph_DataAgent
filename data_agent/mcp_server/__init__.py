@@ -8,4 +8,3 @@ data_agent.mcp_server`` (see ``__main__.py``).
 from data_agent.mcp_server.server import build_server
 
 __all__ = ["build_server"]
-

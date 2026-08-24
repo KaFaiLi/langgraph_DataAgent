@@ -118,5 +118,3 @@ def test_specialist_report_rejects_duplicate_overview_ids() -> None:
             data_overviews=[_pnl_overview(), _pnl_overview()],
             overall_conclusion="No conclusion for this contract test.",
         )
-
-

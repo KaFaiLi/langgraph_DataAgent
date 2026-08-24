@@ -36,18 +36,16 @@ def _context(tmp_path: Path) -> ToolContext:
     return ToolContext(source_root=source, workspace_root=tmp_path / "workspace", manifest=manifest)
 
 
-def test_research_tools_trace_results_and_reject_unassigned_sources(tmp_path: Path) -> None:
+def test_research_tools_trace_results_and_reject_unassigned_sources(
+    tmp_path: Path,
+) -> None:
     trace: list[dict] = []
     tools = {
         tool.name: tool
-        for tool in build_research_tools(
-            _context(tmp_path), ["assigned.csv"], trace, max_calls=4
-        )
+        for tool in build_research_tools(_context(tmp_path), ["assigned.csv"], trace, max_calls=4)
     }
 
-    inspected = tools["inspect_table"].invoke(
-        {"path": "assigned.csv", "preview_rows": 2}
-    )
+    inspected = tools["inspect_table"].invoke({"path": "assigned.csv", "preview_rows": 2})
     with pytest.raises(ToolException, match="outside this specialist scope"):
         tools["inspect_table"].invoke({"path": "other.csv"})
 
@@ -61,9 +59,7 @@ def test_research_tool_budget_is_hard_capped(tmp_path: Path) -> None:
     trace: list[dict] = []
     tool = {
         item.name: item
-        for item in build_research_tools(
-            _context(tmp_path), ["assigned.csv"], trace, max_calls=1
-        )
+        for item in build_research_tools(_context(tmp_path), ["assigned.csv"], trace, max_calls=1)
     }["list_assigned_sources"]
 
     assert "SRC-001" in tool.invoke({})

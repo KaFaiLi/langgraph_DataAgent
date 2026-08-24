@@ -129,9 +129,7 @@ def apply_shape_hyperlink(
             continue
         original = match.group(0)
         if "<a:hlinkClick" in original:
-            raise ValueError(
-                "hyperlink carrier already contains a click hyperlink"
-            )
+            raise ValueError("hyperlink carrier already contains a click hyperlink")
         if original.endswith("/>"):
             replacement = f"{original[:-2]}>{hlink_xml}</p:cNvPr>"
         else:
@@ -143,9 +141,7 @@ def apply_shape_hyperlink(
         replacements.append((match.start(), match.end(), replacement))
 
     if not replacements:
-        raise ValueError(
-            "hyperlink carrier did not produce a clickable DrawingML leaf"
-        )
+        raise ValueError("hyperlink carrier did not produce a clickable DrawingML leaf")
     linked_xml = result.xml
     for start, end, replacement in reversed(replacements):
         linked_xml = linked_xml[:start] + replacement + linked_xml[end:]

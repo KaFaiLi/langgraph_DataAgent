@@ -6,9 +6,7 @@ from __future__ import annotations
 from xml.etree import ElementTree as ET
 
 
-RELATIONSHIPS_NS = (
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-)
+RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 _RELATIONSHIP_ATTRIBUTE_PREFIX = f"{{{RELATIONSHIPS_NS}}}"
 
 

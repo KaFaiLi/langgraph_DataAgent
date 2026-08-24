@@ -75,4 +75,3 @@ def loads_period(data: dict[str, str]) -> DateRange:
 
 def domain_of(state: SpecialistState) -> SpecialistDomain:
     return SpecialistDomain(state["domain"])
-

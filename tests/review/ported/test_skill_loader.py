@@ -58,9 +58,7 @@ def test_lead_review_loader_rejects_missing_verifier_policy(tmp_path: Path) -> N
     skill_root = skills_root / "lead-review"
     scripts = skill_root / "scripts"
     scripts.mkdir(parents=True)
-    (scripts / "analysis.py").write_text(
-        "def run_analysis(reports): return {}\n", encoding="utf-8"
-    )
+    (scripts / "analysis.py").write_text("def run_analysis(reports): return {}\n", encoding="utf-8")
     skill_file = skill_root / "SKILL.md"
     skill_file.write_text(
         """---
@@ -230,9 +228,7 @@ def test_loader_caches_relative_runner_when_loaded_in_parallel(tmp_path: Path) -
     scripts.mkdir(parents=True)
     (scripts / "value.py").write_text("VALUE = 11\n", encoding="utf-8")
     (scripts / "analysis.py").write_text(
-        "from .value import VALUE\n\n"
-        "def run_analysis(ctx, source_paths):\n"
-        "    return [VALUE]\n",
+        "from .value import VALUE\n\ndef run_analysis(ctx, source_paths):\n    return [VALUE]\n",
         encoding="utf-8",
     )
     skill_file = skill_root / "SKILL.md"
@@ -274,9 +270,7 @@ def test_loader_rejects_symlinked_relative_import_escape(tmp_path: Path) -> None
     except OSError as exc:  # pragma: no cover - depends on Windows symlink policy.
         pytest.skip(f"symlink creation unavailable: {exc}")
     (scripts / "analysis.py").write_text(
-        "from .payload import VALUE\n\n"
-        "def run_analysis(ctx, source_paths):\n"
-        "    return [VALUE]\n",
+        "from .payload import VALUE\n\ndef run_analysis(ctx, source_paths):\n    return [VALUE]\n",
         encoding="utf-8",
     )
     skill_file = skill_root / "SKILL.md"

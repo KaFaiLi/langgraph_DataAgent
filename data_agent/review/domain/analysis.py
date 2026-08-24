@@ -17,5 +17,3 @@ class AnalysisResult(BaseModel):
     """Code-flagged candidates the analyst must interpret (never auto-findings)."""
     overviews: list[DataOverview] = Field(default_factory=list)
     """Code-owned report/deck views; never reconstructed by an LLM."""
-
-

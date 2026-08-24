@@ -33,9 +33,7 @@ class SpecialistReport(BaseModel):
     unresolved_items: list[str] = Field(default_factory=list)
     overall_conclusion: str
 
-    verification_history: dict[str, list[VerificationRound]] = Field(
-        default_factory=dict
-    )
+    verification_history: dict[str, list[VerificationRound]] = Field(default_factory=dict)
     """Per-finding analyst/verifier rounds (rendered in the report template)."""
 
     @model_validator(mode="after")
@@ -45,9 +43,7 @@ class SpecialistReport(BaseModel):
             raise ValueError(f"report {self.report_id}: duplicate finding ids in {ids}")
         overview_ids = [overview.overview_id for overview in self.data_overviews]
         if len(overview_ids) != len(set(overview_ids)):
-            raise ValueError(
-                f"report {self.report_id}: duplicate overview ids in {overview_ids}"
-            )
+            raise ValueError(f"report {self.report_id}: duplicate overview ids in {overview_ids}")
         return self
 
     def verified_findings(self) -> list[Finding]:
@@ -55,8 +51,7 @@ class SpecialistReport(BaseModel):
         return [
             finding
             for finding in self.findings
-            if finding.verifier_status
-            in (VerificationStatus.PASSED, VerificationStatus.REVISED)
+            if finding.verifier_status in (VerificationStatus.PASSED, VerificationStatus.REVISED)
         ]
 
     def unresolved_findings(self) -> list[Finding]:
@@ -153,4 +148,3 @@ class FinalReport(BaseModel):
         if len(ids) != len(set(ids)):
             raise ValueError(f"duplicate final finding ids in {ids}")
         return self
-

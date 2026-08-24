@@ -19,7 +19,9 @@ def test_review_models_have_stable_public_contract(tmp_path: Path) -> None:
 
     assert request.review_period.start == date(2025, 1, 1)
     assert request.review_period.end == date(2025, 12, 31)
-    assert ReviewResult(status=ReviewStatus.RUNNING, run_id="RUN-001").status is ReviewStatus.RUNNING
+    assert (
+        ReviewResult(status=ReviewStatus.RUNNING, run_id="RUN-001").status is ReviewStatus.RUNNING
+    )
 
 
 def test_socgenai_review_models_have_role_defaults_and_env_overrides() -> None:

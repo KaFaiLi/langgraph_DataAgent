@@ -11,7 +11,11 @@ from tests.review.fixtures.builder import make_risky_tree
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.evidence import EvidenceReference
 from data_agent.review.domain.finding import Finding, VerificationStatus
-from data_agent.review.domain.reports import CrossSourceCluster, FinalReport, SpecialistReport
+from data_agent.review.domain.reports import (
+    CrossSourceCluster,
+    FinalReport,
+    SpecialistReport,
+)
 from data_agent.review.domain.severity import Severity
 from data_agent.review.domain.source import DateRange
 from data_agent.review.domain.verification import VerifierDecision
@@ -71,7 +75,10 @@ def test_lead_finding_payload_keeps_locators_but_drops_repeated_quotes() -> None
                 "claim": "Claim",
                 "evidence": [{"locator": LOCATOR, "quote": "large repeated quote"}],
                 "counter_evidence": [
-                    {"locator": "source://risk_metrics/risk.csv#rows=3:3", "quote": "quote"}
+                    {
+                        "locator": "source://risk_metrics/risk.csv#rows=3:3",
+                        "quote": "quote",
+                    }
                 ],
                 "alternative_explanations": ["alternative"],
             }
@@ -397,7 +404,8 @@ def test_severity_escalation_blocks_model_pass(tmp_path) -> None:
     report.key_findings[0].severity = Severity.CRITICAL
 
     result = lead_verifier(
-        _state(tmp_path, report), {"configurable": {"llm_provider": _pass_provider(calls)}}
+        _state(tmp_path, report),
+        {"configurable": {"llm_provider": _pass_provider(calls)}},
     )
 
     assert result["lead_status"] == "running"
@@ -413,7 +421,8 @@ def test_non_copied_evidence_blocks_model_pass(tmp_path) -> None:
     report.evidence_index = [invented]
 
     result = lead_verifier(
-        _state(tmp_path, report), {"configurable": {"llm_provider": _pass_provider(calls)}}
+        _state(tmp_path, report),
+        {"configurable": {"llm_provider": _pass_provider(calls)}},
     )
 
     assert result["lead_status"] == "running"
@@ -494,7 +503,8 @@ def test_unknown_cluster_and_missing_evidence_index_block_model_pass(tmp_path) -
     report.evidence_index = []
 
     result = lead_verifier(
-        _state(tmp_path, report), {"configurable": {"llm_provider": _pass_provider(calls)}}
+        _state(tmp_path, report),
+        {"configurable": {"llm_provider": _pass_provider(calls)}},
     )
 
     assert result["lead_status"] == "running"
@@ -529,5 +539,3 @@ def test_evidence_index_must_include_cluster_support(tmp_path) -> None:
     assert cluster_locator in result["lead_feedback"]
     assert "evidence_index" in result["lead_feedback"]
     assert calls == []
-
-

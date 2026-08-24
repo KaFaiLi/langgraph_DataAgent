@@ -9,7 +9,12 @@ from pathlib import Path
 from langchain_core.runnables.config import RunnableConfig
 
 from data_agent.review.domain.reports import FinalReport
-from data_agent.review.domain.review import ReviewRun, ReviewTask, RunStatus, SourceCoverage
+from data_agent.review.domain.review import (
+    ReviewRun,
+    ReviewTask,
+    RunStatus,
+    SourceCoverage,
+)
 from data_agent.review.domain.source import SourceManifest
 from data_agent.review.orchestration.state import ParentState
 from data_agent.review.reporting.markdown import render_final_report
@@ -62,5 +67,3 @@ def finalize(state: ParentState, config: RunnableConfig) -> dict:
         encoding="utf-8",
     )
     return {"status": "completed", "final_markdown": markdown}
-
-

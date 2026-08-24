@@ -83,9 +83,7 @@ def _matches_finding(candidate: dict[object, object], finding: Finding) -> bool:
     return matched >= min(2, len(terms))
 
 
-def _add_candidate_evidence(
-    finding: Finding, analyses: list[dict[str, object]]
-) -> Finding:
+def _add_candidate_evidence(finding: Finding, analyses: list[dict[str, object]]) -> Finding:
     evidence = list(finding.evidence)
     seen = {reference.locator for reference in evidence}
     for analysis in analyses:
@@ -109,7 +107,19 @@ def _add_candidate_evidence(
 
 
 _CONTEXT_MATCH_STOPWORDS = frozenset(
-    {"and", "are", "for", "from", "reported", "review", "source", "that", "the", "this", "with"}
+    {
+        "and",
+        "are",
+        "for",
+        "from",
+        "reported",
+        "review",
+        "source",
+        "that",
+        "the",
+        "this",
+        "with",
+    }
 )
 
 
@@ -122,7 +132,14 @@ def _add_context_evidence(finding: Finding, desk_context: dict[str, object]) -> 
         }
 
     finding_terms = terms(
-        " ".join([finding.title, finding.category, finding.claim, *finding.analysis_performed])
+        " ".join(
+            [
+                finding.title,
+                finding.category,
+                finding.claim,
+                *finding.analysis_performed,
+            ]
+        )
     )
     evidence = list(finding.evidence)
     seen = {reference.locator for reference in evidence}
@@ -148,9 +165,7 @@ def _add_context_evidence(finding: Finding, desk_context: dict[str, object]) -> 
     return finding.model_copy(update={"evidence": evidence})
 
 
-def _apply_severity_floor(
-    finding: Finding, analyses: list[dict[str, object]]
-) -> Finding:
+def _apply_severity_floor(finding: Finding, analyses: list[dict[str, object]]) -> Finding:
     floors: list[Severity] = []
     measured_observation = False
     for analysis in analyses:

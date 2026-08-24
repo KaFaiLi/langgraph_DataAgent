@@ -30,4 +30,3 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseMode
         _excess_workflow(excesses, sgmr),
         _cross_source_consistency(sgmr, excesses),
     ]
-

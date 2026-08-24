@@ -14,7 +14,11 @@ from langchain_core.runnables.config import RunnableConfig
 from pydantic import BaseModel, Field
 
 from data_agent.review.domain.finding import Finding, VerificationStatus
-from data_agent.review.domain.reports import CrossSourceCluster, FinalReport, SpecialistReport
+from data_agent.review.domain.reports import (
+    CrossSourceCluster,
+    FinalReport,
+    SpecialistReport,
+)
 from data_agent.review.domain.severity import SEVERITY_ORDER
 from data_agent.review.domain.verification import VerifierDecision
 from data_agent.review.ingestion.evidence_validator import (
@@ -108,12 +112,8 @@ def _record_evidence_failures(
         if failure.disposition is EvidenceDisposition.FATAL
     ]
     if fatal:
-        details = "; ".join(
-            f"{failure.locator}: {failure.reason}" for failure in fatal
-        )
-        raise FatalEvidenceIntegrityError(
-            f"fatal evidence integrity failure in {label}: {details}"
-        )
+        details = "; ".join(f"{failure.locator}: {failure.reason}" for failure in fatal)
+        raise FatalEvidenceIntegrityError(f"fatal evidence integrity failure in {label}: {details}")
     feedback.extend(
         f"{label} locator {failure.locator} could not be reopened: {failure.reason}"
         for failure in validation.failures
@@ -154,10 +154,7 @@ def validate_final_report(state: ParentState, report: FinalReport) -> list[str]:
             all_findings[finding_id]
             for finding_id in finding.derived_from
             if finding_id in verified
-            or (
-                finding_id in unresolved_ids
-                and finding_id in finding.unresolved_dependencies
-            )
+            or (finding_id in unresolved_ids and finding_id in finding.unresolved_dependencies)
         ]
         if not support:
             feedback.append(
@@ -185,9 +182,7 @@ def validate_final_report(state: ParentState, report: FinalReport) -> list[str]:
             feedback.append(f"{finding.final_id}: final finding requires copied evidence")
         else:
             support_locators = {
-                reference.locator
-                for item in declared_support
-                for reference in item.evidence
+                reference.locator for item in declared_support for reference in item.evidence
             }
             for reference in finding.evidence:
                 final_locators.add(reference.locator)
@@ -245,9 +240,7 @@ def validate_final_report(state: ParentState, report: FinalReport) -> list[str]:
                 f"cluster {cluster.cluster_id} contains unknown specialist findings "
                 f"{unknown_cluster_findings}"
             )
-        final_locators.update(
-            reference.locator for reference in cluster.supporting_evidence
-        )
+        final_locators.update(reference.locator for reference in cluster.supporting_evidence)
         cluster_validation = validator.validate_references(cluster.supporting_evidence)
         _record_evidence_failures(
             feedback,
@@ -341,8 +334,8 @@ def lead_verifier(state: ParentState, config: RunnableConfig) -> dict:
             "lead_status": "running",
         }
 
-    _verified, _unresolved_ids, _all_ids, _index_feedback, all_findings = (
-        _specialist_findings(state)
+    _verified, _unresolved_ids, _all_ids, _index_feedback, all_findings = _specialist_findings(
+        state
     )
     specialist_findings = [
         {

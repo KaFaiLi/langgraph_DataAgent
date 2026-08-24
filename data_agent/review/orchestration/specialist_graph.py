@@ -61,7 +61,10 @@ from data_agent.review.orchestration.prompt_projection import (
     finding_analysis_support_json,
     revision_candidates_json,
 )
-from data_agent.review.orchestration.specialist_schemas import AnalystOutput, VerifierOutput
+from data_agent.review.orchestration.specialist_schemas import (
+    AnalystOutput,
+    VerifierOutput,
+)
 from data_agent.review.orchestration.specialist_state import (
     SpecialistState,
     dumps_finding,
@@ -232,7 +235,9 @@ def build_specialist_graph(
                 "research_round": state.get("research_round", 0) + 1,
                 "research_budget_exhausted": False,
             }
-        agent = create_react_agent(model, tools, prompt=prompt, name=f"{spec.domain.value}_research")
+        agent = create_react_agent(
+            model, tools, prompt=prompt, name=f"{spec.domain.value}_research"
+        )
         exhausted = False
         try:
             result = agent.invoke(
@@ -268,7 +273,10 @@ def build_specialist_graph(
             max_chars=(MAX_REVISION_ANALYSIS_CHARS if feedback else MAX_ANALYSIS_PROMPT_CHARS),
         )
         system = spec.analyst_system_prompt(
-            spec.domain_label, desk_json, state.get("material_summary", ""), analyses_json
+            spec.domain_label,
+            desk_json,
+            state.get("material_summary", ""),
+            analyses_json,
         )
         if feedback:
             previous = revision_candidates_json(list(state.get("candidate_findings", [])))
@@ -478,7 +486,10 @@ def build_specialist_graph(
                 round_number=round_number,
                 decision=decision,
                 questions=result.questions,
-                checks=[*result.checks, f"evidence reopen: {len(finding.evidence)} locator(s)"],
+                checks=[
+                    *result.checks,
+                    f"evidence reopen: {len(finding.evidence)} locator(s)",
+                ],
                 feedback=result.feedback,
             )
             history[finding.finding_id] = [

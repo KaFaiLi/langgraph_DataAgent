@@ -46,22 +46,24 @@ CUSTOM_GEOMETRY_REF_ATTRIBUTE = "data-pptx-custgeom-ref"
 
 _SHA256_RE = re.compile(r"[0-9a-f]{64}")
 _NATIVE_RECORD_ID_RE = re.compile(r"r(?:0|[1-9][0-9]*)")
-_NATIVE_RECORD_ATTRIBUTES = frozenset({
-    "data-pptx-custgeom-ref",
-    "data-pptx-frame",
-    "data-pptx-geometry-kind",
-    "data-pptx-geometry-sha256",
-    "data-pptx-object",
-    "data-pptx-part",
-    "data-pptx-preview-sha256",
-    "data-pptx-prst",
-    "data-pptx-ref",
-    "data-pptx-shape-id",
-    "data-pptx-shape-name",
-    "data-pptx-shape-scope",
-    "data-pptx-shape-style-ref",
-    "data-pptx-text-sha256",
-})
+_NATIVE_RECORD_ATTRIBUTES = frozenset(
+    {
+        "data-pptx-custgeom-ref",
+        "data-pptx-frame",
+        "data-pptx-geometry-kind",
+        "data-pptx-geometry-sha256",
+        "data-pptx-object",
+        "data-pptx-part",
+        "data-pptx-preview-sha256",
+        "data-pptx-prst",
+        "data-pptx-ref",
+        "data-pptx-shape-id",
+        "data-pptx-shape-name",
+        "data-pptx-shape-scope",
+        "data-pptx-shape-style-ref",
+        "data-pptx-text-sha256",
+    }
+)
 _NATIVE_RECORD_PREFIXES = (
     "data-pptx-av-",
     "data-pptx-end-",
@@ -141,10 +143,7 @@ def _register_payload(payloads: dict[str, bytes], raw: bytes) -> str:
 
 
 def _is_native_record_attribute(name: str) -> bool:
-    return (
-        name in _NATIVE_RECORD_ATTRIBUTES
-        or name.startswith(_NATIVE_RECORD_PREFIXES)
-    )
+    return name in _NATIVE_RECORD_ATTRIBUTES or name.startswith(_NATIVE_RECORD_PREFIXES)
 
 
 def _native_record_attributes(element: ET.Element) -> dict[str, str]:
@@ -236,8 +235,7 @@ def externalize_native_attribute_records(
         element.set(NATIVE_RECORD_REF_ATTRIBUTE, record_id)
         stats.native_record_count += 1
         stats.native_attribute_bytes += sum(
-            len(name) + len(value) + 4
-            for name, value in attributes.items()
+            len(name) + len(value) + 4 for name, value in attributes.items()
         )
     return stats
 
@@ -295,7 +293,9 @@ def externalize_native_payloads(
         shape_reference = element.get(SHAPE_STYLE_REF_ATTRIBUTE) or ""
         shape_encoded = element.get(SHAPE_STYLE_ATTRIBUTE)
         if has_shape_reference and not shape_reference:
-            raise NativePayloadError("shape-style metadata has an empty payload reference")
+            raise NativePayloadError(
+                "shape-style metadata has an empty payload reference"
+            )
         if has_shape_reference:
             raise NativePayloadError(
                 "shape-style metadata is already externalized; source payload "
@@ -386,10 +386,8 @@ def _parse_reference(value: str) -> tuple[PurePosixPath, str]:
     prefix = "project:"
     marker = "#sha256:"
     if not value.startswith(prefix) or marker not in value:
-        raise NativePayloadError(
-            f"Unsupported native payload reference: {value!r}"
-        )
-    path_text, digest = value[len(prefix):].split(marker, 1)
+        raise NativePayloadError(f"Unsupported native payload reference: {value!r}")
+    path_text, digest = value[len(prefix) :].split(marker, 1)
     relative = PurePosixPath(path_text)
     if (
         not path_text
@@ -460,9 +458,7 @@ def _load_store(path: Path) -> NativePayloadStore:
                 f"Native payload store contains an invalid digest key: {digest!r}"
             )
         if not isinstance(encoded, str):
-            raise NativePayloadError(
-                f"Native payload {digest} must be a base64 string"
-            )
+            raise NativePayloadError(f"Native payload {digest} must be a base64 string")
         raw = _decode_base64(
             encoded,
             context=f"native payload {digest} in {resolved}",

@@ -16,9 +16,18 @@ from data_agent.review.domain.severity import Severity
 from data_agent.review.domain.source import DateRange
 from data_agent.review.domain.verification import VerifierDecision
 from data_agent.review.ingestion.catalog import build_catalog
-from data_agent.review.orchestration.specialist_graph import SpecialistSpec, build_specialist_graph
-from data_agent.review.orchestration.specialist_prompts import analyst_system_prompt, verifier_system_prompt
-from data_agent.review.orchestration.specialist_schemas import AnalystOutput, VerifierOutput
+from data_agent.review.orchestration.specialist_graph import (
+    SpecialistSpec,
+    build_specialist_graph,
+)
+from data_agent.review.orchestration.specialist_prompts import (
+    analyst_system_prompt,
+    verifier_system_prompt,
+)
+from data_agent.review.orchestration.specialist_schemas import (
+    AnalystOutput,
+    VerifierOutput,
+)
 from data_agent.tools.review_context import ToolContext
 
 
@@ -81,9 +90,7 @@ class Provider:
                             confidence=0.9,
                             claim="The assigned source contains desk records.",
                             period=DateRange(start=date(2025, 1, 1), end=date(2025, 1, 2)),
-                            evidence=[
-                                EvidenceReference(locator="source://assigned.csv#rows=2:2")
-                            ],
+                            evidence=[EvidenceReference(locator="source://assigned.csv#rows=2:2")],
                             is_observation=True,
                         )
                     ]
@@ -91,14 +98,14 @@ class Provider:
             )
         if schema is VerifierOutput:
             return RunnableLambda(
-                lambda _messages: VerifierOutput(
-                    finding_id="F-1", decision=VerifierDecision.PASS
-                )
+                lambda _messages: VerifierOutput(finding_id="F-1", decision=VerifierDecision.PASS)
             )
         raise AssertionError(schema)
 
 
-def test_specialist_researches_with_multiple_tools_before_verification(tmp_path: Path) -> None:
+def test_specialist_researches_with_multiple_tools_before_verification(
+    tmp_path: Path,
+) -> None:
     source = tmp_path / "source"
     source.mkdir()
     (source / "assigned.csv").write_text(

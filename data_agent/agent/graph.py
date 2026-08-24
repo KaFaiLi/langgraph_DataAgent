@@ -17,4 +17,3 @@ async def make_graph() -> Any:
     """Build and return the compiled ReAct agent graph."""
     bundle = await build_agent()
     return bundle.agent
-

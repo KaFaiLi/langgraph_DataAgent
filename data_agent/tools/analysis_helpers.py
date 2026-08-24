@@ -133,4 +133,3 @@ def candidate_flag(
         "locator": row_locator(path, sheet, row),
         **details,
     }
-

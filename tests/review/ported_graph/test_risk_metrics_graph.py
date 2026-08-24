@@ -23,7 +23,9 @@ from data_agent.review.domain.source import DateRange
 from data_agent.review.domain.verification import VerifierDecision
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 from data_agent.review.llm.models import ModelTier
-from data_agent.review.orchestration.nodes.fanout import _sanitize_verification_collection
+from data_agent.review.orchestration.nodes.fanout import (
+    _sanitize_verification_collection,
+)
 from data_agent.review.orchestration.finding_policy import (
     MAX_PERSISTED_FINDING_EVIDENCE,
     normalize_findings,
@@ -158,9 +160,7 @@ def test_verifier_prompt_receives_python_support_and_reopened_evidence(
 
 def test_candidate_finding_count_is_bounded_in_analyst_priority_order() -> None:
     findings = [make_finding(f"RISK-{index:03d}") for index in range(20)]
-    limited, _ = normalize_findings(
-        findings, analyses=[], desk_context={}, report_id="RISK"
-    )
+    limited, _ = normalize_findings(findings, analyses=[], desk_context={}, report_id="RISK")
     assert len(limited) == MAX_ANALYST_FINDINGS
     assert [finding.finding_id for finding in limited] == [
         f"RISK-{index:03d}" for index in range(MAX_ANALYST_FINDINGS)
@@ -197,9 +197,7 @@ def test_analyst_output_deterministically_bounds_verbose_live_model_values() -> 
 
 def test_specialist_finding_ids_are_globally_namespaced() -> None:
     findings = [make_finding("F-001"), make_finding("RISK-F-002")]
-    namespaced, _ = normalize_findings(
-        findings, analyses=[], desk_context={}, report_id="RISK"
-    )
+    namespaced, _ = normalize_findings(findings, analyses=[], desk_context={}, report_id="RISK")
     assert [finding.finding_id for finding in namespaced] == [
         "RISK-F-001",
         "RISK-F-002",
@@ -601,7 +599,10 @@ def test_revise_then_pass_records_history(tool_ctx: ToolContext) -> None:
 
 def test_exhausted_rounds_become_unresolved(tool_ctx: ToolContext) -> None:
     provider = FakeProvider(
-        [AnalystOutput(findings=[make_finding()]), AnalystOutput(findings=[make_finding()])],
+        [
+            AnalystOutput(findings=[make_finding()]),
+            AnalystOutput(findings=[make_finding()]),
+        ],
         always_revise,
     )
     result = run_graph(tool_ctx, provider)
@@ -657,7 +658,9 @@ def test_verification_artifact_separates_bad_citations(tool_ctx: ToolContext) ->
     assert failures[0]["locator"] == BAD_EVIDENCE.locator
 
 
-def test_inaccessible_counter_evidence_never_consults_llm(tool_ctx: ToolContext) -> None:
+def test_inaccessible_counter_evidence_never_consults_llm(
+    tool_ctx: ToolContext,
+) -> None:
     def _explode(_text: str) -> VerifierOutput:
         raise AssertionError("verifier LLM must not be called for inaccessible counter evidence")
 

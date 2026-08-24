@@ -16,125 +16,135 @@ from xml.etree import ElementTree as ET
 from .utils import font_px_to_hpt, parse_svg_length
 
 
-_SVG_TEXT_PROPERTIES = frozenset({
-    'font-weight',
-    'font-style',
-    'text-anchor',
-    'letter-spacing',
-    'text-decoration',
-})
+_SVG_TEXT_PROPERTIES = frozenset(
+    {
+        "font-weight",
+        "font-style",
+        "text-anchor",
+        "letter-spacing",
+        "text-decoration",
+    }
+)
 
 _TEXT_DECLARATION_PROPERTIES = _SVG_TEXT_PROPERTIES | {
-    'baseline-shift',
-    'font-family',
-    'font-size',
+    "baseline-shift",
+    "font-family",
+    "font-size",
 }
 
-_TEXT_INHERITANCE_TARGETS = frozenset({'svg', 'g', 'text', 'tspan'})
+_TEXT_INHERITANCE_TARGETS = frozenset({"svg", "g", "text", "tspan"})
 
-_UNSUPPORTED_TEXT_PROPERTIES = frozenset({
-    'alignment-baseline',
-    'direction',
-    'dominant-baseline',
-    'font-kerning',
-    'font-feature-settings',
-    'font-size-adjust',
-    'font-stretch',
-    'font-synthesis',
-    'font-variant',
-    'font-variation-settings',
-    'font',
-    'hyphens',
-    'kerning',
-    'line-height',
-    'overflow-wrap',
-    'text-align',
-    'text-align-last',
-    'text-indent',
-    'text-rendering',
-    'text-shadow',
-    'text-transform',
-    'unicode-bidi',
-    'vertical-align',
-    'white-space',
-    'word-spacing',
-    'word-break',
-    'writing-mode',
-})
+_UNSUPPORTED_TEXT_PROPERTIES = frozenset(
+    {
+        "alignment-baseline",
+        "direction",
+        "dominant-baseline",
+        "font-kerning",
+        "font-feature-settings",
+        "font-size-adjust",
+        "font-stretch",
+        "font-synthesis",
+        "font-variant",
+        "font-variation-settings",
+        "font",
+        "hyphens",
+        "kerning",
+        "line-height",
+        "overflow-wrap",
+        "text-align",
+        "text-align-last",
+        "text-indent",
+        "text-rendering",
+        "text-shadow",
+        "text-transform",
+        "unicode-bidi",
+        "vertical-align",
+        "white-space",
+        "word-spacing",
+        "word-break",
+        "writing-mode",
+    }
+)
 
-_TEXT_DIRECT_ATTRIBUTES = frozenset({
-    'fill',
-    'fill-opacity',
-    'filter',
-    'font-family',
-    'font-size',
-    'font-style',
-    'font-weight',
-    'id',
-    'letter-spacing',
-    'opacity',
-    'stroke',
-    'stroke-opacity',
-    'stroke-width',
-    'style',
-    'text-anchor',
-    'text-decoration',
-    'transform',
-    'x',
-    'xml:space',
-    'y',
-})
+_TEXT_DIRECT_ATTRIBUTES = frozenset(
+    {
+        "fill",
+        "fill-opacity",
+        "filter",
+        "font-family",
+        "font-size",
+        "font-style",
+        "font-weight",
+        "id",
+        "letter-spacing",
+        "opacity",
+        "stroke",
+        "stroke-opacity",
+        "stroke-width",
+        "style",
+        "text-anchor",
+        "text-decoration",
+        "transform",
+        "x",
+        "xml:space",
+        "y",
+    }
+)
 
-_TSPAN_DIRECT_ATTRIBUTES = frozenset({
-    'baseline-shift',
-    'dx',
-    'dy',
-    'fill',
-    'fill-opacity',
-    'font-family',
-    'font-size',
-    'font-style',
-    'font-weight',
-    'id',
-    'letter-spacing',
-    'opacity',
-    'stroke',
-    'stroke-opacity',
-    'stroke-width',
-    'style',
-    'text-decoration',
-    'x',
-    'xml:space',
-    'y',
-})
+_TSPAN_DIRECT_ATTRIBUTES = frozenset(
+    {
+        "baseline-shift",
+        "dx",
+        "dy",
+        "fill",
+        "fill-opacity",
+        "font-family",
+        "font-size",
+        "font-style",
+        "font-weight",
+        "id",
+        "letter-spacing",
+        "opacity",
+        "stroke",
+        "stroke-opacity",
+        "stroke-width",
+        "style",
+        "text-decoration",
+        "x",
+        "xml:space",
+        "y",
+    }
+)
 
-_TEXT_INLINE_PROPERTIES = frozenset({
-    'fill',
-    'fill-opacity',
-    'font-family',
-    'font-size',
-    'font-style',
-    'font-weight',
-    'letter-spacing',
-    'opacity',
-    'shape-rendering',
-    'stroke',
-    'stroke-opacity',
-    'stroke-width',
-    'text-anchor',
-    'text-decoration',
-})
+_TEXT_INLINE_PROPERTIES = frozenset(
+    {
+        "fill",
+        "fill-opacity",
+        "font-family",
+        "font-size",
+        "font-style",
+        "font-weight",
+        "letter-spacing",
+        "opacity",
+        "shape-rendering",
+        "stroke",
+        "stroke-opacity",
+        "stroke-width",
+        "text-anchor",
+        "text-decoration",
+    }
+)
 
-_TSPAN_INLINE_PROPERTIES = _TEXT_INLINE_PROPERTIES - {'text-anchor'}
+_TSPAN_INLINE_PROPERTIES = _TEXT_INLINE_PROPERTIES - {"text-anchor"}
 
-_CANONICAL_DECIMAL_RE = re.compile(r'^-?(?:\d+(?:\.\d+)?|\.\d+)$')
+_CANONICAL_DECIMAL_RE = re.compile(r"^-?(?:\d+(?:\.\d+)?|\.\d+)$")
 _COMPATIBLE_LETTER_SPACING_RE = re.compile(
-    r'(-?(?:\d+(?:\.\d+)?|\.\d+))(px|pt|em)',
+    r"(-?(?:\d+(?:\.\d+)?|\.\d+))(px|pt|em)",
     re.IGNORECASE,
 )
-_XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace'
-_XML_SPACE_ATTRIBUTE = f'{{{_XML_NAMESPACE}}}space'
-_PROJECT_XML_SPACE_VALUES = frozenset({'default', 'preserve'})
+_XML_NAMESPACE = "http://www.w3.org/XML/1998/namespace"
+_XML_SPACE_ATTRIBUTE = f"{{{_XML_NAMESPACE}}}space"
+_PROJECT_XML_SPACE_VALUES = frozenset({"default", "preserve"})
 _DRAWINGML_TEXT_SPACING_MIN = -400_000
 _DRAWINGML_TEXT_SPACING_MAX = 400_000
 
@@ -163,31 +173,31 @@ class TextPropertyDiagnostic:
 
 def _local_name(value: object) -> str:
     text = str(value)
-    return text.rsplit('}', 1)[-1] if '}' in text else text
+    return text.rsplit("}", 1)[-1] if "}" in text else text
 
 
 def _element_label(elem: ET.Element) -> str:
     tag = _local_name(elem.tag)
-    elem_id = elem.get('id')
-    return f'<{tag} id="{elem_id}">' if elem_id else f'<{tag}>'
+    elem_id = elem.get("id")
+    return f'<{tag} id="{elem_id}">' if elem_id else f"<{tag}>"
 
 
 def _attribute_name(raw_name: str) -> str:
-    if raw_name.startswith(f'{{{_XML_NAMESPACE}}}'):
-        return f'xml:{raw_name.rsplit("}", 1)[-1]}'
+    if raw_name.startswith(f"{{{_XML_NAMESPACE}}}"):
+        return f"xml:{raw_name.rsplit('}', 1)[-1]}"
     return _local_name(raw_name)
 
 
 def resolve_project_xml_space(
     elem: ET.Element,
-    inherited: str = 'default',
+    inherited: str = "default",
 ) -> str:
     """Resolve the exact project ``xml:space`` value for one text element."""
     if inherited not in _PROJECT_XML_SPACE_VALUES:
-        raise ValueError(f'invalid inherited xml:space value {inherited!r}')
+        raise ValueError(f"invalid inherited xml:space value {inherited!r}")
     raw = elem.get(_XML_SPACE_ATTRIBUTE)
     if raw is None:
-        raw = elem.get('xml:space')
+        raw = elem.get("xml:space")
     if raw is None:
         return inherited
     if raw not in _PROJECT_XML_SPACE_VALUES:
@@ -223,18 +233,17 @@ def normalize_project_text_segments(
     def flush_pending() -> None:
         nonlocal pending_default_space
         if pending_default_space is not None and output:
-            append(pending_default_space, ' ')
+            append(pending_default_space, " ")
         pending_default_space = None
 
     for index, (xml_space, raw_text) in enumerate(segments):
         if xml_space not in _PROJECT_XML_SPACE_VALUES:
             raise ValueError(
-                f'xml:space must be exactly default or preserve; got '
-                f'{xml_space!r}'
+                f"xml:space must be exactly default or preserve; got {xml_space!r}"
             )
-        text = re.sub(r'[\t\r\n]', ' ', raw_text)
+        text = re.sub(r"[\t\r\n]", " ", raw_text)
         for char in text:
-            if xml_space == 'default' and char == ' ':
+            if xml_space == "default" and char == " ":
                 if pending_default_space is None:
                     pending_default_space = index
                 continue
@@ -249,25 +258,25 @@ def normalize_project_text_segments(
 def _is_unregistered_prefixed_text_property(name: str) -> bool:
     lowered = name.lower()
     return (
-        lowered.startswith(('font-', 'text-'))
+        lowered.startswith(("font-", "text-"))
         and lowered not in _TEXT_DECLARATION_PROPERTIES
     )
 
 
 def _format_decimal(value: float) -> str:
     if abs(value) < 1e-15:
-        return '0'
-    text = f'{value:.15f}'.rstrip('0').rstrip('.')
-    return '0' if text in {'', '-0'} else text
+        return "0"
+    text = f"{value:.15f}".rstrip("0").rstrip(".")
+    return "0" if text in {"", "-0"} else text
 
 
 def parse_project_font_weight(raw: str) -> ParsedTextProperty:
     """Parse the closed project font-weight grammar."""
-    if raw in {'normal', 'bold'}:
-        return ParsedTextProperty(raw == 'bold', raw)
+    if raw in {"normal", "bold"}:
+        return ParsedTextProperty(raw == "bold", raw)
     if raw in {str(value) for value in range(100, 1000, 100)}:
         return ParsedTextProperty(int(raw) >= 600, raw)
-    aliases = {'medium': '500', 'semibold': '600'}
+    aliases = {"medium": "500", "semibold": "600"}
     if raw in aliases:
         canonical = aliases[raw]
         return ParsedTextProperty(int(canonical) >= 600, canonical, True)
@@ -278,14 +287,14 @@ def parse_project_font_weight(raw: str) -> ParsedTextProperty:
 
 def parse_project_font_style(raw: str) -> ParsedTextProperty:
     """Parse the closed project font-style grammar."""
-    if raw not in {'normal', 'italic'}:
+    if raw not in {"normal", "italic"}:
         raise ValueError("expected 'normal' or 'italic'")
-    return ParsedTextProperty(raw == 'italic', raw)
+    return ParsedTextProperty(raw == "italic", raw)
 
 
 def parse_project_text_anchor(raw: str) -> ParsedTextProperty:
     """Parse the closed project text-anchor grammar."""
-    if raw not in {'start', 'middle', 'end'}:
+    if raw not in {"start", "middle", "end"}:
         raise ValueError("expected 'start', 'middle', or 'end'")
     return ParsedTextProperty(raw, raw)
 
@@ -293,34 +302,33 @@ def parse_project_text_anchor(raw: str) -> ParsedTextProperty:
 def parse_project_text_decoration(raw: str) -> ParsedTextProperty:
     """Parse text decoration without substring-based false positives."""
     canonical = {
-        'none': 'none',
-        'underline': 'underline',
-        'line-through': 'line-through',
-        'underline line-through': 'underline line-through',
+        "none": "none",
+        "underline": "underline",
+        "line-through": "line-through",
+        "underline line-through": "underline line-through",
     }
     if raw in canonical:
         value = (
-            'underline' in raw.split(),
-            'line-through' in raw.split(),
+            "underline" in raw.split(),
+            "line-through" in raw.split(),
         )
         return ParsedTextProperty(value, canonical[raw])
-    if raw == 'line-through underline':
+    if raw == "line-through underline":
         return ParsedTextProperty(
             (True, True),
-            'underline line-through',
+            "underline line-through",
             True,
         )
     raise ValueError(
-        "expected 'none', 'underline', 'line-through', or "
-        "'underline line-through'"
+        "expected 'none', 'underline', 'line-through', or 'underline line-through'"
     )
 
 
 def parse_project_baseline_shift(raw: str) -> ParsedTextProperty:
     """Map the closed superscript/subscript grammar to DrawingML baseline."""
     values = {
-        'super': 30_000,
-        'sub': -25_000,
+        "super": 30_000,
+        "sub": -25_000,
     }
     if raw not in values:
         raise ValueError("expected exactly 'super' or 'sub'")
@@ -336,29 +344,29 @@ def parse_project_letter_spacing(
     """Parse project tracking into scaled SVG pixels and validate DML range."""
     if _CANONICAL_DECIMAL_RE.fullmatch(raw):
         amount = float(raw)
-        unit = ''
+        unit = ""
         compatible = False
     else:
         match = _COMPATIBLE_LETTER_SPACING_RE.fullmatch(raw)
         if match is None:
             raise ValueError(
-                'expected a finite ordinary decimal, optionally followed by '
-                'the registered compatible unit px, pt, or em'
+                "expected a finite ordinary decimal, optionally followed by "
+                "the registered compatible unit px, pt, or em"
             )
         amount = float(match.group(1))
         unit = match.group(2).lower()
         compatible = True
 
     if not math.isfinite(amount):
-        raise ValueError('must be finite')
+        raise ValueError("must be finite")
     if not math.isfinite(font_size) or font_size <= 0:
-        raise ValueError('requires a finite positive effective font size')
+        raise ValueError("requires a finite positive effective font size")
     if not math.isfinite(scale_x) or scale_x <= 0:
-        raise ValueError('requires a finite positive horizontal scale')
+        raise ValueError("requires a finite positive horizontal scale")
 
-    if unit == 'em':
+    if unit == "em":
         value_px = amount * font_size
-    elif unit == 'pt':
+    elif unit == "pt":
         value_px = amount * 4.0 / 3.0 * scale_x
     else:
         value_px = amount * scale_x
@@ -366,8 +374,8 @@ def parse_project_letter_spacing(
     spacing = round(value_px * 75)
     if not _DRAWINGML_TEXT_SPACING_MIN <= spacing <= _DRAWINGML_TEXT_SPACING_MAX:
         raise ValueError(
-            'converts outside the DrawingML character-spacing range '
-            f'{_DRAWINGML_TEXT_SPACING_MIN}..{_DRAWINGML_TEXT_SPACING_MAX}'
+            "converts outside the DrawingML character-spacing range "
+            f"{_DRAWINGML_TEXT_SPACING_MIN}..{_DRAWINGML_TEXT_SPACING_MAX}"
         )
     return ParsedTextProperty(
         value_px,
@@ -379,12 +387,12 @@ def parse_project_letter_spacing(
 def drawingml_letter_spacing(value_px: float) -> int:
     """Return validated DrawingML ``a:rPr@spc`` hundredths-of-a-point."""
     if not math.isfinite(value_px):
-        raise ValueError('letter-spacing must be finite')
+        raise ValueError("letter-spacing must be finite")
     spacing = round(value_px * 75)
     if not _DRAWINGML_TEXT_SPACING_MIN <= spacing <= _DRAWINGML_TEXT_SPACING_MAX:
         raise ValueError(
-            'letter-spacing converts outside the DrawingML range '
-            f'{_DRAWINGML_TEXT_SPACING_MIN}..{_DRAWINGML_TEXT_SPACING_MAX}'
+            "letter-spacing converts outside the DrawingML range "
+            f"{_DRAWINGML_TEXT_SPACING_MIN}..{_DRAWINGML_TEXT_SPACING_MAX}"
         )
     return spacing
 
@@ -397,17 +405,17 @@ def parse_project_text_property(
 ) -> ParsedTextProperty:
     """Parse one declaration from the shared text-property value contract."""
     parsers = {
-        'baseline-shift': parse_project_baseline_shift,
-        'font-weight': parse_project_font_weight,
-        'font-style': parse_project_font_style,
-        'text-anchor': parse_project_text_anchor,
-        'letter-spacing': parse_project_letter_spacing,
-        'text-decoration': parse_project_text_decoration,
+        "baseline-shift": parse_project_baseline_shift,
+        "font-weight": parse_project_font_weight,
+        "font-style": parse_project_font_style,
+        "text-anchor": parse_project_text_anchor,
+        "letter-spacing": parse_project_letter_spacing,
+        "text-decoration": parse_project_text_decoration,
     }
     parser = parsers.get(name)
     if parser is None:
-        raise ValueError(f'unsupported project text property {name!r}')
-    if name == 'letter-spacing':
+        raise ValueError(f"unsupported project text property {name!r}")
+    if name == "letter-spacing":
         return parser(raw, font_size=font_size)
     return parser(raw)
 
@@ -417,14 +425,14 @@ def _iter_style_declarations(
 ) -> tuple[list[tuple[str, str]], list[str]]:
     declarations: list[tuple[str, str]] = []
     malformed: list[str] = []
-    for raw_fragment in (elem.get('style') or '').split(';'):
+    for raw_fragment in (elem.get("style") or "").split(";"):
         fragment = raw_fragment.strip()
         if not fragment:
             continue
-        if ':' not in fragment:
+        if ":" not in fragment:
             malformed.append(fragment)
             continue
-        raw_name, raw_value = fragment.split(':', 1)
+        raw_name, raw_value = fragment.split(":", 1)
         name = raw_name.strip().lower()
         value = raw_value.strip()
         if not name or not value:
@@ -450,9 +458,7 @@ def _resolve_font_sizes(
     ) -> float | None:
         label = _element_label(elem)
         relative_base = (
-            root_size
-            if raw.strip().lower().endswith('rem')
-            else parent_size
+            root_size if raw.strip().lower().endswith("rem") else parent_size
         )
         try:
             value = parse_svg_length(
@@ -462,14 +468,16 @@ def _resolve_font_sizes(
             )
             font_px_to_hpt(value)
         except ValueError as exc:
-            diagnostics.append(TextPropertyDiagnostic(
-                'error',
-                label,
-                source,
-                'font-size',
-                raw,
-                f'{label} {source} font-size={raw!r}: {exc}',
-            ))
+            diagnostics.append(
+                TextPropertyDiagnostic(
+                    "error",
+                    label,
+                    source,
+                    "font-size",
+                    raw,
+                    f"{label} {source} font-size={raw!r}: {exc}",
+                )
+            )
             return None
         return value
 
@@ -479,17 +487,13 @@ def _resolve_font_sizes(
         root_size: float,
     ) -> None:
         declarations, _ = _iter_style_declarations(elem)
-        style_sizes = [
-            raw
-            for name, raw in declarations
-            if name == 'font-size'
-        ]
-        direct_raw = elem.get('font-size')
+        style_sizes = [raw for name, raw in declarations if name == "font-size"]
+        direct_raw = elem.get("font-size")
         direct_size = (
             parse_declared_size(
                 elem,
                 direct_raw,
-                'attribute',
+                "attribute",
                 parent_size,
                 root_size,
             )
@@ -500,7 +504,7 @@ def _resolve_font_sizes(
             parse_declared_size(
                 elem,
                 raw,
-                'inline style',
+                "inline style",
                 parent_size,
                 root_size,
             )
@@ -510,9 +514,7 @@ def _resolve_font_sizes(
         if style_sizes:
             last_style_size = parsed_style_sizes[-1]
             effective_size = (
-                last_style_size
-                if last_style_size is not None
-                else parent_size
+                last_style_size if last_style_size is not None else parent_size
             )
         elif direct_raw is not None:
             effective_size = direct_size if direct_size is not None else parent_size
@@ -529,7 +531,7 @@ def resolve_project_font_sizes(root: ET.Element) -> dict[int, float]:
     """Return effective SVG font sizes or reject an invalid declaration."""
     resolved, diagnostics = _resolve_font_sizes(root)
     if diagnostics:
-        raise ValueError('; '.join(item.message for item in diagnostics[:8]))
+        raise ValueError("; ".join(item.message for item in diagnostics[:8]))
     return resolved
 
 
@@ -544,19 +546,23 @@ def resolve_project_letter_spacings(
     def walk(elem: ET.Element, parent_spacing: float) -> None:
         declarations, _ = _iter_style_declarations(elem)
         style = dict(declarations)
-        direct_raw = elem.get('letter-spacing')
-        style_raw = style.get('letter-spacing')
+        direct_raw = elem.get("letter-spacing")
+        style_raw = style.get("letter-spacing")
         effective_spacing = parent_spacing
         if style_raw is not None:
-            effective_spacing = float(parse_project_letter_spacing(
-                style_raw,
-                font_size=effective_font_sizes[id(elem)],
-            ).value)
+            effective_spacing = float(
+                parse_project_letter_spacing(
+                    style_raw,
+                    font_size=effective_font_sizes[id(elem)],
+                ).value
+            )
         elif direct_raw is not None:
-            effective_spacing = float(parse_project_letter_spacing(
-                direct_raw,
-                font_size=effective_font_sizes[id(elem)],
-            ).value)
+            effective_spacing = float(
+                parse_project_letter_spacing(
+                    direct_raw,
+                    font_size=effective_font_sizes[id(elem)],
+                ).value
+            )
         resolved[id(elem)] = effective_spacing
         for child in elem:
             walk(child, effective_spacing)
@@ -573,41 +579,39 @@ def materialize_project_text_metrics(root: ET.Element) -> int:
     for elem in root.iter():
         canonical_font_size = _format_decimal(font_sizes[id(elem)])
         canonical_letter_spacing = _format_decimal(letter_spacings[id(elem)])
-        if elem.get('font-size') is not None:
-            elem.set('font-size', canonical_font_size)
+        if elem.get("font-size") is not None:
+            elem.set("font-size", canonical_font_size)
             materialized += 1
-        if elem.get('letter-spacing') is not None:
-            elem.set('letter-spacing', canonical_letter_spacing)
+        if elem.get("letter-spacing") is not None:
+            elem.set("letter-spacing", canonical_letter_spacing)
             materialized += 1
 
-        style = elem.get('style')
+        style = elem.get("style")
         if not style:
             continue
         retained: list[str] = []
         changed = False
-        for raw_fragment in style.split(';'):
+        for raw_fragment in style.split(";"):
             fragment = raw_fragment.strip()
             if not fragment:
                 continue
-            if ':' not in fragment:
+            if ":" not in fragment:
                 retained.append(fragment)
                 continue
-            raw_name, _ = fragment.split(':', 1)
+            raw_name, _ = fragment.split(":", 1)
             name = raw_name.strip().lower()
-            if name == 'font-size':
-                retained.append(f'font-size:{canonical_font_size}')
+            if name == "font-size":
+                retained.append(f"font-size:{canonical_font_size}")
                 changed = True
                 materialized += 1
-            elif name == 'letter-spacing':
-                retained.append(
-                    f'letter-spacing:{canonical_letter_spacing}'
-                )
+            elif name == "letter-spacing":
+                retained.append(f"letter-spacing:{canonical_letter_spacing}")
                 changed = True
                 materialized += 1
             else:
                 retained.append(fragment)
         if changed:
-            elem.set('style', '; '.join(retained))
+            elem.set("style", "; ".join(retained))
     return materialized
 
 
@@ -622,68 +626,101 @@ def _diagnose_text_declaration(
 ) -> tuple[bool, TextPropertyDiagnostic | None]:
     """Return whether a declaration belongs to the text contract and its issue."""
     label = _element_label(elem)
-    if name == 'xml:space':
-        if source != 'attribute' or tag not in {'text', 'tspan'}:
+    if name == "xml:space":
+        if source != "attribute" or tag not in {"text", "tspan"}:
             return True, TextPropertyDiagnostic(
-                'error', label, source, name, raw,
-                f'{label} can use xml:space only as a direct attribute on '
-                '<text> or <tspan>',
+                "error",
+                label,
+                source,
+                name,
+                raw,
+                f"{label} can use xml:space only as a direct attribute on "
+                "<text> or <tspan>",
             )
         if raw not in _PROJECT_XML_SPACE_VALUES:
             return True, TextPropertyDiagnostic(
-                'error', label, source, name, raw,
-                f'{label} attribute xml:space={raw!r}: expected exactly '
+                "error",
+                label,
+                source,
+                name,
+                raw,
+                f"{label} attribute xml:space={raw!r}: expected exactly "
                 "'default' or 'preserve'",
             )
         return True, None
-    if name == 'baseline-shift':
-        if source != 'attribute':
+    if name == "baseline-shift":
+        if source != "attribute":
             return True, TextPropertyDiagnostic(
-                'error', label, source, name, raw,
-                f'{label} must declare baseline-shift as a direct attribute; '
-                'inline style is not supported',
+                "error",
+                label,
+                source,
+                name,
+                raw,
+                f"{label} must declare baseline-shift as a direct attribute; "
+                "inline style is not supported",
             )
-        if tag != 'tspan':
+        if tag != "tspan":
             return True, TextPropertyDiagnostic(
-                'error', label, source, name, raw,
-                f'{label} can use baseline-shift only on <tspan>',
+                "error",
+                label,
+                source,
+                name,
+                raw,
+                f"{label} can use baseline-shift only on <tspan>",
             )
         try:
             parse_project_baseline_shift(raw)
         except ValueError as exc:
             return True, TextPropertyDiagnostic(
-                'error', label, source, name, raw,
-                f'{label} attribute baseline-shift={raw!r}: {exc}',
+                "error",
+                label,
+                source,
+                name,
+                raw,
+                f"{label} attribute baseline-shift={raw!r}: {exc}",
             )
         return True, None
     if _is_unregistered_prefixed_text_property(name):
         return True, TextPropertyDiagnostic(
-            'error', label, source, name, raw,
-            f'{label} uses unregistered inherited text property {name!r}; '
-            'native PPTX export would ignore it',
+            "error",
+            label,
+            source,
+            name,
+            raw,
+            f"{label} uses unregistered inherited text property {name!r}; "
+            "native PPTX export would ignore it",
         )
-    if (
-        name in _TEXT_DECLARATION_PROPERTIES
-        and tag not in _TEXT_INHERITANCE_TARGETS
-    ):
+    if name in _TEXT_DECLARATION_PROPERTIES and tag not in _TEXT_INHERITANCE_TARGETS:
         return True, TextPropertyDiagnostic(
-            'error', label, source, name, raw,
-            f'{label} cannot carry text property {name!r}; place it on '
-            '<svg>, <g>, <text>, or <tspan>',
+            "error",
+            label,
+            source,
+            name,
+            raw,
+            f"{label} cannot carry text property {name!r}; place it on "
+            "<svg>, <g>, <text>, or <tspan>",
         )
     if name in _UNSUPPORTED_TEXT_PROPERTIES:
         return True, TextPropertyDiagnostic(
-            'error', label, source, name, raw,
-            f'{label} uses unsupported text property {name!r}; '
-            'it has no registered DrawingML mapping',
+            "error",
+            label,
+            source,
+            name,
+            raw,
+            f"{label} uses unsupported text property {name!r}; "
+            "it has no registered DrawingML mapping",
         )
     if name not in _SVG_TEXT_PROPERTIES:
         return name in _TEXT_DECLARATION_PROPERTIES, None
-    if tag == 'tspan' and name == 'text-anchor':
+    if tag == "tspan" and name == "text-anchor":
         return True, TextPropertyDiagnostic(
-            'error', label, source, name, raw,
-            f'{label} cannot use text-anchor on <tspan>; place it on the '
-            'containing <text> or an ancestor group',
+            "error",
+            label,
+            source,
+            name,
+            raw,
+            f"{label} cannot use text-anchor on <tspan>; place it on the "
+            "containing <text> or an ancestor group",
         )
     try:
         parsed = parse_project_text_property(
@@ -693,14 +730,22 @@ def _diagnose_text_declaration(
         )
     except ValueError as exc:
         return True, TextPropertyDiagnostic(
-            'error', label, source, name, raw,
-            f'{label} {source} {name}={raw!r}: {exc}',
+            "error",
+            label,
+            source,
+            name,
+            raw,
+            f"{label} {source} {name}={raw!r}: {exc}",
         )
     if parsed.compatible:
         return True, TextPropertyDiagnostic(
-            'warning', label, source, name, raw,
-            f'{label} {source} {name}={raw!r} is compatible; '
-            f'prefer {name}={parsed.canonical!r}',
+            "warning",
+            label,
+            source,
+            name,
+            raw,
+            f"{label} {source} {name}={raw!r} is compatible; "
+            f"prefer {name}={parsed.canonical!r}",
             parsed.canonical,
         )
     return True, None
@@ -716,22 +761,22 @@ def project_text_property_diagnostics(
         tag = _local_name(elem.tag)
         label = _element_label(elem)
         direct_allowlist = {
-            'text': _TEXT_DIRECT_ATTRIBUTES,
-            'tspan': _TSPAN_DIRECT_ATTRIBUTES,
+            "text": _TEXT_DIRECT_ATTRIBUTES,
+            "tspan": _TSPAN_DIRECT_ATTRIBUTES,
         }.get(tag)
         inline_allowlist = {
-            'text': _TEXT_INLINE_PROPERTIES,
-            'tspan': _TSPAN_INLINE_PROPERTIES,
+            "text": _TEXT_INLINE_PROPERTIES,
+            "tspan": _TSPAN_INLINE_PROPERTIES,
         }.get(tag)
 
         for raw_name, raw in elem.attrib.items():
             name = _attribute_name(raw_name)
-            if name == 'style' or name.startswith('data-'):
+            if name == "style" or name.startswith("data-"):
                 continue
             handled, diagnostic = _diagnose_text_declaration(
                 elem,
                 tag=tag,
-                source='attribute',
+                source="attribute",
                 name=name,
                 raw=raw,
                 font_size=font_sizes[id(elem)],
@@ -743,11 +788,17 @@ def project_text_property_diagnostics(
                 and direct_allowlist is not None
                 and name not in direct_allowlist
             ):
-                diagnostics.append(TextPropertyDiagnostic(
-                    'error', label, 'attribute', name, raw,
-                    f'{label} uses unsupported text attribute {name!r}; '
-                    'native PPTX export would ignore it',
-                ))
+                diagnostics.append(
+                    TextPropertyDiagnostic(
+                        "error",
+                        label,
+                        "attribute",
+                        name,
+                        raw,
+                        f"{label} uses unsupported text attribute {name!r}; "
+                        "native PPTX export would ignore it",
+                    )
+                )
 
         declarations, malformed = _iter_style_declarations(elem)
         for fragment in malformed:
@@ -758,15 +809,21 @@ def project_text_property_diagnostics(
                 or property_hint in _UNSUPPORTED_TEXT_PROPERTIES
                 or _is_unregistered_prefixed_text_property(property_hint)
             ):
-                diagnostics.append(TextPropertyDiagnostic(
-                    'error', label, 'inline style', '<malformed>', fragment,
-                    f'{label} has malformed inline style declaration {fragment!r}',
-                ))
+                diagnostics.append(
+                    TextPropertyDiagnostic(
+                        "error",
+                        label,
+                        "inline style",
+                        "<malformed>",
+                        fragment,
+                        f"{label} has malformed inline style declaration {fragment!r}",
+                    )
+                )
         for name, raw in declarations:
             handled, diagnostic = _diagnose_text_declaration(
                 elem,
                 tag=tag,
-                source='inline style',
+                source="inline style",
                 name=name,
                 raw=raw,
                 font_size=font_sizes[id(elem)],
@@ -778,11 +835,17 @@ def project_text_property_diagnostics(
                 and inline_allowlist is not None
                 and name not in inline_allowlist
             ):
-                diagnostics.append(TextPropertyDiagnostic(
-                    'error', label, 'inline style', name, raw,
-                    f'{label} uses unsupported inline text property {name!r}; '
-                    'native PPTX export would ignore it',
-                ))
+                diagnostics.append(
+                    TextPropertyDiagnostic(
+                        "error",
+                        label,
+                        "inline style",
+                        name,
+                        raw,
+                        f"{label} uses unsupported inline text property {name!r}; "
+                        "native PPTX export would ignore it",
+                    )
+                )
 
     return diagnostics
 
@@ -792,5 +855,5 @@ def project_text_property_errors(root: ET.Element) -> list[str]:
     return [
         diagnostic.message
         for diagnostic in project_text_property_diagnostics(root)
-        if diagnostic.severity == 'error'
+        if diagnostic.severity == "error"
     ]

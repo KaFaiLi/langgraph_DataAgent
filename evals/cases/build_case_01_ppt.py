@@ -39,8 +39,7 @@ from scripts.runtime import (  # noqa: E402
 )
 
 RUN_DIR = WORKSPACE_ROOT / (
-    "evals/cases/case_01/runs/"
-    "case01-e2e-deepseek-20260824-r5-sequential-no-thinking"
+    "evals/cases/case_01/runs/case01-e2e-deepseek-20260824-r5-sequential-no-thinking"
 )
 DECK_DIR_NAME = "risk_ppt"
 DECK_FILENAME = "case01_independent_risk_review.pptx"
@@ -100,8 +99,14 @@ class DeckPlan(BaseModel):
     @model_validator(mode="after")
     def _controlled_shape(self) -> "DeckPlan":
         expected_roles = [
-            "cover", "summary", "specialist", "specialist",
-            "specialist", "specialist", "synthesis", "closing",
+            "cover",
+            "summary",
+            "specialist",
+            "specialist",
+            "specialist",
+            "specialist",
+            "synthesis",
+            "closing",
         ]
         actual_roles = [slide.role for slide in self.slides]
         if actual_roles != expected_roles:
@@ -186,9 +191,7 @@ def _author_copy(
     corpus: dict[str, object],
 ) -> AuthoredSlide:
     allowed_findings = {
-        item["id"]: item
-        for item in corpus["findings"]
-        if item["id"] in slide.finding_ids
+        item["id"]: item for item in corpus["findings"] if item["id"] in slide.finding_ids
     }
     overview = corpus["overviews"].get(slide.overview_id) if slide.overview_id else None
     prompt = [
@@ -249,8 +252,15 @@ def _wrap(text: str, limit: int) -> list[str]:
 
 
 def _text_lines(
-    lines: list[str], *, x: float, y: float, size: int, color: str, weight: int = 400,
-    line_height: float = 1.22, anchor: str = "start",
+    lines: list[str],
+    *,
+    x: float,
+    y: float,
+    size: int,
+    color: str,
+    weight: int = 400,
+    line_height: float = 1.22,
+    anchor: str = "start",
 ) -> str:
     spans = []
     for index, line in enumerate(lines):
@@ -269,16 +279,16 @@ def _base_groups(page: int, role: str, eyebrow: str, title: str) -> list[str]:
         '<g id="background" data-pptx-bounds="0 0 1280 720">'
         '<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/></g>',
         '<g id="header" data-pptx-bounds="48 38 1184 138">'
-        f'{_text_lines([eyebrow.upper()], x=48, y=62, size=13, color=COLORS["muted"], weight=700)}'
+        f"{_text_lines([eyebrow.upper()], x=48, y=62, size=13, color=COLORS['muted'], weight=700)}"
         '<line x1="48" y1="78" x2="248" y2="78" stroke="#E60028" stroke-width="5"/>'
-        f'{_text_lines(title_lines, x=48, y=119, size=34, color=COLORS["ink"], weight=700, line_height=1.08)}'
-        '</g>',
+        f"{_text_lines(title_lines, x=48, y=119, size=34, color=COLORS['ink'], weight=700, line_height=1.08)}"
+        "</g>",
         '<g id="chrome" data-pptx-bounds="48 662 1184 46">'
         '<line x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF" stroke-width="1"/>'
         '<rect x="48" y="680" width="6" height="18" fill="#E60028"/>'
-        f'{_text_lines(["INDEPENDENT RISK REVIEW"], x=64, y=694, size=12, color=COLORS["ink"], weight=700)}'
-        f'{_text_lines([str(page)], x=1232, y=694, size=13, color=COLORS["focus"], weight=700, anchor="end")}'
-        '</g>',
+        f"{_text_lines(['INDEPENDENT RISK REVIEW'], x=64, y=694, size=12, color=COLORS['ink'], weight=700)}"
+        f"{_text_lines([str(page)], x=1232, y=694, size=13, color=COLORS['focus'], weight=700, anchor='end')}"
+        "</g>",
     ]
 
 
@@ -290,44 +300,57 @@ def _cover_svg(copy: AuthoredSlide) -> str:
         '<rect x="0" y="0" width="130" height="720" fill="#07073F"/>'
         '<rect x="130" y="0" width="12" height="720" fill="#E60028"/></g>',
         '<g id="cover-title" data-pptx-bounds="196 150 940 180">'
-        f'{_text_lines(title, x=196, y=218, size=52, color=COLORS["focus"], weight=700, line_height=1.08)}'
+        f"{_text_lines(title, x=196, y=218, size=52, color=COLORS['focus'], weight=700, line_height=1.08)}"
         '<line x1="196" y1="334" x2="560" y2="334" stroke="#E60028" stroke-width="8"/>'
-        '</g>',
+        "</g>",
         '<g id="cover-context" data-pptx-bounds="510 370 620 130">'
-        f'{_text_lines(_wrap(copy.why_it_matters, 44)[:2], x=510, y=408, size=24, color=COLORS["ink"], weight=700)}'
-        f'{_text_lines(_wrap(copy.commentary, 56)[:2], x=510, y=475, size=18, color=COLORS["muted"])}'
-        '</g>',
+        f"{_text_lines(_wrap(copy.why_it_matters, 44)[:2], x=510, y=408, size=24, color=COLORS['ink'], weight=700)}"
+        f"{_text_lines(_wrap(copy.commentary, 56)[:2], x=510, y=475, size=18, color=COLORS['muted'])}"
+        "</g>",
         '<g id="cover-footer" data-pptx-bounds="196 650 936 44">'
         '<rect x="196" y="672" width="6" height="22" fill="#E60028"/>'
-        f'{_text_lines(["INDEPENDENT RISK REVIEW"], x=212, y=689, size=13, color=COLORS["ink"], weight=700)}'
-        '</g>',
+        f"{_text_lines(['INDEPENDENT RISK REVIEW'], x=212, y=689, size=13, color=COLORS['ink'], weight=700)}"
+        "</g>",
     ]
     return _svg_document("cover", groups)
 
 
-def _summary_svg(page: int, slide: PlannedSlide, copy: AuthoredSlide, findings: list[dict[str, object]]) -> str:
+def _summary_svg(
+    page: int,
+    slide: PlannedSlide,
+    copy: AuthoredSlide,
+    findings: list[dict[str, object]],
+) -> str:
     groups = _base_groups(page, "content", copy.eyebrow, copy.headline)
     groups.append(
         '<g id="assessment" data-pptx-bounds="48 190 420 410">'
         '<rect x="48" y="190" width="420" height="410" fill="#07073F"/>'
-        f'{_text_lines(_wrap(copy.commentary, 29)[:4], x=76, y=246, size=23, color="#FFFFFF", weight=700)}'
+        f"{_text_lines(_wrap(copy.commentary, 29)[:4], x=76, y=246, size=23, color='#FFFFFF', weight=700)}"
         '<line x1="76" y1="410" x2="430" y2="410" stroke="#51547A" stroke-width="1"/>'
-        f'{_text_lines(["WHY IT MATTERS"], x=76, y=446, size=13, color="#FFFFFF", weight=700)}'
-        f'{_text_lines(_wrap(copy.why_it_matters, 37)[:4], x=76, y=482, size=17, color="#FFFFFF")}'
-        '</g>'
+        f"{_text_lines(['WHY IT MATTERS'], x=76, y=446, size=13, color='#FFFFFF', weight=700)}"
+        f"{_text_lines(_wrap(copy.why_it_matters, 37)[:4], x=76, y=482, size=17, color='#FFFFFF')}"
+        "</g>"
     )
     cards = []
     for index, finding in enumerate(findings[:3]):
         y = 190 + index * 134
         severity = str(finding["severity"])
-        accent = COLORS["focus"] if severity == "high" else COLORS["watch"] if severity == "medium" else COLORS["muted"]
+        accent = (
+            COLORS["focus"]
+            if severity == "high"
+            else COLORS["watch"]
+            if severity == "medium"
+            else COLORS["muted"]
+        )
         cards.append(
             f'<rect x="510" y="{y}" width="722" height="112" fill="#F2F2F5"/>'
             f'<rect x="510" y="{y}" width="8" height="112" fill="{accent}"/>'
-            f'{_text_lines([str(finding["id"]) + "  " + severity.upper()], x=540, y=y+28, size=12, color=accent, weight=700)}'
-            f'{_text_lines(_wrap(str(finding["title"]), 68)[:2], x=540, y=y+58, size=18, color=COLORS["ink"], weight=700)}'
+            f"{_text_lines([str(finding['id']) + '  ' + severity.upper()], x=540, y=y + 28, size=12, color=accent, weight=700)}"
+            f"{_text_lines(_wrap(str(finding['title']), 68)[:2], x=540, y=y + 58, size=18, color=COLORS['ink'], weight=700)}"
         )
-    groups.append('<g id="priority-findings" data-pptx-bounds="510 190 722 380">' + "".join(cards) + '</g>')
+    groups.append(
+        '<g id="priority-findings" data-pptx-bounds="510 190 722 380">' + "".join(cards) + "</g>"
+    )
     groups.append(_evidence_footer(slide.finding_ids))
     return _svg_document("content", groups)
 
@@ -339,10 +362,10 @@ def _metric_cards(overview: DataOverview) -> str:
         x = 446 + index * 190
         cards.append(
             f'<rect x="{x}" y="178" width="{width}" height="82" fill="#F2F2F5"/>'
-            f'{_text_lines([metric.label.upper()], x=x+14, y=201, size=10, color=COLORS["muted"], weight=700)}'
-            f'{_text_lines([metric.value], x=x+14, y=235, size=24, color=COLORS["ink"], weight=700)}'
+            f"{_text_lines([metric.label.upper()], x=x + 14, y=201, size=10, color=COLORS['muted'], weight=700)}"
+            f"{_text_lines([metric.value], x=x + 14, y=235, size=24, color=COLORS['ink'], weight=700)}"
         )
-    return '<g id="overview-metrics" data-pptx-bounds="446 178 746 82">' + "".join(cards) + '</g>'
+    return '<g id="overview-metrics" data-pptx-bounds="446 178 746 82">' + "".join(cards) + "</g>"
 
 
 def _line_or_bar_chart(overview: DataOverview) -> str:
@@ -354,12 +377,14 @@ def _line_or_bar_chart(overview: DataOverview) -> str:
     min_value = min(0.0, min(all_values) if all_values else 0.0)
     span = max(max_value - min_value, 1e-9)
     parts = [
-        f'<line x1="{x0}" y1="{y0+height}" x2="{x0+width}" y2="{y0+height}" stroke="#07073F" stroke-width="2"/>',
-        f'<line x1="{x0}" y1="{y0}" x2="{x0}" y2="{y0+height}" stroke="#07073F" stroke-width="2"/>',
+        f'<line x1="{x0}" y1="{y0 + height}" x2="{x0 + width}" y2="{y0 + height}" stroke="#07073F" stroke-width="2"/>',
+        f'<line x1="{x0}" y1="{y0}" x2="{x0}" y2="{y0 + height}" stroke="#07073F" stroke-width="2"/>',
     ]
     for grid in range(1, 4):
         gy = y0 + height * grid / 4
-        parts.append(f'<line x1="{x0}" y1="{gy:.1f}" x2="{x0+width}" y2="{gy:.1f}" stroke="#D9D9DF" stroke-width="1"/>')
+        parts.append(
+            f'<line x1="{x0}" y1="{gy:.1f}" x2="{x0 + width}" y2="{gy:.1f}" stroke="#D9D9DF" stroke-width="1"/>'
+        )
     if visual.kind == "bar":
         points = visual.series[0].points
         gap = width / max(len(points), 1)
@@ -368,12 +393,25 @@ def _line_or_bar_chart(overview: DataOverview) -> str:
             bh = height * (point.value - min_value) / span
             x = x0 + gap * index + (gap - bar_width) / 2
             y = y0 + height - bh
-            parts.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_width:.1f}" height="{bh:.1f}" fill="#282C63"/>')
+            parts.append(
+                f'<rect x="{x:.1f}" y="{y:.1f}" width="{bar_width:.1f}" height="{bh:.1f}" fill="#282C63"/>'
+            )
             if index % max(1, math.ceil(len(points) / 6)) == 0:
-                parts.append(_text_lines([point.label], x=x+bar_width/2, y=y0+height+24, size=10, color=COLORS["muted"], anchor="middle"))
+                parts.append(
+                    _text_lines(
+                        [point.label],
+                        x=x + bar_width / 2,
+                        y=y0 + height + 24,
+                        size=10,
+                        color=COLORS["muted"],
+                        anchor="middle",
+                    )
+                )
     elif visual.kind == "stacked_bar":
         labels = [point.label for point in visual.series[0].points]
-        totals = [sum(series.points[i].value for series in visual.series) for i in range(len(labels))]
+        totals = [
+            sum(series.points[i].value for series in visual.series) for i in range(len(labels))
+        ]
         max_total = max(totals) or 1.0
         gap = width / len(labels)
         bar_width = min(42.0, gap * 0.62)
@@ -383,9 +421,20 @@ def _line_or_bar_chart(overview: DataOverview) -> str:
             for series_index, series in enumerate(visual.series):
                 bh = height * series.points[index].value / max_total
                 bottom -= bh
-                parts.append(f'<rect x="{x0+gap*index+(gap-bar_width)/2:.1f}" y="{bottom:.1f}" width="{bar_width:.1f}" height="{bh:.1f}" fill="{palette[series_index % len(palette)]}"/>')
+                parts.append(
+                    f'<rect x="{x0 + gap * index + (gap - bar_width) / 2:.1f}" y="{bottom:.1f}" width="{bar_width:.1f}" height="{bh:.1f}" fill="{palette[series_index % len(palette)]}"/>'
+                )
             if index % max(1, math.ceil(len(labels) / 6)) == 0:
-                parts.append(_text_lines([label], x=x0+gap*index+gap/2, y=y0+height+24, size=10, color=COLORS["muted"], anchor="middle"))
+                parts.append(
+                    _text_lines(
+                        [label],
+                        x=x0 + gap * index + gap / 2,
+                        y=y0 + height + 24,
+                        size=10,
+                        color=COLORS["muted"],
+                        anchor="middle",
+                    )
+                )
     else:
         for series_index, series in enumerate(visual.series):
             sampled = series.points[:: max(1, len(series.points) // 80)]
@@ -393,17 +442,28 @@ def _line_or_bar_chart(overview: DataOverview) -> str:
                 sampled.append(series.points[-1])
             coords = []
             for index, point in enumerate(sampled):
-                x = x0 + width * index / max(len(sampled)-1, 1)
+                x = x0 + width * index / max(len(sampled) - 1, 1)
                 y = y0 + height - height * (point.value - min_value) / span
                 coords.append(f"{x:.1f},{y:.1f}")
             color = [COLORS["navy"], COLORS["watch"], COLORS["focus"]][series_index % 3]
             dash = ' stroke-dasharray="8 7"' if series_index else ""
-            parts.append(f'<polyline points="{" ".join(coords)}" fill="none" stroke="{color}" stroke-width="{4 if series_index == 0 else 2}"{dash}/>')
+            parts.append(
+                f'<polyline points="{" ".join(coords)}" fill="none" stroke="{color}" stroke-width="{4 if series_index == 0 else 2}"{dash}/>'
+            )
         first = visual.series[0].points[0].label
         last = visual.series[0].points[-1].label
-        parts.append(_text_lines([first], x=x0, y=y0+height+24, size=10, color=COLORS["muted"]))
-        parts.append(_text_lines([last], x=x0+width, y=y0+height+24, size=10, color=COLORS["muted"], anchor="end"))
-    return '<g id="overview-visual" data-pptx-bounds="446 282 770 310">' + "".join(parts) + '</g>'
+        parts.append(_text_lines([first], x=x0, y=y0 + height + 24, size=10, color=COLORS["muted"]))
+        parts.append(
+            _text_lines(
+                [last],
+                x=x0 + width,
+                y=y0 + height + 24,
+                size=10,
+                color=COLORS["muted"],
+                anchor="end",
+            )
+        )
+    return '<g id="overview-visual" data-pptx-bounds="446 282 770 310">' + "".join(parts) + "</g>"
 
 
 def _table_visual(overview: DataOverview) -> str:
@@ -420,26 +480,33 @@ def _table_visual(overview: DataOverview) -> str:
         y = 320 + index * 39
         if index % 2:
             parts.append(f'<rect x="446" y="{y}" width="770" height="39" fill="#F2F2F5"/>')
-        name = str(row[0]).split("/")[-1].replace("quarterly_reviews_summary_", "").replace("_comment.md", "")
+        name = (
+            str(row[0])
+            .split("/")[-1]
+            .replace("quarterly_reviews_summary_", "")
+            .replace("_comment.md", "")
+        )
         values = [name, *row[1:5]]
         for x, value in zip(xs, values, strict=True):
-            parts.append(_text_lines([str(value)], x=x, y=y+25, size=11, color=COLORS["ink"]))
-    return '<g id="overview-visual" data-pptx-bounds="446 282 770 274">' + "".join(parts) + '</g>'
+            parts.append(_text_lines([str(value)], x=x, y=y + 25, size=11, color=COLORS["ink"]))
+    return '<g id="overview-visual" data-pptx-bounds="446 282 770 274">' + "".join(parts) + "</g>"
 
 
-def _specialist_svg(page: int, slide: PlannedSlide, copy: AuthoredSlide, overview: DataOverview) -> str:
+def _specialist_svg(
+    page: int, slide: PlannedSlide, copy: AuthoredSlide, overview: DataOverview
+) -> str:
     groups = _base_groups(page, "data", copy.eyebrow, copy.headline)
     groups.append(
         '<g id="commentary-rail" data-pptx-bounds="48 178 350 422">'
         '<rect x="48" y="178" width="350" height="422" fill="#07073F"/>'
         '<rect x="48" y="178" width="350" height="58" fill="#E60028"/>'
-        f'{_text_lines(["REVIEW COMMENTARY"], x=72, y=214, size=13, color="#FFFFFF", weight=700)}'
-        f'{_text_lines(_wrap(copy.commentary, 27)[:4], x=72, y=280, size=20, color="#FFFFFF", weight=700)}'
+        f"{_text_lines(['REVIEW COMMENTARY'], x=72, y=214, size=13, color='#FFFFFF', weight=700)}"
+        f"{_text_lines(_wrap(copy.commentary, 27)[:4], x=72, y=280, size=20, color='#FFFFFF', weight=700)}"
         '<line x1="72" y1="404" x2="374" y2="404" stroke="#51547A" stroke-width="1"/>'
-        f'{_text_lines(["WHY IT MATTERS"], x=72, y=438, size=12, color="#FFFFFF", weight=700)}'
-        f'{_text_lines(_wrap(copy.why_it_matters, 31)[:3], x=72, y=472, size=16, color="#FFFFFF")}'
-        f'{_text_lines(_wrap(slide.limitation or (overview.limitations[0] if overview.limitations else ""), 37)[:3], x=72, y=558, size=11, color="#D9D9DF")}'
-        '</g>'
+        f"{_text_lines(['WHY IT MATTERS'], x=72, y=438, size=12, color='#FFFFFF', weight=700)}"
+        f"{_text_lines(_wrap(copy.why_it_matters, 31)[:3], x=72, y=472, size=16, color='#FFFFFF')}"
+        f"{_text_lines(_wrap(slide.limitation or (overview.limitations[0] if overview.limitations else ''), 37)[:3], x=72, y=558, size=11, color='#D9D9DF')}"
+        "</g>"
     )
     groups.append(_metric_cards(overview))
     if overview.visual and overview.visual.kind == "table":
@@ -450,13 +517,18 @@ def _specialist_svg(page: int, slide: PlannedSlide, copy: AuthoredSlide, overvie
     return _svg_document("content", groups)
 
 
-def _synthesis_svg(page: int, slide: PlannedSlide, copy: AuthoredSlide, findings: list[dict[str, object]]) -> str:
+def _synthesis_svg(
+    page: int,
+    slide: PlannedSlide,
+    copy: AuthoredSlide,
+    findings: list[dict[str, object]],
+) -> str:
     groups = _base_groups(page, "content", copy.eyebrow, copy.headline)
     groups.append(
         '<g id="synthesis-message" data-pptx-bounds="48 184 1184 90">'
         '<rect x="48" y="184" width="1184" height="90" fill="#07073F"/>'
-        f'{_text_lines(_wrap(copy.commentary, 80)[:2], x=76, y=225, size=22, color="#FFFFFF", weight=700)}'
-        '</g>'
+        f"{_text_lines(_wrap(copy.commentary, 80)[:2], x=76, y=225, size=22, color='#FFFFFF', weight=700)}"
+        "</g>"
     )
     cards = []
     for index, finding in enumerate(findings[:3]):
@@ -464,14 +536,16 @@ def _synthesis_svg(page: int, slide: PlannedSlide, copy: AuthoredSlide, findings
         cards.append(
             f'<rect x="{x}" y="310" width="368" height="240" fill="#F2F2F5"/>'
             f'<rect x="{x}" y="310" width="368" height="8" fill="#E60028"/>'
-            f'{_text_lines([str(finding["id"])], x=x+24, y=356, size=13, color=COLORS["focus"], weight=700)}'
-            f'{_text_lines(_wrap(str(finding["title"]), 33)[:3], x=x+24, y=398, size=20, color=COLORS["ink"], weight=700)}'
+            f"{_text_lines([str(finding['id'])], x=x + 24, y=356, size=13, color=COLORS['focus'], weight=700)}"
+            f"{_text_lines(_wrap(str(finding['title']), 33)[:3], x=x + 24, y=398, size=20, color=COLORS['ink'], weight=700)}"
         )
-    groups.append('<g id="synthesis-findings" data-pptx-bounds="48 310 1184 240">' + "".join(cards) + '</g>')
+    groups.append(
+        '<g id="synthesis-findings" data-pptx-bounds="48 310 1184 240">' + "".join(cards) + "</g>"
+    )
     groups.append(
         '<g id="synthesis-implication" data-pptx-bounds="48 570 1184 48">'
-        f'{_text_lines(_wrap(copy.why_it_matters, 105)[:2], x=48, y=598, size=16, color=COLORS["muted"])}'
-        '</g>'
+        f"{_text_lines(_wrap(copy.why_it_matters, 105)[:2], x=48, y=598, size=16, color=COLORS['muted'])}"
+        "</g>"
     )
     groups.append(_evidence_footer(slide.finding_ids))
     return _svg_document("content", groups)
@@ -486,14 +560,16 @@ def _closing_svg(page: int, slide: PlannedSlide, copy: AuthoredSlide, actions: l
         cards.append(
             f'<rect x="{x}" y="{y}" width="568" height="148" fill="#F2F2F5"/>'
             f'<rect x="{x}" y="{y}" width="8" height="148" fill="#E60028"/>'
-            f'{_text_lines([str(index+1).zfill(2)], x=x+28, y=y+42, size=18, color=COLORS["focus"], weight=700)}'
-            f'{_text_lines(_wrap(action, 48)[:3], x=x+78, y=y+42, size=18, color=COLORS["ink"], weight=700)}'
+            f"{_text_lines([str(index + 1).zfill(2)], x=x + 28, y=y + 42, size=18, color=COLORS['focus'], weight=700)}"
+            f"{_text_lines(_wrap(action, 48)[:3], x=x + 78, y=y + 42, size=18, color=COLORS['ink'], weight=700)}"
         )
-    groups.append('<g id="priority-actions" data-pptx-bounds="48 200 1168 328">' + "".join(cards) + '</g>')
+    groups.append(
+        '<g id="priority-actions" data-pptx-bounds="48 200 1168 328">' + "".join(cards) + "</g>"
+    )
     groups.append(
         '<g id="closing-message" data-pptx-bounds="48 560 1168 60">'
-        f'{_text_lines(_wrap(copy.why_it_matters, 95)[:2], x=48, y=592, size=18, color=COLORS["muted"])}'
-        '</g>'
+        f"{_text_lines(_wrap(copy.why_it_matters, 95)[:2], x=48, y=592, size=18, color=COLORS['muted'])}"
+        "</g>"
     )
     groups.append(_evidence_footer(slide.finding_ids))
     return _svg_document("ending", groups)
@@ -505,8 +581,8 @@ def _evidence_footer(finding_ids: list[str], overview_id: str | None = None) -> 
         label += f" | Overview: {overview_id}"
     return (
         '<g id="evidence-footer" data-pptx-bounds="260 638 860 24">'
-        f'{_text_lines(_wrap(label, 132)[:1], x=260, y=656, size=10, color=COLORS["muted"])}'
-        '</g>'
+        f"{_text_lines(_wrap(label, 132)[:1], x=260, y=656, size=10, color=COLORS['muted'])}"
+        "</g>"
     )
 
 
@@ -514,9 +590,7 @@ def _svg_document(role: str, groups: list[str]) -> str:
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" '
-        f'viewBox="0 0 1280 720" data-pptx-page-role="{role}">\n'
-        + "\n".join(groups)
-        + "\n</svg>\n"
+        f'viewBox="0 0 1280 720" data-pptx-page-role="{role}">\n' + "\n".join(groups) + "\n</svg>\n"
     )
 
 
@@ -531,9 +605,23 @@ def _slide_notes(
     if overview:
         locators.extend(reference.locator for reference in overview.evidence)
     unique_locators = list(dict.fromkeys(locators))
-    lines = ["APPROVED FINDING IDS", *(slide.finding_ids or ["None"]), "", "APPROVED SOURCE LOCATORS", *(unique_locators or ["None"])]
+    lines = [
+        "APPROVED FINDING IDS",
+        *(slide.finding_ids or ["None"]),
+        "",
+        "APPROVED SOURCE LOCATORS",
+        *(unique_locators or ["None"]),
+    ]
     if overview:
-        lines.extend(["", "OVERVIEW ID", overview.overview_id, "OVERVIEW DATA FINGERPRINT", overview.data_fingerprint])
+        lines.extend(
+            [
+                "",
+                "OVERVIEW ID",
+                overview.overview_id,
+                "OVERVIEW DATA FINGERPRINT",
+                overview.data_fingerprint,
+            ]
+        )
     return "\n".join(lines)
 
 
@@ -552,8 +640,12 @@ def _extract_pptx_text_and_notes(path: Path) -> dict[str, str]:
             note_items: list[str] = []
             if note_name in names:
                 note_root = ET.fromstring(package.read(note_name))
-                note_items = [node.text or "" for node in note_root.iter() if node.tag.endswith("}t")]
-            output[f"slide_{index}"] = "TEXT\n" + " | ".join(text_items) + "\nNOTES\n" + " | ".join(note_items)
+                note_items = [
+                    node.text or "" for node in note_root.iter() if node.tag.endswith("}t")
+                ]
+            output[f"slide_{index}"] = (
+                "TEXT\n" + " | ".join(text_items) + "\nNOTES\n" + " | ".join(note_items)
+            )
     return output
 
 
@@ -577,7 +669,13 @@ def _verify_deck(
         ),
         HumanMessage(
             content=json.dumps(
-                {"plan": plan.model_dump(mode="json"), "corpus": corpus, "exported": exported, "quality": quality, "receipt": receipt},
+                {
+                    "plan": plan.model_dump(mode="json"),
+                    "corpus": corpus,
+                    "exported": exported,
+                    "quality": quality,
+                    "receipt": receipt,
+                },
                 ensure_ascii=False,
             )
         ),
@@ -593,8 +691,12 @@ def build(run_dir: Path) -> Path:
 
     overviews: dict[str, DataOverview] = {}
     for domain, overview_id in OVERVIEW_IDS.items():
-        report = next(item for key, item in bundle.specialist_reports.items() if key.value == domain)
-        overviews[overview_id] = next(item for item in report.data_overviews if item.overview_id == overview_id)
+        report = next(
+            item for key, item in bundle.specialist_reports.items() if key.value == domain
+        )
+        overviews[overview_id] = next(
+            item for item in report.data_overviews if item.overview_id == overview_id
+        )
     corpus = _compact_corpus(bundle, overviews)
     finding_index = {item["id"]: item for item in corpus["findings"]}
     deck_dir = run_dir / DECK_DIR_NAME
@@ -619,9 +721,7 @@ def build(run_dir: Path) -> Path:
     notes: dict[str, str] = {}
     authored_path = deck_dir / "authored_copy.json"
     authored: list[dict[str, object]] = (
-        json.loads(authored_path.read_text(encoding="utf-8"))
-        if authored_path.is_file()
-        else []
+        json.loads(authored_path.read_text(encoding="utf-8")) if authored_path.is_file() else []
     )
     authored_by_page = {int(item["page"]): item for item in authored}
     for page, slide in enumerate(plan.slides, start=1):
@@ -629,7 +729,11 @@ def build(run_dir: Path) -> Path:
             copy = AuthoredSlide.model_validate(authored_by_page[page]["copy"])
         else:
             copy = _author_copy(provider, slide, corpus)
-            item = {"page": page, "slide": slide.model_dump(mode="json"), "copy": copy.model_dump(mode="json")}
+            item = {
+                "page": page,
+                "slide": slide.model_dump(mode="json"),
+                "copy": copy.model_dump(mode="json"),
+            }
             authored.append(item)
             authored_by_page[page] = item
         if slide.overview_id == "post-trade-controls.breaches-over-time":
@@ -689,9 +793,13 @@ def build(run_dir: Path) -> Path:
         notes=notes,
     )
     exported = _extract_pptx_text_and_notes(output)
-    (deck_dir / "exported_text_and_notes.json").write_text(json.dumps(exported, indent=2), encoding="utf-8")
+    (deck_dir / "exported_text_and_notes.json").write_text(
+        json.dumps(exported, indent=2), encoding="utf-8"
+    )
     verification = _verify_deck(provider, plan, corpus, exported, quality, receipt)
-    (deck_dir / "deck_verification.json").write_text(verification.model_dump_json(indent=2), encoding="utf-8")
+    (deck_dir / "deck_verification.json").write_text(
+        verification.model_dump_json(indent=2), encoding="utf-8"
+    )
     if not verification.passed:
         raise RuntimeError(f"deck verification failed: {verification.model_dump(mode='json')}")
     print(output)

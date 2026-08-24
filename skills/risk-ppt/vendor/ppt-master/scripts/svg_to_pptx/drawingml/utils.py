@@ -30,8 +30,8 @@ from .context import AffineMatrix, ConvertContext, IDENTITY_MATRIX
 # Constants
 # ---------------------------------------------------------------------------
 
-SVG_NS = 'http://www.w3.org/2000/svg'
-XLINK_NS = 'http://www.w3.org/1999/xlink'
+SVG_NS = "http://www.w3.org/2000/svg"
+XLINK_NS = "http://www.w3.org/1999/xlink"
 
 EMU_PER_PX = 9525  # 1 SVG px = 9525 EMU (96 DPI)
 FONT_PX_TO_HUNDREDTHS_PT = 75  # 1px = 0.75pt -> 75 hundredths-of-a-point
@@ -41,261 +41,386 @@ ANGLE_UNIT = 60000  # DrawingML angle: 60000ths of a degree
 
 # SVG attributes inheritable from parent <g>
 INHERITABLE_ATTRS = [
-    'fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'stroke-linecap',
-    'stroke-linejoin', 'fill-opacity', 'stroke-opacity',
-    'font-family', 'font-size', 'font-weight', 'font-style',
-    'text-anchor', 'letter-spacing', 'text-decoration',
+    "fill",
+    "stroke",
+    "stroke-width",
+    "stroke-dasharray",
+    "stroke-linecap",
+    "stroke-linejoin",
+    "fill-opacity",
+    "stroke-opacity",
+    "font-family",
+    "font-size",
+    "font-weight",
+    "font-style",
+    "text-anchor",
+    "letter-spacing",
+    "text-decoration",
 ]
 
 # Known East Asian fonts
 EA_FONTS = {
-    'PingFang SC', 'PingFang TC', 'PingFang HK',
-    'Microsoft YaHei', 'Microsoft JhengHei',
-    'SimSun', 'SimHei', 'FangSong', 'KaiTi', 'STKaiti',
-    'STHeiti', 'STSong', 'STFangsong', 'STXihei', 'STZhongsong',
-    'Hiragino Sans', 'Hiragino Sans GB', 'Hiragino Mincho ProN',
-    'Hiragino Kaku Gothic ProN', 'Hiragino Kaku Gothic Pro',
-    'Hiragino Mincho Pro',
-    'Noto Sans SC', 'Noto Sans TC', 'Noto Serif SC', 'Noto Serif TC',
-    'Noto Sans CJK SC', 'Noto Serif CJK SC',
-    'Noto Sans JP', 'Noto Serif JP', 'Noto Sans CJK JP',
-    'Source Han Sans SC', 'Source Han Sans TC',
-    'Source Han Serif SC', 'Source Han Serif TC',
-    'Source Han Sans JP', 'Source Han Serif JP',
-    'WenQuanYi Micro Hei', 'WenQuanYi Zen Hei',
-    'YouYuan', 'LiSu', 'HuaWenKaiTi',
-    'Heiti TC', 'Kaiti TC', 'Songti SC', 'Songti TC',
+    "PingFang SC",
+    "PingFang TC",
+    "PingFang HK",
+    "Microsoft YaHei",
+    "Microsoft JhengHei",
+    "SimSun",
+    "SimHei",
+    "FangSong",
+    "KaiTi",
+    "STKaiti",
+    "STHeiti",
+    "STSong",
+    "STFangsong",
+    "STXihei",
+    "STZhongsong",
+    "Hiragino Sans",
+    "Hiragino Sans GB",
+    "Hiragino Mincho ProN",
+    "Hiragino Kaku Gothic ProN",
+    "Hiragino Kaku Gothic Pro",
+    "Hiragino Mincho Pro",
+    "Noto Sans SC",
+    "Noto Sans TC",
+    "Noto Serif SC",
+    "Noto Serif TC",
+    "Noto Sans CJK SC",
+    "Noto Serif CJK SC",
+    "Noto Sans JP",
+    "Noto Serif JP",
+    "Noto Sans CJK JP",
+    "Source Han Sans SC",
+    "Source Han Sans TC",
+    "Source Han Serif SC",
+    "Source Han Serif TC",
+    "Source Han Sans JP",
+    "Source Han Serif JP",
+    "WenQuanYi Micro Hei",
+    "WenQuanYi Zen Hei",
+    "YouYuan",
+    "LiSu",
+    "HuaWenKaiTi",
+    "Heiti TC",
+    "Kaiti TC",
+    "Songti SC",
+    "Songti TC",
     # Windows 10/11 + Office default / common Simplified Chinese
-    'DengXian', 'DengXian Light', 'DengXian Bold', 'Microsoft YaHei UI',
+    "DengXian",
+    "DengXian Light",
+    "DengXian Bold",
+    "Microsoft YaHei UI",
     # Office display Chinese (华文 / 方正) — usually title-only, not on every client
-    'STXingkai', 'STLiti', 'STXinwei', 'STHupo', 'STCaiyun',
-    'FZShuTi', 'FZYaoti',
+    "STXingkai",
+    "STLiti",
+    "STXinwei",
+    "STHupo",
+    "STCaiyun",
+    "FZShuTi",
+    "FZYaoti",
     # Common Traditional Chinese (Office)
-    'DFKai-SB', 'MingLiU', 'PMingLiU', 'MingLiU_HKSCS',
-    'MingLiU-ExtB', 'PMingLiU-ExtB',
-    'Microsoft JhengHei UI',
+    "DFKai-SB",
+    "MingLiU",
+    "PMingLiU",
+    "MingLiU_HKSCS",
+    "MingLiU-ExtB",
+    "PMingLiU-ExtB",
+    "Microsoft JhengHei UI",
     # Japanese fonts (Windows-available)
-    'Yu Gothic', 'Yu Gothic UI', 'Yu Mincho',
-    'Meiryo', 'Meiryo UI', 'メイリオ',
-    'MS Gothic', 'MS Mincho', 'MS PGothic', 'MS PMincho', 'MS UI Gothic',
+    "Yu Gothic",
+    "Yu Gothic UI",
+    "Yu Mincho",
+    "Meiryo",
+    "Meiryo UI",
+    "メイリオ",
+    "MS Gothic",
+    "MS Mincho",
+    "MS PGothic",
+    "MS PMincho",
+    "MS UI Gothic",
     # Korean
-    'Malgun Gothic', 'Gulim', 'Dotum', 'Batang',
-    'Noto Sans KR', 'Noto Serif KR',
+    "Malgun Gothic",
+    "Gulim",
+    "Dotum",
+    "Batang",
+    "Noto Sans KR",
+    "Noto Serif KR",
 }
-SYSTEM_FONTS = {'system-ui', '-apple-system', 'BlinkMacSystemFont'}
+SYSTEM_FONTS = {"system-ui", "-apple-system", "BlinkMacSystemFont"}
 
 # macOS/Linux-only fonts -> Windows equivalents
 FONT_FALLBACK_WIN = {
-    'PingFang SC': 'Microsoft YaHei',
-    'PingFang TC': 'Microsoft JhengHei',
-    'PingFang HK': 'Microsoft JhengHei',
-    'Heiti TC': 'Microsoft JhengHei',
-    'Kaiti TC': 'DFKai-SB',
-    'Hiragino Sans': 'Microsoft YaHei',
-    'Hiragino Sans GB': 'Microsoft YaHei',
-    'Hiragino Mincho ProN': 'SimSun',
-    'STHeiti': 'SimHei',
-    'STSong': 'SimSun',
-    'STKaiti': 'KaiTi',
-    'STFangsong': 'FangSong',
-    'STXihei': 'Microsoft YaHei',
-    'STZhongsong': 'SimSun',
-    'Songti SC': 'SimSun',
-    'Songti TC': 'PMingLiU',
-    'Noto Sans SC': 'Microsoft YaHei',
-    'Noto Sans CJK SC': 'Microsoft YaHei',
-    'Noto Sans TC': 'Microsoft JhengHei',
-    'Noto Serif SC': 'SimSun',
-    'Noto Serif CJK SC': 'SimSun',
-    'Noto Serif TC': 'PMingLiU',
+    "PingFang SC": "Microsoft YaHei",
+    "PingFang TC": "Microsoft JhengHei",
+    "PingFang HK": "Microsoft JhengHei",
+    "Heiti TC": "Microsoft JhengHei",
+    "Kaiti TC": "DFKai-SB",
+    "Hiragino Sans": "Microsoft YaHei",
+    "Hiragino Sans GB": "Microsoft YaHei",
+    "Hiragino Mincho ProN": "SimSun",
+    "STHeiti": "SimHei",
+    "STSong": "SimSun",
+    "STKaiti": "KaiTi",
+    "STFangsong": "FangSong",
+    "STXihei": "Microsoft YaHei",
+    "STZhongsong": "SimSun",
+    "Songti SC": "SimSun",
+    "Songti TC": "PMingLiU",
+    "Noto Sans SC": "Microsoft YaHei",
+    "Noto Sans CJK SC": "Microsoft YaHei",
+    "Noto Sans TC": "Microsoft JhengHei",
+    "Noto Serif SC": "SimSun",
+    "Noto Serif CJK SC": "SimSun",
+    "Noto Serif TC": "PMingLiU",
     # Japanese: keep as-is if user specified (PowerPoint will fallback if uninstalled)
     # 'Noto Sans JP': → keep as 'Noto Sans JP' (do not map)
     # 'メイリオ': → keep as 'メイリオ' (Meiryo alias)
-    'メイリオ': 'Meiryo',
-    'Source Han Sans SC': 'Microsoft YaHei',
-    'Source Han Sans TC': 'Microsoft JhengHei',
-    'Source Han Serif SC': 'SimSun',
-    'Source Han Serif TC': 'PMingLiU',
-    'Source Han Sans JP': 'Noto Sans JP',
-    'Source Han Serif JP': 'Noto Serif JP',
-    'WenQuanYi Micro Hei': 'Microsoft YaHei',
-    'WenQuanYi Zen Hei': 'Microsoft YaHei',
+    "メイリオ": "Meiryo",
+    "Source Han Sans SC": "Microsoft YaHei",
+    "Source Han Sans TC": "Microsoft JhengHei",
+    "Source Han Serif SC": "SimSun",
+    "Source Han Serif TC": "PMingLiU",
+    "Source Han Sans JP": "Noto Sans JP",
+    "Source Han Serif JP": "Noto Serif JP",
+    "WenQuanYi Micro Hei": "Microsoft YaHei",
+    "WenQuanYi Zen Hei": "Microsoft YaHei",
     # Latin fonts (macOS / Linux / Web -> Windows)
-    'SF Pro': 'Segoe UI',
-    'SF Pro Display': 'Segoe UI',
-    'SF Pro Text': 'Segoe UI',
-    'SF Mono': 'Consolas',
-    'Menlo': 'Consolas',
-    'Monaco': 'Consolas',
-    'Helvetica Neue': 'Arial',
-    'Helvetica': 'Arial',
-    'Roboto': 'Segoe UI',
-    'Ubuntu': 'Segoe UI',
-    'Liberation Sans': 'Arial',
-    'Liberation Serif': 'Times New Roman',
-    'Liberation Mono': 'Consolas',
-    'DejaVu Sans': 'Segoe UI',
-    'DejaVu Serif': 'Times New Roman',
-    'DejaVu Sans Mono': 'Consolas',
+    "SF Pro": "Segoe UI",
+    "SF Pro Display": "Segoe UI",
+    "SF Pro Text": "Segoe UI",
+    "SF Mono": "Consolas",
+    "Menlo": "Consolas",
+    "Monaco": "Consolas",
+    "Helvetica Neue": "Arial",
+    "Helvetica": "Arial",
+    "Roboto": "Segoe UI",
+    "Ubuntu": "Segoe UI",
+    "Liberation Sans": "Arial",
+    "Liberation Serif": "Times New Roman",
+    "Liberation Mono": "Consolas",
+    "DejaVu Sans": "Segoe UI",
+    "DejaVu Serif": "Times New Roman",
+    "DejaVu Sans Mono": "Consolas",
 }
 
 GENERIC_FONT_MAP = {
-    'monospace': 'Consolas',
-    'sans-serif': 'Segoe UI',
-    'serif': 'Times New Roman',
+    "monospace": "Consolas",
+    "sans-serif": "Segoe UI",
+    "serif": "Times New Roman",
 }
 
 # When the latin font is serif and no EA font is specified,
 # prefer SimSun (serif CJK) over Microsoft YaHei (sans-serif CJK).
 _SERIF_LATIN = {
-    'Times New Roman', 'Georgia', 'Garamond', 'Palatino', 'Palatino Linotype',
-    'Book Antiqua', 'Cambria', 'SimSun', 'Liberation Serif', 'DejaVu Serif',
+    "Times New Roman",
+    "Georgia",
+    "Garamond",
+    "Palatino",
+    "Palatino Linotype",
+    "Book Antiqua",
+    "Cambria",
+    "SimSun",
+    "Liberation Serif",
+    "DejaVu Serif",
 }
 
 # Common Office/OS faces accepted without a custom-font warning on their
 # corresponding target locale. Actual playback availability remains
 # target-specific; keep these examples aligned with strategist.md §g.
-PPT_SAFE_FONTS = frozenset({
-    'microsoft yahei', 'simhei', 'simsun', 'kaiti', 'fangsong',
-    'dengxian',
-    'microsoft jhenghei', 'microsoft jhenghei ui', 'pmingliu', 'mingliu',
-    'mingliu_hkscs', 'dfkai-sb',
-    'pingfang sc', 'heiti sc', 'songti sc', 'stsong',
-    'pingfang tc', 'pingfang hk', 'heiti tc', 'songti tc', 'kaiti tc',
-    'yu gothic', 'yu gothic ui', 'yu mincho',
-    'meiryo', 'meiryo ui',
-    'ms gothic', 'ms mincho', 'ms pgothic', 'ms pmincho', 'ms ui gothic',
-    'malgun gothic', 'gulim', 'dotum', 'batang',
-    'arial', 'arial black', 'calibri', 'segoe ui', 'verdana',
-    'helvetica', 'helvetica neue', 'tahoma', 'trebuchet ms',
-    'times new roman', 'times', 'georgia', 'cambria', 'palatino',
-    'garamond', 'book antiqua',
-    'consolas', 'courier new', 'menlo', 'monaco',
-    'impact',
-})
+PPT_SAFE_FONTS = frozenset(
+    {
+        "microsoft yahei",
+        "simhei",
+        "simsun",
+        "kaiti",
+        "fangsong",
+        "dengxian",
+        "microsoft jhenghei",
+        "microsoft jhenghei ui",
+        "pmingliu",
+        "mingliu",
+        "mingliu_hkscs",
+        "dfkai-sb",
+        "pingfang sc",
+        "heiti sc",
+        "songti sc",
+        "stsong",
+        "pingfang tc",
+        "pingfang hk",
+        "heiti tc",
+        "songti tc",
+        "kaiti tc",
+        "yu gothic",
+        "yu gothic ui",
+        "yu mincho",
+        "meiryo",
+        "meiryo ui",
+        "ms gothic",
+        "ms mincho",
+        "ms pgothic",
+        "ms pmincho",
+        "ms ui gothic",
+        "malgun gothic",
+        "gulim",
+        "dotum",
+        "batang",
+        "arial",
+        "arial black",
+        "calibri",
+        "segoe ui",
+        "verdana",
+        "helvetica",
+        "helvetica neue",
+        "tahoma",
+        "trebuchet ms",
+        "times new roman",
+        "times",
+        "georgia",
+        "cambria",
+        "palatino",
+        "garamond",
+        "book antiqua",
+        "consolas",
+        "courier new",
+        "menlo",
+        "monaco",
+        "impact",
+    }
+)
 
 # Parsed SVG stroke-dasharray values -> DrawingML prstDash
 DASH_PRESETS = {
-    (4.0, 4.0): 'dash',
-    (6.0, 3.0): 'dash',
-    (2.0, 2.0): 'sysDot',
-    (8.0, 4.0): 'lgDash',
-    (8.0, 4.0, 2.0, 4.0): 'lgDashDot',
+    (4.0, 4.0): "dash",
+    (6.0, 3.0): "dash",
+    (2.0, 2.0): "sysDot",
+    (8.0, 4.0): "lgDash",
+    (8.0, 4.0, 2.0, 4.0): "lgDashDot",
 }
 PROJECT_STROKE_ENUM_VALUES = {
-    'stroke-linecap': frozenset({'butt', 'round', 'square'}),
-    'stroke-linejoin': frozenset({'bevel', 'miter', 'round'}),
-    'vector-effect': frozenset({'none', 'non-scaling-stroke'}),
+    "stroke-linecap": frozenset({"butt", "round", "square"}),
+    "stroke-linejoin": frozenset({"bevel", "miter", "round"}),
+    "vector-effect": frozenset({"none", "non-scaling-stroke"}),
 }
 PROJECT_IMAGE_ASPECT_RATIO_ANCHORS = {
-    'xMinYMin': (0.0, 0.0),
-    'xMidYMin': (0.5, 0.0),
-    'xMaxYMin': (1.0, 0.0),
-    'xMinYMid': (0.0, 0.5),
-    'xMidYMid': (0.5, 0.5),
-    'xMaxYMid': (1.0, 0.5),
-    'xMinYMax': (0.0, 1.0),
-    'xMidYMax': (0.5, 1.0),
-    'xMaxYMax': (1.0, 1.0),
+    "xMinYMin": (0.0, 0.0),
+    "xMidYMin": (0.5, 0.0),
+    "xMaxYMin": (1.0, 0.0),
+    "xMinYMid": (0.0, 0.5),
+    "xMidYMid": (0.5, 0.5),
+    "xMaxYMid": (1.0, 0.5),
+    "xMinYMax": (0.0, 1.0),
+    "xMidYMax": (0.5, 1.0),
+    "xMaxYMax": (1.0, 1.0),
 }
-PROJECT_IMAGE_ASPECT_RATIO_MODES = frozenset({'meet', 'slice'})
+PROJECT_IMAGE_ASPECT_RATIO_MODES = frozenset({"meet", "slice"})
 PROJECT_OPACITY_PROPERTIES = (
-    'opacity',
-    'fill-opacity',
-    'stroke-opacity',
-    'stop-opacity',
-    'flood-opacity',
+    "opacity",
+    "fill-opacity",
+    "stroke-opacity",
+    "stop-opacity",
+    "flood-opacity",
 )
-PROJECT_PERCENTAGE_OPACITY_PROPERTIES = frozenset({
-    'stop-opacity',
-    'flood-opacity',
-})
+PROJECT_PERCENTAGE_OPACITY_PROPERTIES = frozenset(
+    {
+        "stop-opacity",
+        "flood-opacity",
+    }
+)
 PROJECT_PAINT_PROPERTIES = (
-    'fill',
-    'stroke',
-    'stop-color',
-    'flood-color',
-    'data-pptx-fg',
-    'data-pptx-bg',
+    "fill",
+    "stroke",
+    "stop-color",
+    "flood-color",
+    "data-pptx-fg",
+    "data-pptx-bg",
 )
-PROJECT_REFERENCE_PAINT_PROPERTIES = frozenset({'fill', 'stroke'})
-PROJECT_DEFINITION_TAGS = frozenset({
-    'clipPath',
-    'filter',
-    'linearGradient',
-    'marker',
-    'pattern',
-    'radialGradient',
-})
-PROJECT_GRADIENT_TAGS = frozenset({'linearGradient', 'radialGradient'})
-PROJECT_TEXT_IMAGE_FILL_ATTR = 'data-pptx-text-image-fill'
-PROJECT_TEXT_IMAGE_FILL_MODES = frozenset({'stretch', 'tile'})
+PROJECT_REFERENCE_PAINT_PROPERTIES = frozenset({"fill", "stroke"})
+PROJECT_DEFINITION_TAGS = frozenset(
+    {
+        "clipPath",
+        "filter",
+        "linearGradient",
+        "marker",
+        "pattern",
+        "radialGradient",
+    }
+)
+PROJECT_GRADIENT_TAGS = frozenset({"linearGradient", "radialGradient"})
+PROJECT_TEXT_IMAGE_FILL_ATTR = "data-pptx-text-image-fill"
+PROJECT_TEXT_IMAGE_FILL_MODES = frozenset({"stretch", "tile"})
 # PPTX angle projection can overshoot a unit box by at most ~0.1036.
 PROJECT_LINEAR_GRADIENT_COORDINATE_MIN = -0.105
 PROJECT_LINEAR_GRADIENT_COORDINATE_MAX = 1.105
 PROJECT_RADIAL_FOCUS_TOLERANCE = 0.00001
-PROJECT_FILTER_PRIMITIVES = frozenset({
-    'feDropShadow',
-    'feGaussianBlur',
-    'feOffset',
-    'feFlood',
-    'feComposite',
-    'feMerge',
-    'feMergeNode',
-    'feComponentTransfer',
-    'feFuncA',
-})
-PROJECT_FILTER_EFFECT_PRIMITIVES = frozenset({
-    'feDropShadow',
-    'feGaussianBlur',
-})
-PROJECT_FILTER_PUBLIC_TARGETS = frozenset({
-    'rect',
-    'circle',
-    'image',
-    'path',
-    'text',
-})
-_PROJECT_MARKER_NUMBER_TOKEN = (
-    r'[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?'
+PROJECT_FILTER_PRIMITIVES = frozenset(
+    {
+        "feDropShadow",
+        "feGaussianBlur",
+        "feOffset",
+        "feFlood",
+        "feComposite",
+        "feMerge",
+        "feMergeNode",
+        "feComponentTransfer",
+        "feFuncA",
+    }
 )
+PROJECT_FILTER_EFFECT_PRIMITIVES = frozenset(
+    {
+        "feDropShadow",
+        "feGaussianBlur",
+    }
+)
+PROJECT_FILTER_PUBLIC_TARGETS = frozenset(
+    {
+        "rect",
+        "circle",
+        "image",
+        "path",
+        "text",
+    }
+)
+_PROJECT_MARKER_NUMBER_TOKEN = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
 _PROJECT_MARKER_POINT_TOKEN = (
-    rf'{_PROJECT_MARKER_NUMBER_TOKEN}'
-    rf'(?:\s*,\s*|\s+){_PROJECT_MARKER_NUMBER_TOKEN}'
+    rf"{_PROJECT_MARKER_NUMBER_TOKEN}"
+    rf"(?:\s*,\s*|\s+){_PROJECT_MARKER_NUMBER_TOKEN}"
 )
 _PROJECT_MARKER_TRIANGLE_PATH_RE = re.compile(
-    rf'^\s*M\s*{_PROJECT_MARKER_POINT_TOKEN}'
-    rf'(?:\s*L\s*{_PROJECT_MARKER_POINT_TOKEN}){{2}}\s*Z\s*$',
+    rf"^\s*M\s*{_PROJECT_MARKER_POINT_TOKEN}"
+    rf"(?:\s*L\s*{_PROJECT_MARKER_POINT_TOKEN}){{2}}\s*Z\s*$",
     re.IGNORECASE,
 )
 _PROJECT_MARKER_DIAMOND_PATH_RE = re.compile(
-    rf'^\s*M\s*{_PROJECT_MARKER_POINT_TOKEN}'
-    rf'(?:\s*L\s*{_PROJECT_MARKER_POINT_TOKEN}){{3}}\s*Z\s*$',
+    rf"^\s*M\s*{_PROJECT_MARKER_POINT_TOKEN}"
+    rf"(?:\s*L\s*{_PROJECT_MARKER_POINT_TOKEN}){{3}}\s*Z\s*$",
     re.IGNORECASE,
 )
 _PROJECT_MARKER_ARROW_PATH_RE = re.compile(
-    rf'^\s*M\s*{_PROJECT_MARKER_POINT_TOKEN}'
-    rf'(?:\s*L\s*{_PROJECT_MARKER_POINT_TOKEN}){{2}}\s*$',
+    rf"^\s*M\s*{_PROJECT_MARKER_POINT_TOKEN}"
+    rf"(?:\s*L\s*{_PROJECT_MARKER_POINT_TOKEN}){{2}}\s*$",
     re.IGNORECASE,
 )
 _PROJECT_MARKER_COMMAND_POINT_RE = re.compile(
-    rf'[ML]\s*({_PROJECT_MARKER_NUMBER_TOKEN})'
-    rf'(?:\s*,\s*|\s+)({_PROJECT_MARKER_NUMBER_TOKEN})',
+    rf"[ML]\s*({_PROJECT_MARKER_NUMBER_TOKEN})"
+    rf"(?:\s*,\s*|\s+)({_PROJECT_MARKER_NUMBER_TOKEN})",
     re.IGNORECASE,
 )
-PROJECT_NON_VISUAL_DEFINITION_CHILD_TAGS = frozenset({
-    'defs',
-    'desc',
-    'metadata',
-    'style',
-    'title',
-})
+PROJECT_NON_VISUAL_DEFINITION_CHILD_TAGS = frozenset(
+    {
+        "defs",
+        "desc",
+        "metadata",
+        "style",
+        "title",
+    }
+)
 THICK_CIRCLE_COVERAGE_TOLERANCE = 1.0
 
 
 # ---------------------------------------------------------------------------
 # Coordinate helpers
 # ---------------------------------------------------------------------------
+
 
 def px_to_emu(px: float) -> int:
     """Convert SVG pixels to EMU."""
@@ -333,44 +458,47 @@ def _f(val: str | None, default: float = 0.0) -> float:
         return default
 
 
-_LENGTH_RE = re.compile(r'^\s*([-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)\s*([A-Za-z%]*)\s*$')
-_CANONICAL_PROJECT_GEOMETRY_LENGTH_RE = re.compile(
-    r'^-?(?:\d+(?:\.\d+)?|\.\d+)$'
+_LENGTH_RE = re.compile(
+    r"^\s*([-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?)\s*([A-Za-z%]*)\s*$"
 )
-_PROJECT_STROKE_DASH_NUMBER_PATTERN = (
-    r'[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?'
-)
-_PROJECT_STROKE_DASH_NUMBER_RE = re.compile(
-    _PROJECT_STROKE_DASH_NUMBER_PATTERN
-)
+_CANONICAL_PROJECT_GEOMETRY_LENGTH_RE = re.compile(r"^-?(?:\d+(?:\.\d+)?|\.\d+)$")
+_PROJECT_STROKE_DASH_NUMBER_PATTERN = r"[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?"
+_PROJECT_STROKE_DASH_NUMBER_RE = re.compile(_PROJECT_STROKE_DASH_NUMBER_PATTERN)
 _PROJECT_STROKE_DASHARRAY_RE = re.compile(
-    rf'\s*{_PROJECT_STROKE_DASH_NUMBER_PATTERN}'
-    rf'(?:(?:\s+|\s*,\s*){_PROJECT_STROKE_DASH_NUMBER_PATTERN})+\s*'
+    rf"\s*{_PROJECT_STROKE_DASH_NUMBER_PATTERN}"
+    rf"(?:(?:\s+|\s*,\s*){_PROJECT_STROKE_DASH_NUMBER_PATTERN})+\s*"
 )
 PROJECT_GEOMETRY_LENGTH_ATTRIBUTES = {
-    'svg': frozenset({'x', 'y', 'width', 'height'}),
-    'rect': frozenset({'x', 'y', 'width', 'height', 'rx', 'ry'}),
-    'circle': frozenset({'cx', 'cy', 'r'}),
-    'ellipse': frozenset({'cx', 'cy', 'rx', 'ry'}),
-    'line': frozenset({'x1', 'y1', 'x2', 'y2'}),
-    'text': frozenset({'x', 'y'}),
-    'tspan': frozenset({'x', 'y', 'dx', 'dy'}),
-    'image': frozenset({'x', 'y', 'width', 'height'}),
-    'use': frozenset({'x', 'y', 'width', 'height'}),
+    "svg": frozenset({"x", "y", "width", "height"}),
+    "rect": frozenset({"x", "y", "width", "height", "rx", "ry"}),
+    "circle": frozenset({"cx", "cy", "r"}),
+    "ellipse": frozenset({"cx", "cy", "rx", "ry"}),
+    "line": frozenset({"x1", "y1", "x2", "y2"}),
+    "text": frozenset({"x", "y"}),
+    "tspan": frozenset({"x", "y", "dx", "dy"}),
+    "image": frozenset({"x", "y", "width", "height"}),
+    "use": frozenset({"x", "y", "width", "height"}),
 }
-PROJECT_NON_NEGATIVE_LENGTH_ATTRIBUTES = frozenset({
-    'width', 'height', 'r', 'rx', 'ry', 'stroke-width',
-})
+PROJECT_NON_NEGATIVE_LENGTH_ATTRIBUTES = frozenset(
+    {
+        "width",
+        "height",
+        "r",
+        "rx",
+        "ry",
+        "stroke-width",
+    }
+)
 
 
 def _parse_svg_length_parts(val: str) -> tuple[float, str]:
     """Parse one finite SVG length into its numeric part and lowercase unit."""
     match = _LENGTH_RE.match(str(val))
     if not match:
-        raise ValueError(f'SVG length must be one finite literal, got {val!r}')
+        raise ValueError(f"SVG length must be one finite literal, got {val!r}")
     number = float(match.group(1))
     if not math.isfinite(number):
-        raise ValueError(f'SVG length must be finite, got {val!r}')
+        raise ValueError(f"SVG length must be finite, got {val!r}")
     return number, match.group(2).lower()
 
 
@@ -393,53 +521,53 @@ def parse_svg_length(
     if val is None:
         return default
     number, unit = _parse_svg_length_parts(str(val))
-    if unit == '%':
+    if unit == "%":
         if percent_base is None:
             raise ValueError(
-                f'SVG percentage length requires a reference length, got {val!r}'
+                f"SVG percentage length requires a reference length, got {val!r}"
             )
         return percent_base * number / 100.0
-    if unit in ('', 'px'):
+    if unit in ("", "px"):
         return number
-    if unit == 'pt':
+    if unit == "pt":
         return number * 96.0 / 72.0
-    if unit in ('pc', 'pica'):
+    if unit in ("pc", "pica"):
         return number * 16.0
-    if unit == 'in':
+    if unit == "in":
         return number * 96.0
-    if unit == 'cm':
+    if unit == "cm":
         return number * 96.0 / 2.54
-    if unit == 'mm':
+    if unit == "mm":
         return number * 96.0 / 25.4
-    if unit == 'q':
+    if unit == "q":
         return number * 96.0 / 101.6
-    if unit in ('em', 'rem'):
+    if unit in ("em", "rem"):
         if not math.isfinite(font_size):
             raise ValueError(
-                f'SVG relative length requires a finite font size, got {val!r}'
+                f"SVG relative length requires a finite font size, got {val!r}"
             )
         return number * font_size
-    raise ValueError(f'Unsupported SVG length unit {unit!r} in {val!r}')
+    raise ValueError(f"Unsupported SVG length unit {unit!r} in {val!r}")
 
 
 def parse_project_geometry_length(raw: str, attribute: str) -> float:
     """Parse one project geometry value without widening the authoring surface."""
     number, unit = _parse_svg_length_parts(raw)
-    if unit not in {'', 'px'}:
+    if unit not in {"", "px"}:
         raise ValueError(
-            f'uses unsupported unit {unit!r}; project geometry accepts only '
-            'unitless values or the compatible px suffix'
+            f"uses unsupported unit {unit!r}; project geometry accepts only "
+            "unitless values or the compatible px suffix"
         )
     numeric_literal = raw.strip()
-    if unit == 'px':
+    if unit == "px":
         numeric_literal = numeric_literal[:-2].strip()
     if not _CANONICAL_PROJECT_GEOMETRY_LENGTH_RE.fullmatch(numeric_literal):
         raise ValueError(
-            'uses an unsupported numeric spelling; use an ordinary decimal '
-            'without a leading plus sign, exponent, or trailing decimal point'
+            "uses an unsupported numeric spelling; use an ordinary decimal "
+            "without a leading plus sign, exponent, or trailing decimal point"
         )
     if attribute in PROJECT_NON_NEGATIVE_LENGTH_ATTRIBUTES and number < 0:
-        raise ValueError('must be non-negative')
+        raise ValueError("must be non-negative")
     return number
 
 
@@ -451,9 +579,9 @@ def is_canonical_project_geometry_length(raw: str) -> bool:
 def format_project_geometry_length(value: float) -> str:
     """Format a parsed project geometry value as a plain unitless decimal."""
     if abs(value) < 1e-15:
-        return '0'
-    text = f'{value:.15f}'.rstrip('0').rstrip('.')
-    return '0' if text in {'', '-0'} else text
+        return "0"
+    text = f"{value:.15f}".rstrip("0").rstrip(".")
+    return "0" if text in {"", "-0"} else text
 
 
 def parse_project_opacity(
@@ -465,14 +593,14 @@ def parse_project_opacity(
     try:
         number, unit = _parse_svg_length_parts(raw)
     except ValueError as exc:
-        raise ValueError('must be one finite numeric opacity') from exc
+        raise ValueError("must be one finite numeric opacity") from exc
 
-    if unit == '%':
+    if unit == "%":
         if not allow_percentage:
-            raise ValueError('must be unitless; percentages are not supported')
+            raise ValueError("must be unitless; percentages are not supported")
         number /= 100.0
     elif unit:
-        raise ValueError(f'uses unsupported unit {unit!r}')
+        raise ValueError(f"uses unsupported unit {unit!r}")
     return max(0.0, min(1.0, number))
 
 
@@ -482,51 +610,49 @@ def is_project_opacity_default_form(raw: str) -> bool:
         number, unit = _parse_svg_length_parts(raw)
     except ValueError:
         return False
-    return unit == '' and 0.0 <= number <= 1.0
+    return unit == "" and 0.0 <= number <= 1.0
 
 
 def format_project_opacity(value: float) -> str:
     """Format one parsed opacity as a compact unitless ``0..1`` value."""
     bounded = max(0.0, min(1.0, value))
-    return f'{bounded:.6f}'.rstrip('0').rstrip('.') or '0'
+    return f"{bounded:.6f}".rstrip("0").rstrip(".") or "0"
 
 
 def parse_project_image_aspect_ratio(raw: str | None) -> tuple[str, str]:
     """Parse the closed project ``<image>`` aspect-ratio grammar."""
     if raw is None:
-        return 'xMidYMid', 'meet'
+        return "xMidYMid", "meet"
 
     text = raw.strip()
     if not text:
-        raise ValueError('must not be empty; omit the attribute for the default')
+        raise ValueError("must not be empty; omit the attribute for the default")
 
     parts = text.split()
     align = parts[0]
-    if align == 'none':
+    if align == "none":
         if len(parts) != 1:
             raise ValueError('value "none" must appear alone')
-        return align, 'meet'
+        return align, "meet"
 
     if align not in PROJECT_IMAGE_ASPECT_RATIO_ANCHORS:
-        choices = ', '.join(PROJECT_IMAGE_ASPECT_RATIO_ANCHORS)
-        raise ValueError(
-            f'alignment must be "none" or one of: {choices}'
-        )
+        choices = ", ".join(PROJECT_IMAGE_ASPECT_RATIO_ANCHORS)
+        raise ValueError(f'alignment must be "none" or one of: {choices}')
     if len(parts) > 2:
-        raise ValueError('accepts at most one alignment and one mode token')
+        raise ValueError("accepts at most one alignment and one mode token")
 
-    mode = parts[1] if len(parts) == 2 else 'meet'
+    mode = parts[1] if len(parts) == 2 else "meet"
     if mode not in PROJECT_IMAGE_ASPECT_RATIO_MODES:
-        choices = ', '.join(sorted(PROJECT_IMAGE_ASPECT_RATIO_MODES))
-        raise ValueError(f'mode must be one of: {choices}')
+        choices = ", ".join(sorted(PROJECT_IMAGE_ASPECT_RATIO_MODES))
+        raise ValueError(f"mode must be one of: {choices}")
     return align, mode
 
 
 def format_project_image_aspect_ratio(align: str, mode: str) -> str:
     """Format one parsed image aspect ratio for generated project SVG."""
-    if align == 'none':
-        return 'none'
-    return f'{align} {mode}'
+    if align == "none":
+        return "none"
+    return f"{align} {mode}"
 
 
 def _parse_project_stroke_dasharray(
@@ -536,26 +662,26 @@ def _parse_project_stroke_dasharray(
 ) -> tuple[str | None, tuple[float, ...], tuple[str, ...]] | None:
     """Parse one project dash array without accepting general SVG lengths."""
     text = raw.strip()
-    if text == 'none':
+    if text == "none":
         return None
     if not _PROJECT_STROKE_DASHARRAY_RE.fullmatch(text):
         raise ValueError(
             'must be "none" or at least two finite unitless numbers separated '
-            'by spaces or single commas'
+            "by spaces or single commas"
         )
     tokens = tuple(_PROJECT_STROKE_DASH_NUMBER_RE.findall(text))
     values = tuple(float(token) for token in tokens)
     if not all(math.isfinite(value) for value in values):
-        raise ValueError('must contain only finite numbers')
+        raise ValueError("must contain only finite numbers")
     if values[0] <= 0:
-        raise ValueError('dash length must be positive')
+        raise ValueError("dash length must be positive")
     if allow_zero_gap:
         if values[1] < 0:
-            raise ValueError('dash gap must be non-negative')
+            raise ValueError("dash gap must be non-negative")
     elif values[1] <= 0:
-        raise ValueError('dash gap must be positive')
+        raise ValueError("dash gap must be positive")
     if any(value <= 0 for value in values[2:]):
-        raise ValueError('additional dash and gap values must be positive')
+        raise ValueError("additional dash and gap values must be positive")
     return DASH_PRESETS.get(values), values, tokens
 
 
@@ -592,11 +718,11 @@ def parse_project_stroke_enum(attribute: str, raw: str) -> str:
     """Parse one closed line-presentation enumeration."""
     allowed = PROJECT_STROKE_ENUM_VALUES.get(attribute)
     if allowed is None:
-        raise ValueError(f'has no registered project enumeration for {attribute!r}')
+        raise ValueError(f"has no registered project enumeration for {attribute!r}")
     value = raw.strip()
     if value not in allowed:
-        choices = ', '.join(sorted(allowed))
-        raise ValueError(f'must be one of: {choices}')
+        choices = ", ".join(sorted(allowed))
+        raise ValueError(f"must be one of: {choices}")
     return value
 
 
@@ -608,13 +734,9 @@ def is_thick_circle_shorthand(
     radius: float,
 ) -> bool:
     """Return whether one circle uses the converter's thick-arc shorthand."""
-    if (
-        not dasharray
-        or not stroke
-        or stroke.strip().lower() in {'none', 'transparent'}
-    ):
+    if not dasharray or not stroke or stroke.strip().lower() in {"none", "transparent"}:
         return False
-    if not fill or fill.strip().lower() != 'none':
+    if not fill or fill.strip().lower() != "none":
         return False
     if stroke_width <= 0 or radius <= 0 or stroke_width >= 2 * radius:
         return False
@@ -648,7 +770,9 @@ def svg_length_y(val: str | None, ctx: ConvertContext, default: float = 0.0) -> 
     return parse_svg_length(val, default, percent_base=ctx.viewport_height)
 
 
-def svg_length_size(val: str | None, ctx: ConvertContext, default: float = 0.0) -> float:
+def svg_length_size(
+    val: str | None, ctx: ConvertContext, default: float = 0.0
+) -> float:
     base = min(ctx.viewport_width, ctx.viewport_height)
     return parse_svg_length(val, default, percent_base=base)
 
@@ -657,39 +781,47 @@ def svg_length_size(val: str | None, ctx: ConvertContext, default: float = 0.0) 
 # SVG transform matrix helpers
 # ---------------------------------------------------------------------------
 
-_TRANSFORM_NUMBER_PATTERN = (
-    r'[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?'
-)
+_TRANSFORM_NUMBER_PATTERN = r"[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?"
 _TRANSFORM_NUMBER_RE = re.compile(_TRANSFORM_NUMBER_PATTERN)
-_CANONICAL_TRANSFORM_NUMBER_RE = re.compile(
-    r'-?(?:\d+(?:\.\d+)?|\.\d+)$'
-)
-_TRANSFORM_OPERATION_RE = re.compile(r'([A-Za-z]+)\(([^()]*)\)')
-_TRANSFORM_WHITESPACE_RE = re.compile(r'[ \t\r\n]*')
-_TRANSFORM_SEPARATOR_PATTERN = (
-    r'(?:[ \t\r\n]+|[ \t\r\n]*,[ \t\r\n]*)'
-)
+_CANONICAL_TRANSFORM_NUMBER_RE = re.compile(r"-?(?:\d+(?:\.\d+)?|\.\d+)$")
+_TRANSFORM_OPERATION_RE = re.compile(r"([A-Za-z]+)\(([^()]*)\)")
+_TRANSFORM_WHITESPACE_RE = re.compile(r"[ \t\r\n]*")
+_TRANSFORM_SEPARATOR_PATTERN = r"(?:[ \t\r\n]+|[ \t\r\n]*,[ \t\r\n]*)"
 _TRANSFORM_SEPARATOR_RE = re.compile(_TRANSFORM_SEPARATOR_PATTERN)
 _TRANSFORM_ARGUMENTS_RE = re.compile(
-    rf'[ \t\r\n]*{_TRANSFORM_NUMBER_PATTERN}'
-    rf'(?:{_TRANSFORM_SEPARATOR_PATTERN}{_TRANSFORM_NUMBER_PATTERN})*'
-    r'[ \t\r\n]*'
+    rf"[ \t\r\n]*{_TRANSFORM_NUMBER_PATTERN}"
+    rf"(?:{_TRANSFORM_SEPARATOR_PATTERN}{_TRANSFORM_NUMBER_PATTERN})*"
+    r"[ \t\r\n]*"
 )
 _TRANSFORM_ARITIES = {
-    'matrix': frozenset({6}),
-    'translate': frozenset({1, 2}),
-    'scale': frozenset({1, 2}),
-    'rotate': frozenset({1, 3}),
+    "matrix": frozenset({6}),
+    "translate": frozenset({1, 2}),
+    "scale": frozenset({1, 2}),
+    "rotate": frozenset({1, 3}),
 }
-_FULL_TRANSFORM_TAGS = frozenset({
-    'rect', 'circle', 'ellipse', 'line', 'path', 'polygon', 'polyline',
-    'image',
-})
-_TRANSFORM_CONTAINER_TAGS = frozenset({'g', 'use'})
-_TRANSFORM_DEFINITION_BOUNDARIES = frozenset({'clipPath', 'marker', 'pattern'})
-_NON_VISUAL_TRANSFORM_CHILD_TAGS = frozenset({
-    'defs', 'title', 'desc', 'metadata', 'style',
-})
+_FULL_TRANSFORM_TAGS = frozenset(
+    {
+        "rect",
+        "circle",
+        "ellipse",
+        "line",
+        "path",
+        "polygon",
+        "polyline",
+        "image",
+    }
+)
+_TRANSFORM_CONTAINER_TAGS = frozenset({"g", "use"})
+_TRANSFORM_DEFINITION_BOUNDARIES = frozenset({"clipPath", "marker", "pattern"})
+_NON_VISUAL_TRANSFORM_CHILD_TAGS = frozenset(
+    {
+        "defs",
+        "title",
+        "desc",
+        "metadata",
+        "style",
+    }
+)
 
 
 def matrix_multiply(left: AffineMatrix, right: AffineMatrix) -> AffineMatrix:
@@ -714,7 +846,9 @@ def _scale_matrix(sx: float, sy: float | None = None) -> AffineMatrix:
     return (sx, 0.0, 0.0, sx if sy is None else sy, 0.0, 0.0)
 
 
-def _rotate_matrix(angle_deg: float, cx: float | None = None, cy: float | None = None) -> AffineMatrix:
+def _rotate_matrix(
+    angle_deg: float, cx: float | None = None, cy: float | None = None
+) -> AffineMatrix:
     rad = math.radians(angle_deg)
     cos_a = math.cos(rad)
     sin_a = math.sin(rad)
@@ -743,44 +877,43 @@ def _parse_transform_operations(
     matches = list(_TRANSFORM_OPERATION_RE.finditer(transform_str))
     if not matches:
         if _TRANSFORM_WHITESPACE_RE.fullmatch(transform_str):
-            raise ValueError('SVG transform must not be empty')
-        raise ValueError(f'Invalid SVG transform syntax {transform_str!r}')
+            raise ValueError("SVG transform must not be empty")
+        raise ValueError(f"Invalid SVG transform syntax {transform_str!r}")
 
     for index, match in enumerate(matches):
-        gap = transform_str[cursor:match.start()]
+        gap = transform_str[cursor : match.start()]
         gap_pattern = (
-            _TRANSFORM_WHITESPACE_RE
-            if index == 0 else _TRANSFORM_SEPARATOR_RE
+            _TRANSFORM_WHITESPACE_RE if index == 0 else _TRANSFORM_SEPARATOR_RE
         )
         if gap_pattern.fullmatch(gap) is None:
             if index > 0 and not gap:
                 raise ValueError(
-                    f'SVG transform operations require a separator at '
-                    f'offset {cursor}'
+                    f"SVG transform operations require a separator at offset {cursor}"
                 )
             raise ValueError(
-                f'Invalid SVG transform syntax at offset {cursor}: '
-                f'{gap!r}'
+                f"Invalid SVG transform syntax at offset {cursor}: {gap!r}"
             )
         name, raw_args = match.groups()
         if name not in _TRANSFORM_ARITIES:
             raise ValueError(
-                f'Unsupported SVG transform operation {name!r}; use lowercase '
-                'matrix, translate, scale, or rotate'
+                f"Unsupported SVG transform operation {name!r}; use lowercase "
+                "matrix, translate, scale, or rotate"
             )
         if raw_args.strip() and _TRANSFORM_ARGUMENTS_RE.fullmatch(raw_args) is None:
             raise ValueError(
-                f'Invalid arguments for SVG transform {name!r}: {raw_args!r}'
+                f"Invalid arguments for SVG transform {name!r}: {raw_args!r}"
             )
         tokens = tuple(_TRANSFORM_NUMBER_RE.findall(raw_args))
         values = tuple(float(token) for token in tokens)
         if not all(math.isfinite(value) for value in values):
-            raise ValueError(f'Non-finite arguments for SVG transform {name!r}')
+            raise ValueError(f"Non-finite arguments for SVG transform {name!r}")
         if len(values) not in _TRANSFORM_ARITIES[name]:
-            expected = '/'.join(str(value) for value in sorted(_TRANSFORM_ARITIES[name]))
+            expected = "/".join(
+                str(value) for value in sorted(_TRANSFORM_ARITIES[name])
+            )
             raise ValueError(
-                f'SVG transform {name!r} has {len(values)} argument(s); '
-                f'expected {expected}'
+                f"SVG transform {name!r} has {len(values)} argument(s); "
+                f"expected {expected}"
             )
         operations.append((name, values))
         number_tokens.extend(tokens)
@@ -789,8 +922,7 @@ def _parse_transform_operations(
     trailing = transform_str[cursor:]
     if _TRANSFORM_WHITESPACE_RE.fullmatch(trailing) is None:
         raise ValueError(
-            f'Invalid SVG transform trailing syntax at offset {cursor}: '
-            f'{trailing!r}'
+            f"Invalid SVG transform trailing syntax at offset {cursor}: {trailing!r}"
         )
 
     return tuple(operations), tuple(number_tokens)
@@ -819,14 +951,14 @@ def _transform_operations_matrix(
 ) -> AffineMatrix:
     matrix = IDENTITY_MATRIX
     for name, args in operations:
-        if name == 'matrix':
+        if name == "matrix":
             local = (args[0], args[1], args[2], args[3], args[4], args[5])
-        elif name == 'translate':
+        elif name == "translate":
             local = _translate_matrix(
                 args[0],
                 args[1] if len(args) > 1 else 0.0,
             )
-        elif name == 'scale':
+        elif name == "scale":
             local = _scale_matrix(
                 args[0],
                 args[1] if len(args) > 1 else None,
@@ -861,40 +993,36 @@ def transform_point(matrix: AffineMatrix, x: float, y: float) -> tuple[float, fl
 def validate_dml_shape_matrix(matrix: AffineMatrix) -> None:
     """Reject affine shear that a DrawingML shape transform cannot express."""
     if not all(math.isfinite(value) for value in matrix):
-        raise ValueError('SVG transform produces non-finite matrix values')
+        raise ValueError("SVG transform produces non-finite matrix values")
     a, b, c, d, _e, _f = matrix
     x_length = math.hypot(a, b)
     y_length = math.hypot(c, d)
     if not math.isfinite(x_length) or not math.isfinite(y_length):
-        raise ValueError('SVG transform produces non-finite axis lengths')
+        raise ValueError("SVG transform produces non-finite axis lengths")
     if x_length <= 1e-12 or y_length <= 1e-12:
         raise ValueError(
-            'SVG zero-scale transform cannot be represented by a visible '
-            'DrawingML shape'
+            "SVG zero-scale transform cannot be represented by a visible "
+            "DrawingML shape"
         )
-    normalized_dot = (
-        (a / x_length) * (c / y_length)
-        + (b / x_length) * (d / y_length)
-    )
+    normalized_dot = (a / x_length) * (c / y_length) + (b / x_length) * (d / y_length)
     if not math.isfinite(normalized_dot) or abs(normalized_dot) > 1e-9:
         raise ValueError(
-            'SVG shear/skew cannot be represented by a DrawingML '
-            'shape transform'
+            "SVG shear/skew cannot be represented by a DrawingML shape transform"
         )
 
 
 def _svg_element_tag(elem: ET.Element) -> str | None:
     raw_tag = str(elem.tag)
-    if raw_tag.startswith('{'):
-        namespace, tag = raw_tag[1:].split('}', 1)
+    if raw_tag.startswith("{"):
+        namespace, tag = raw_tag[1:].split("}", 1)
         return tag if namespace == SVG_NS else None
     return raw_tag
 
 
 def _transform_element_label(elem: ET.Element) -> str:
     tag = _svg_element_tag(elem) or str(elem.tag)
-    elem_id = elem.get('id')
-    return f'<{tag} id={elem_id!r}>' if elem_id else f'<{tag}>'
+    elem_id = elem.get("id")
+    return f"<{tag} id={elem_id!r}>" if elem_id else f"<{tag}>"
 
 
 def _visual_transform_children(elem: ET.Element) -> list[ET.Element]:
@@ -913,10 +1041,10 @@ def _iter_visual_transform_tree(elem: ET.Element) -> Iterator[ET.Element]:
 
 
 _TRANSFORM_ARC_STYLE_ATTRS = (
-    'fill',
-    'stroke',
-    'stroke-width',
-    'stroke-dasharray',
+    "fill",
+    "stroke",
+    "stroke-width",
+    "stroke-dasharray",
 )
 
 
@@ -925,7 +1053,7 @@ def _transform_arc_styles(
     inherited: dict[str, str] | None = None,
 ) -> dict[str, str]:
     values = dict(inherited or {})
-    inline_style = parse_inline_style(elem.get('style'))
+    inline_style = parse_inline_style(elem.get("style"))
     for name in _TRANSFORM_ARC_STYLE_ATTRS:
         direct = elem.get(name)
         if direct is not None:
@@ -939,21 +1067,21 @@ def _is_project_thick_circle(
     elem: ET.Element,
     arc_styles: dict[str, str],
 ) -> bool:
-    if _svg_element_tag(elem) != 'circle':
+    if _svg_element_tag(elem) != "circle":
         return False
     try:
-        radius = parse_project_geometry_length(elem.get('r') or '0', 'r')
+        radius = parse_project_geometry_length(elem.get("r") or "0", "r")
         stroke_width = parse_project_geometry_length(
-            arc_styles.get('stroke-width', '0'),
-            'stroke-width',
+            arc_styles.get("stroke-width", "0"),
+            "stroke-width",
         )
     except ValueError:
         # Geometry preflight owns malformed length diagnostics.
         return False
     return is_thick_circle_shorthand(
-        arc_styles.get('stroke-dasharray'),
-        arc_styles.get('stroke'),
-        arc_styles.get('fill'),
+        arc_styles.get("stroke-dasharray"),
+        arc_styles.get("stroke"),
+        arc_styles.get("fill"),
         stroke_width,
         radius,
     )
@@ -972,17 +1100,16 @@ def supports_full_project_transform(
         return False
     if tag in _FULL_TRANSFORM_TAGS:
         return True
-    if tag == 'use':
+    if tag == "use":
         # Local/data-icon use references are validated again after expansion.
         return True
-    if tag == 'svg':
+    if tag == "svg":
         children = _visual_transform_children(elem)
-        return len(children) == 1 and _svg_element_tag(children[0]) == 'image'
-    if tag == 'g':
+        return len(children) == 1 and _svg_element_tag(children[0]) == "image"
+    if tag == "g":
         children = _visual_transform_children(elem)
         return bool(children) and all(
-            supports_full_project_transform(child, arc_styles)
-            for child in children
+            supports_full_project_transform(child, arc_styles) for child in children
         )
     return False
 
@@ -994,13 +1121,13 @@ def iter_project_transforms(
     for elem in root.iter():
         if _svg_element_tag(elem) is None:
             continue
-        raw = elem.get('transform')
+        raw = elem.get("transform")
         if raw is not None:
             yield elem, raw
 
 
 def _has_positive_rounding(elem: ET.Element) -> bool:
-    for attr in ('rx', 'ry'):
+    for attr in ("rx", "ry"):
         raw = elem.get(attr)
         if raw is None:
             continue
@@ -1015,8 +1142,7 @@ def _has_positive_rounding(elem: ET.Element) -> bool:
 
 def _contains_rounded_rect(elem: ET.Element) -> bool:
     return any(
-        _svg_element_tag(descendant) == 'rect'
-        and _has_positive_rounding(descendant)
+        _svg_element_tag(descendant) == "rect" and _has_positive_rounding(descendant)
         for descendant in _iter_visual_transform_tree(elem)
     )
 
@@ -1027,7 +1153,7 @@ def _contains_native_marker(elem: ET.Element) -> bool:
     from ..native_objects.marker_attributes import native_replacement_kind
 
     return any(
-        native_replacement_kind(descendant) in {'table', 'chart', 'formula'}
+        native_replacement_kind(descendant) in {"table", "chart", "formula"}
         for descendant in _iter_visual_transform_tree(elem)
     )
 
@@ -1052,11 +1178,11 @@ def _project_thick_circle_ids(
 
 
 _PROJECT_STROKE_STYLE_ATTRIBUTES = (
-    'stroke-dasharray',
-    'stroke-dashoffset',
-    'stroke-linecap',
-    'stroke-linejoin',
-    'vector-effect',
+    "stroke-dasharray",
+    "stroke-dashoffset",
+    "stroke-linecap",
+    "stroke-linejoin",
+    "vector-effect",
 )
 
 
@@ -1068,12 +1194,12 @@ def iter_project_stroke_styles(
         for attribute in _PROJECT_STROKE_STYLE_ATTRIBUTES:
             raw = elem.get(attribute)
             if raw is not None:
-                yield elem, attribute, raw, 'attribute'
-        inline_style = parse_inline_style(elem.get('style'))
+                yield elem, attribute, raw, "attribute"
+        inline_style = parse_inline_style(elem.get("style"))
         for attribute in _PROJECT_STROKE_STYLE_ATTRIBUTES:
             raw = inline_style.get(attribute)
             if raw is not None:
-                yield elem, attribute, raw, 'inline style'
+                yield elem, attribute, raw, "inline style"
 
 
 def project_stroke_style_errors(root: ET.Element) -> list[str]:
@@ -1083,27 +1209,26 @@ def project_stroke_style_errors(root: ET.Element) -> list[str]:
     for elem, attribute, raw, source in iter_project_stroke_styles(root):
         label = _transform_element_label(elem)
         try:
-            if attribute == 'stroke-dasharray':
+            if attribute == "stroke-dasharray":
                 parse_project_stroke_dasharray(
                     raw,
                     allow_zero_gap=id(elem) in thick_circle_ids,
                 )
-            elif attribute == 'stroke-dashoffset':
-                if source != 'attribute':
+            elif attribute == "stroke-dashoffset":
+                if source != "attribute":
                     raise ValueError(
-                        'is supported only as a direct attribute on a '
-                        'thick-circle arc'
+                        "is supported only as a direct attribute on a thick-circle arc"
                     )
                 parse_project_geometry_length(raw, attribute)
                 if id(elem) not in thick_circle_ids:
                     raise ValueError(
-                        'is supported only on a circle that satisfies the '
-                        'thick-circle arc contract'
+                        "is supported only on a circle that satisfies the "
+                        "thick-circle arc contract"
                     )
             else:
                 parse_project_stroke_enum(attribute, raw)
         except ValueError as exc:
-            errors.add(f'{label} {source} {attribute}={raw!r}: {exc}')
+            errors.add(f"{label} {source} {attribute}={raw!r}: {exc}")
     return sorted(errors)
 
 
@@ -1119,17 +1244,8 @@ def _is_unit_axis_reflection(
 ) -> bool:
     """Return whether a transform is translation plus an unscaled axis flip."""
     has_explicit_flip = any(
-        (
-            name == 'scale'
-            and (
-                args[0] < 0
-                or (len(args) > 1 and args[1] < 0)
-            )
-        )
-        or (
-            name == 'matrix'
-            and (args[0] < 0 or args[3] < 0)
-        )
+        (name == "scale" and (args[0] < 0 or (len(args) > 1 and args[1] < 0)))
+        or (name == "matrix" and (args[0] < 0 or args[3] < 0))
         for name, args in operations
     )
     if not has_explicit_flip:
@@ -1158,35 +1274,35 @@ def _transform_semantic_error(
 
     if is_root:
         return (
-            'Root <svg> transform is unsupported; apply transforms to child '
-            'elements or groups'
+            "Root <svg> transform is unsupported; apply transforms to child "
+            "elements or groups"
         )
 
-    if tag == 'text':
-        if all(name == 'translate' for name in names):
+    if tag == "text":
+        if all(name == "translate" for name in names):
             return None
-        if len(names) == 1 and names[0] == 'rotate':
+        if len(names) == 1 and names[0] == "rotate":
             return None
         return (
-            f'{label} text transform must be a translate-only list or one '
-            'rotate operation; text scale, matrix, and mixed operations are '
-            'not mapped'
+            f"{label} text transform must be a translate-only list or one "
+            "rotate operation; text scale, matrix, and mixed operations are "
+            "not mapped"
         )
 
     if tag in _TRANSFORM_CONTAINER_TAGS:
         if _contains_native_marker(elem):
-            if all(name in {'translate', 'scale'} for name in names):
+            if all(name in {"translate", "scale"} for name in names):
                 return None
             return (
-                f'{label} native replacement marker transforms support only '
-                'translate and scale'
+                f"{label} native replacement marker transforms support only "
+                "translate and scale"
             )
         if _contains_thick_circle(elem, thick_circle_ids):
-            if all(name == 'translate' for name in names):
+            if all(name == "translate" for name in names):
                 return None
             return (
-                f'{label} contains a thick-circle arc shorthand; ancestor '
-                'transforms must be translate-only'
+                f"{label} contains a thick-circle arc shorthand; ancestor "
+                "transforms must be translate-only"
             )
         if _is_unit_axis_reflection(operations):
             # Imported PowerPoint groups encode flipH/flipV as a translate /
@@ -1195,45 +1311,40 @@ def _transform_semantic_error(
             # scaling font metrics, so this exact no-shear case is lossless.
             return None
         if supports_full_project_transform(elem):
-            if 'matrix' in names and _contains_rounded_rect(elem):
+            if "matrix" in names and _contains_rounded_rect(elem):
                 return (
-                    f'{label} matrix transform cannot target a rounded '
-                    'rectangle subtree'
+                    f"{label} matrix transform cannot target a rounded "
+                    "rectangle subtree"
                 )
             return None
-        if all(name == 'translate' for name in names):
+        if all(name == "translate" for name in names):
             return None
-        if len(names) == 1 and names[0] == 'rotate':
+        if len(names) == 1 and names[0] == "rotate":
             return None
         return (
-            f'{label} contains text or another non-matrix visual; its transform '
-            'must be a translate-only list or one rotate operation'
+            f"{label} contains text or another non-matrix visual; its transform "
+            "must be a translate-only list or one rotate operation"
         )
 
     if tag in _FULL_TRANSFORM_TAGS:
         if id(elem) in thick_circle_ids:
-            if len(names) == 1 and names[0] == 'rotate':
+            if len(names) == 1 and names[0] == "rotate":
                 return None
-            return (
-                f'{label} thick-circle arc transform must be one rotate '
-                'operation'
-            )
-        if tag == 'rect' and 'matrix' in names and _has_positive_rounding(elem):
-            return f'{label} rounded rectangles cannot use matrix transforms'
+            return f"{label} thick-circle arc transform must be one rotate operation"
+        if tag == "rect" and "matrix" in names and _has_positive_rounding(elem):
+            return f"{label} rounded rectangles cannot use matrix transforms"
         return None
 
-    if tag == 'svg' and supports_full_project_transform(elem):
+    if tag == "svg" and supports_full_project_transform(elem):
         return None
 
-    return f'{label} has no registered project transform mapping'
+    return f"{label} has no registered project transform mapping"
 
 
 def project_transform_errors(root: ET.Element) -> list[str]:
     """Return blocking transform grammar and mapping errors for preflight."""
     parent_by_id = {
-        id(child): parent
-        for parent in root.iter()
-        for child in list(parent)
+        id(child): parent for parent in root.iter() for child in list(parent)
     }
     thick_circle_ids = _project_thick_circle_ids(root)
     parsed: dict[int, tuple[AffineMatrix, bool]] = {}
@@ -1250,19 +1361,17 @@ def project_transform_errors(root: ET.Element) -> list[str]:
                 break
             current = parent_by_id.get(id(current))
         if restricted_ancestor is not None:
-            errors.add(
-                f'{label} cannot use transform inside <{restricted_ancestor}>'
-            )
+            errors.add(f"{label} cannot use transform inside <{restricted_ancestor}>")
             parsed[id(elem)] = (IDENTITY_MATRIX, False)
             continue
 
         try:
             operations = parse_transform_operations(raw)
             if not operations:
-                raise ValueError('SVG transform must not be empty')
+                raise ValueError("SVG transform must not be empty")
             matrix = _transform_operations_matrix(operations)
         except ValueError as exc:
-            errors.add(f'{label} transform={raw!r}: {exc}')
+            errors.add(f"{label} transform={raw!r}: {exc}")
             parsed[id(elem)] = (IDENTITY_MATRIX, False)
             continue
 
@@ -1288,8 +1397,8 @@ def project_transform_errors(root: ET.Element) -> list[str]:
                 validate_dml_shape_matrix(current_matrix)
             except ValueError as exc:
                 errors.add(
-                    f'{_transform_element_label(elem)} has an unsupported '
-                    f'cumulative transform: {exc}'
+                    f"{_transform_element_label(elem)} has an unsupported "
+                    f"cumulative transform: {exc}"
                 )
                 return
         for child in elem:
@@ -1334,16 +1443,16 @@ def rect_to_dml_xfrm(
 
     if rect_w <= 1e-12 and rect_h > 1e-12:
         angle_deg = math.degrees(math.atan2(vy, vx)) - 90.0
-        flip_attr = ''
+        flip_attr = ""
     elif cross < 0:
         angle_deg = math.degrees(math.atan2(-uy, -ux))
         flip_attr = ' flipH="1"'
     else:
         angle_deg = math.degrees(math.atan2(uy, ux))
-        flip_attr = ''
+        flip_attr = ""
 
     rot = round(angle_deg * ANGLE_UNIT)
-    rot_attr = f' rot="{rot}"' if rot else ''
+    rot_attr = f' rot="{rot}"' if rot else ""
 
     center_x = (p0[0] + p2[0]) / 2
     center_y = (p0[1] + p2[1]) / 2
@@ -1362,7 +1471,7 @@ def rect_to_dml_xfrm(
         px_to_emu(max(ys)),
     )
 
-    return f'{flip_attr}{rot_attr}', off_x, off_y, ext_cx, ext_cy, bounds
+    return f"{flip_attr}{rot_attr}", off_x, off_y, ext_cx, ext_cy, bounds
 
 
 def _extract_inheritable_styles(elem: ET.Element) -> dict[str, str]:
@@ -1372,17 +1481,19 @@ def _extract_inheritable_styles(elem: ET.Element) -> dict[str, str]:
         val = elem.get(attr)
         if val is not None:
             styles[attr] = val
-    styles.update({
-        attr: val
-        for attr, val in parse_inline_style(elem.get('style')).items()
-        if attr in INHERITABLE_ATTRS
-    })
+    styles.update(
+        {
+            attr: val
+            for attr, val in parse_inline_style(elem.get("style")).items()
+            if attr in INHERITABLE_ATTRS
+        }
+    )
     return styles
 
 
 def _get_attr(elem: ET.Element, attr: str, ctx: ConvertContext) -> str | None:
     """Get effective attribute: element's own value first, then inherited."""
-    style_val = parse_inline_style(elem.get('style')).get(attr)
+    style_val = parse_inline_style(elem.get("style")).get(attr)
     if style_val is not None:
         return style_val
     val = elem.get(attr)
@@ -1416,34 +1527,34 @@ def ctx_h(val: float, ctx: ConvertContext) -> float:
 # ---------------------------------------------------------------------------
 
 _CSS_NAMED_COLORS = {
-    'black': '000000',
-    'silver': 'C0C0C0',
-    'gray': '808080',
-    'grey': '808080',
-    'white': 'FFFFFF',
-    'maroon': '800000',
-    'red': 'FF0000',
-    'purple': '800080',
-    'fuchsia': 'FF00FF',
-    'magenta': 'FF00FF',
-    'green': '008000',
-    'lime': '00FF00',
-    'olive': '808000',
-    'yellow': 'FFFF00',
-    'navy': '000080',
-    'blue': '0000FF',
-    'teal': '008080',
-    'aqua': '00FFFF',
-    'cyan': '00FFFF',
-    'orange': 'FFA500',
-    'brown': 'A52A2A',
-    'pink': 'FFC0CB',
-    'gold': 'FFD700',
-    'transparent': None,
-    'lightgray': 'D3D3D3',
-    'lightgrey': 'D3D3D3',
-    'darkgray': 'A9A9A9',
-    'darkgrey': 'A9A9A9',
+    "black": "000000",
+    "silver": "C0C0C0",
+    "gray": "808080",
+    "grey": "808080",
+    "white": "FFFFFF",
+    "maroon": "800000",
+    "red": "FF0000",
+    "purple": "800080",
+    "fuchsia": "FF00FF",
+    "magenta": "FF00FF",
+    "green": "008000",
+    "lime": "00FF00",
+    "olive": "808000",
+    "yellow": "FFFF00",
+    "navy": "000080",
+    "blue": "0000FF",
+    "teal": "008080",
+    "aqua": "00FFFF",
+    "cyan": "00FFFF",
+    "orange": "FFA500",
+    "brown": "A52A2A",
+    "pink": "FFC0CB",
+    "gold": "FFD700",
+    "transparent": None,
+    "lightgray": "D3D3D3",
+    "lightgrey": "D3D3D3",
+    "darkgray": "A9A9A9",
+    "darkgrey": "A9A9A9",
 }
 
 
@@ -1452,10 +1563,10 @@ def parse_inline_style(style_str: str | None) -> dict[str, str]:
     styles: dict[str, str] = {}
     if not style_str:
         return styles
-    for part in style_str.split(';'):
-        if ':' not in part:
+    for part in style_str.split(";"):
+        if ":" not in part:
             continue
-        name, value = part.split(':', 1)
+        name, value = part.split(":", 1)
         name = name.strip().lower()
         value = value.strip()
         if name and value:
@@ -1468,36 +1579,34 @@ def iter_project_geometry_lengths(
 ) -> Iterator[tuple[ET.Element, str, str, str]]:
     """Yield project geometry values as element, attribute, raw value, source."""
     for elem in root.iter():
-        tag = elem.tag.rsplit('}', 1)[-1] if '}' in str(elem.tag) else str(elem.tag)
+        tag = elem.tag.rsplit("}", 1)[-1] if "}" in str(elem.tag) else str(elem.tag)
         for attribute in sorted(
             PROJECT_GEOMETRY_LENGTH_ATTRIBUTES.get(tag, frozenset())
         ):
             raw = elem.get(attribute)
             if raw is not None:
-                yield elem, attribute, raw, 'attribute'
+                yield elem, attribute, raw, "attribute"
 
-        direct_stroke_width = elem.get('stroke-width')
+        direct_stroke_width = elem.get("stroke-width")
         if direct_stroke_width is not None:
-            yield elem, 'stroke-width', direct_stroke_width, 'attribute'
+            yield elem, "stroke-width", direct_stroke_width, "attribute"
 
-        style_stroke_width = parse_inline_style(elem.get('style')).get('stroke-width')
+        style_stroke_width = parse_inline_style(elem.get("style")).get("stroke-width")
         if style_stroke_width is not None:
-            yield elem, 'stroke-width', style_stroke_width, 'inline style'
+            yield elem, "stroke-width", style_stroke_width, "inline style"
 
 
 def project_geometry_length_errors(root: ET.Element) -> list[str]:
     """Return blocking project geometry errors for converter preflight."""
     errors: list[str] = []
     for elem, attribute, raw, source in iter_project_geometry_lengths(root):
-        tag = elem.tag.rsplit('}', 1)[-1] if '}' in str(elem.tag) else str(elem.tag)
-        elem_id = elem.get('id')
-        label = f'<{tag} id={elem_id!r}>' if elem_id else f'<{tag}>'
+        tag = elem.tag.rsplit("}", 1)[-1] if "}" in str(elem.tag) else str(elem.tag)
+        elem_id = elem.get("id")
+        label = f"<{tag} id={elem_id!r}>" if elem_id else f"<{tag}>"
         try:
             parse_project_geometry_length(raw, attribute)
         except ValueError as exc:
-            errors.append(
-                f'{label} {source} {attribute}={raw!r}: {exc}'
-            )
+            errors.append(f"{label} {source} {attribute}={raw!r}: {exc}")
     return errors
 
 
@@ -1506,9 +1615,9 @@ def iter_project_image_aspect_ratios(
 ) -> Iterator[tuple[ET.Element, str]]:
     """Yield explicit ``preserveAspectRatio`` values from image elements."""
     for elem in root.iter():
-        if _svg_element_tag(elem) != 'image':
+        if _svg_element_tag(elem) != "image":
             continue
-        raw = elem.get('preserveAspectRatio')
+        raw = elem.get("preserveAspectRatio")
         if raw is not None:
             yield elem, raw
 
@@ -1517,12 +1626,12 @@ def project_image_aspect_ratio_errors(root: ET.Element) -> list[str]:
     """Return blocking project image aspect-ratio errors for preflight."""
     errors: list[str] = []
     for elem, raw in iter_project_image_aspect_ratios(root):
-        elem_id = elem.get('id')
-        label = f'<image id={elem_id!r}>' if elem_id else '<image>'
+        elem_id = elem.get("id")
+        label = f"<image id={elem_id!r}>" if elem_id else "<image>"
         try:
             parse_project_image_aspect_ratio(raw)
         except ValueError as exc:
-            errors.append(f'{label} preserveAspectRatio={raw!r}: {exc}')
+            errors.append(f"{label} preserveAspectRatio={raw!r}: {exc}")
     return errors
 
 
@@ -1534,21 +1643,21 @@ def iter_project_opacities(
         for property_name in PROJECT_OPACITY_PROPERTIES:
             raw = elem.get(property_name)
             if raw is not None:
-                yield elem, property_name, raw, 'attribute'
+                yield elem, property_name, raw, "attribute"
 
-        for fragment in (elem.get('style') or '').split(';'):
+        for fragment in (elem.get("style") or "").split(";"):
             fragment = fragment.strip()
             if not fragment:
                 continue
-            if ':' in fragment:
-                name, raw = fragment.split(':', 1)
+            if ":" in fragment:
+                name, raw = fragment.split(":", 1)
                 name = name.strip().lower()
                 raw = raw.strip()
             else:
                 name = fragment.lower()
-                raw = ''
+                raw = ""
             if name in PROJECT_OPACITY_PROPERTIES:
-                yield elem, name, raw, 'inline style'
+                yield elem, name, raw, "inline style"
 
 
 def project_opacity_errors(root: ET.Element) -> list[str]:
@@ -1556,8 +1665,8 @@ def project_opacity_errors(root: ET.Element) -> list[str]:
     errors: list[str] = []
     for elem, property_name, raw, source in iter_project_opacities(root):
         tag = _svg_element_tag(elem) or str(elem.tag)
-        elem_id = elem.get('id')
-        label = f'<{tag} id={elem_id!r}>' if elem_id else f'<{tag}>'
+        elem_id = elem.get("id")
+        label = f"<{tag} id={elem_id!r}>" if elem_id else f"<{tag}>"
         try:
             parse_project_opacity(
                 raw,
@@ -1566,9 +1675,7 @@ def project_opacity_errors(root: ET.Element) -> list[str]:
                 ),
             )
         except ValueError as exc:
-            errors.append(
-                f'{label} {source} {property_name}={raw!r}: {exc}'
-            )
+            errors.append(f"{label} {source} {property_name}={raw!r}: {exc}")
     return errors
 
 
@@ -1576,13 +1683,13 @@ def _finite_float(raw: str) -> float:
     """Parse a finite floating-point number."""
     value = float(raw)
     if not math.isfinite(value):
-        raise ValueError(f'Non-finite numeric value: {raw}')
+        raise ValueError(f"Non-finite numeric value: {raw}")
     return value
 
 
 def _parse_color_channel(raw: str) -> int:
     raw = raw.strip()
-    if raw.endswith('%'):
+    if raw.endswith("%"):
         value = _finite_float(raw[:-1]) * 255.0 / 100.0
     else:
         value = _finite_float(raw)
@@ -1592,11 +1699,7 @@ def _parse_color_channel(raw: str) -> int:
 def _parse_alpha_channel(raw: str) -> float:
     """Parse a CSS alpha channel as a clamped ``0..1`` ratio."""
     raw = raw.strip()
-    value = (
-        _finite_float(raw[:-1]) / 100.0
-        if raw.endswith('%')
-        else _finite_float(raw)
-    )
+    value = _finite_float(raw[:-1]) / 100.0 if raw.endswith("%") else _finite_float(raw)
     return max(0.0, min(1.0, value))
 
 
@@ -1615,7 +1718,7 @@ def parse_opacity(
 def quantize_ooxml_unit_ratio(value: float) -> int:
     """Quantize one normalized ratio to DrawingML 1/100000 units."""
     if not math.isfinite(value):
-        raise ValueError(f'OOXML unit ratio must be finite; got {value!r}')
+        raise ValueError(f"OOXML unit ratio must be finite; got {value!r}")
     normalized = max(0.0, min(1.0, value))
     scaled = Decimal(str(normalized)) * Decimal(100000)
     return int(scaled.to_integral_value(rounding=ROUND_HALF_UP))
@@ -1624,14 +1727,14 @@ def quantize_ooxml_unit_ratio(value: float) -> int:
 def quantize_ooxml_alpha(opacity: float) -> int:
     """Quantize one normalized alpha to DrawingML 1/100000 units."""
     if not math.isfinite(opacity):
-        raise ValueError(f'Opacity must be finite; got {opacity!r}')
+        raise ValueError(f"Opacity must be finite; got {opacity!r}")
     return quantize_ooxml_unit_ratio(opacity)
 
 
 def _functional_color_parts(body: str) -> tuple[list[str], str | None]:
     """Split legacy comma or modern space/slash functional color syntax."""
-    before, separator, after = body.partition('/')
-    parts = [part for part in re.split(r'[\s,]+', before.strip()) if part]
+    before, separator, after = body.partition("/")
+    parts = [part for part in re.split(r"[\s,]+", before.strip()) if part]
     alpha = after.strip() if separator else None
     if alpha is None and len(parts) > 3:
         alpha = parts.pop()
@@ -1642,13 +1745,13 @@ def _parse_hue_degrees(raw: str) -> float:
     """Normalize a CSS hue angle to degrees."""
     value = raw.strip().lower()
     for suffix, multiplier in (
-        ('turn', 360.0),
-        ('grad', 0.9),
-        ('rad', 180.0 / math.pi),
-        ('deg', 1.0),
+        ("turn", 360.0),
+        ("grad", 0.9),
+        ("rad", 180.0 / math.pi),
+        ("deg", 1.0),
     ):
         if value.endswith(suffix):
-            return _finite_float(value[:-len(suffix)]) * multiplier
+            return _finite_float(value[: -len(suffix)]) * multiplier
     return _finite_float(value)
 
 
@@ -1657,7 +1760,7 @@ def _parse_percentage(raw: str) -> float:
     value = raw.strip()
     ratio = (
         _finite_float(value[:-1]) / 100.0
-        if value.endswith('%')
+        if value.endswith("%")
         else _finite_float(value) / 100.0
     )
     return max(0.0, min(1.0, ratio))
@@ -1670,22 +1773,24 @@ def parse_svg_color(color_str: str) -> tuple[str | None, float]:
     color_str = color_str.strip()
     named = _CSS_NAMED_COLORS.get(color_str.lower())
     if named is not None or color_str.lower() in _CSS_NAMED_COLORS:
-        if color_str.lower() == 'transparent':
-            return '000000', 0.0
+        if color_str.lower() == "transparent":
+            return "000000", 0.0
         return named, 1.0
 
-    rgb_match = re.match(r'rgba?\((.+)\)$', color_str, flags=re.IGNORECASE)
+    rgb_match = re.match(r"rgba?\((.+)\)$", color_str, flags=re.IGNORECASE)
     if rgb_match:
         channels, alpha_raw = _functional_color_parts(rgb_match.group(1))
         if len(channels) == 3:
             try:
                 r, g, b = (_parse_color_channel(ch) for ch in channels)
-                alpha = _parse_alpha_channel(alpha_raw) if alpha_raw is not None else 1.0
-                return f'{r:02X}{g:02X}{b:02X}', alpha
+                alpha = (
+                    _parse_alpha_channel(alpha_raw) if alpha_raw is not None else 1.0
+                )
+                return f"{r:02X}{g:02X}{b:02X}", alpha
             except ValueError:
                 return None, 1.0
 
-    hsl_match = re.match(r'hsla?\((.+)\)$', color_str, flags=re.IGNORECASE)
+    hsl_match = re.match(r"hsla?\((.+)\)$", color_str, flags=re.IGNORECASE)
     if hsl_match:
         channels, alpha_raw = _functional_color_parts(hsl_match.group(1))
         if len(channels) == 3:
@@ -1694,23 +1799,25 @@ def parse_svg_color(color_str: str) -> tuple[str | None, float]:
                 saturation = _parse_percentage(channels[1])
                 lightness = _parse_percentage(channels[2])
                 red, green, blue = colorsys.hls_to_rgb(hue, lightness, saturation)
-                alpha = _parse_alpha_channel(alpha_raw) if alpha_raw is not None else 1.0
+                alpha = (
+                    _parse_alpha_channel(alpha_raw) if alpha_raw is not None else 1.0
+                )
                 return (
-                    f'{round(red * 255):02X}{round(green * 255):02X}{round(blue * 255):02X}',
+                    f"{round(red * 255):02X}{round(green * 255):02X}{round(blue * 255):02X}",
                     alpha,
                 )
             except ValueError:
                 return None, 1.0
 
-    if color_str.startswith('#'):
+    if color_str.startswith("#"):
         color_str = color_str[1:]
     if len(color_str) == 3:
-        color_str = ''.join(c * 2 for c in color_str)
+        color_str = "".join(c * 2 for c in color_str)
     elif len(color_str) == 4:
-        color_str = ''.join(c * 2 for c in color_str)
-    if len(color_str) == 8 and all(c in '0123456789abcdefABCDEF' for c in color_str):
+        color_str = "".join(c * 2 for c in color_str)
+    if len(color_str) == 8 and all(c in "0123456789abcdefABCDEF" for c in color_str):
         return color_str[:6].upper(), int(color_str[6:], 16) / 255.0
-    if len(color_str) == 6 and all(c in '0123456789abcdefABCDEF' for c in color_str):
+    if len(color_str) == 6 and all(c in "0123456789abcdefABCDEF" for c in color_str):
         return color_str.upper(), 1.0
     return None, 1.0
 
@@ -1726,37 +1833,37 @@ def parse_project_paint(
     values contain the local definition id.
     """
     if property_name not in PROJECT_PAINT_PROPERTIES:
-        raise ValueError(f'unknown project paint property {property_name!r}')
+        raise ValueError(f"unknown project paint property {property_name!r}")
 
     value = raw.strip()
     if property_name in PROJECT_REFERENCE_PAINT_PROPERTIES:
-        if value.lower() == 'none':
-            return 'none', None, 1.0
-        reference = re.fullmatch(r'url\(#([^)]+)\)', value)
+        if value.lower() == "none":
+            return "none", None, 1.0
+        reference = re.fullmatch(r"url\(#([^)]+)\)", value)
         if reference is not None:
-            return 'reference', reference.group(1), 1.0
+            return "reference", reference.group(1), 1.0
 
     color, alpha = parse_svg_color(value)
     if color is not None:
-        return 'color', color, alpha
+        return "color", color, alpha
 
     accepted = (
-        'a supported color, none, or an exact local url(#id) reference'
+        "a supported color, none, or an exact local url(#id) reference"
         if property_name in PROJECT_REFERENCE_PAINT_PROPERTIES
-        else 'a supported color'
+        else "a supported color"
     )
-    raise ValueError(f'must be {accepted}')
+    raise ValueError(f"must be {accepted}")
 
 
 def is_project_paint_default_form(raw: str, property_name: str) -> bool:
     """Return whether paint uses the generated project spelling."""
     value = raw.strip()
     if property_name in PROJECT_REFERENCE_PAINT_PROPERTIES:
-        if value == 'none':
+        if value == "none":
             return True
-        if re.fullmatch(r'url\(#[^)]+\)', value) is not None:
+        if re.fullmatch(r"url\(#[^)]+\)", value) is not None:
             return True
-    return re.fullmatch(r'#[0-9A-F]{6}', value) is not None
+    return re.fullmatch(r"#[0-9A-F]{6}", value) is not None
 
 
 def iter_project_paints(
@@ -1767,21 +1874,21 @@ def iter_project_paints(
         for property_name in PROJECT_PAINT_PROPERTIES:
             raw = elem.get(property_name)
             if raw is not None:
-                yield elem, property_name, raw, 'attribute'
+                yield elem, property_name, raw, "attribute"
 
-        for fragment in (elem.get('style') or '').split(';'):
+        for fragment in (elem.get("style") or "").split(";"):
             fragment = fragment.strip()
             if not fragment:
                 continue
-            if ':' in fragment:
-                name, raw = fragment.split(':', 1)
+            if ":" in fragment:
+                name, raw = fragment.split(":", 1)
                 name = name.strip().lower()
                 raw = raw.strip()
             else:
                 name = fragment.lower()
-                raw = ''
+                raw = ""
             if name in PROJECT_PAINT_PROPERTIES:
-                yield elem, name, raw, 'inline style'
+                yield elem, name, raw, "inline style"
 
 
 def project_paint_errors(root: ET.Element) -> list[str]:
@@ -1789,14 +1896,12 @@ def project_paint_errors(root: ET.Element) -> list[str]:
     errors: list[str] = []
     for elem, property_name, raw, source in iter_project_paints(root):
         tag = _svg_element_tag(elem) or str(elem.tag)
-        elem_id = elem.get('id')
-        label = f'<{tag} id={elem_id!r}>' if elem_id else f'<{tag}>'
+        elem_id = elem.get("id")
+        label = f"<{tag} id={elem_id!r}>" if elem_id else f"<{tag}>"
         try:
             parse_project_paint(raw, property_name)
         except ValueError as exc:
-            errors.append(
-                f'{label} {source} {property_name}={raw!r}: {exc}'
-            )
+            errors.append(f"{label} {source} {property_name}={raw!r}: {exc}")
     return errors
 
 
@@ -1807,10 +1912,10 @@ def project_definition_index(
     definitions: dict[str, ET.Element] = {}
     duplicates: set[str] = set()
     for defs_elem in root.iter():
-        if _svg_element_tag(defs_elem) != 'defs':
+        if _svg_element_tag(defs_elem) != "defs":
             continue
         for child in defs_elem:
-            definition_id = (child.get('id') or '').strip()
+            definition_id = (child.get("id") or "").strip()
             if not definition_id:
                 continue
             if definition_id in definitions:
@@ -1822,25 +1927,21 @@ def project_definition_index(
 def project_definition_errors(root: ET.Element) -> list[str]:
     """Return errors for definitions outside the closed local-ref contract."""
     parent_by_id = {
-        id(child): parent
-        for parent in root.iter()
-        for child in list(parent)
+        id(child): parent for parent in root.iter() for child in list(parent)
     }
     definitions, duplicate_definition_ids = project_definition_index(root)
     errors = {
-        f'Duplicate direct <defs> id {definition_id!r} makes local references ambiguous'
+        f"Duplicate direct <defs> id {definition_id!r} makes local references ambiguous"
         for definition_id in duplicate_definition_ids
     }
     all_id_counts = Counter(
-        elem.get('id')
-        for elem in root.iter()
-        if (elem.get('id') or '').strip()
+        elem.get("id") for elem in root.iter() if (elem.get("id") or "").strip()
     )
     for definition_id in definitions:
         if all_id_counts[definition_id] > 1:
             errors.add(
-                f'Definition id {definition_id!r} is duplicated in the SVG; '
-                'local references require one unique target'
+                f"Definition id {definition_id!r} is duplicated in the SVG; "
+                "local references require one unique target"
             )
 
     for elem in root.iter():
@@ -1849,10 +1950,10 @@ def project_definition_errors(root: ET.Element) -> list[str]:
             continue
         label = _transform_element_label(elem)
         parent = parent_by_id.get(id(elem))
-        if parent is None or _svg_element_tag(parent) != 'defs':
-            errors.add(f'{label} must be a direct child of <defs>')
-        if not (elem.get('id') or '').strip():
-            errors.add(f'{label} requires a non-empty unique id')
+        if parent is None or _svg_element_tag(parent) != "defs":
+            errors.add(f"{label} must be a direct child of <defs>")
+        if not (elem.get("id") or "").strip():
+            errors.add(f"{label} requires a non-empty unique id")
     return sorted(errors)
 
 
@@ -1860,7 +1961,7 @@ def _project_marker_polygon_points(
     raw: str,
 ) -> list[tuple[float, float]] | None:
     """Parse finite marker polygon points from the closed project grammar."""
-    tokens = [token for token in re.split(r'[\s,]+', raw.strip()) if token]
+    tokens = [token for token in re.split(r"[\s,]+", raw.strip()) if token]
     if not tokens or len(tokens) % 2:
         return None
     try:
@@ -1875,8 +1976,7 @@ def _project_marker_polygon_points(
 def _project_marker_path_points(raw: str) -> list[tuple[float, float]]:
     """Return the explicit M/L points from an already-validated marker path."""
     points = [
-        (float(x), float(y))
-        for x, y in _PROJECT_MARKER_COMMAND_POINT_RE.findall(raw)
+        (float(x), float(y)) for x, y in _PROJECT_MARKER_COMMAND_POINT_RE.findall(raw)
     ]
     return [
         point
@@ -1891,9 +1991,8 @@ def _project_marker_cross(
     third: tuple[float, float],
 ) -> float:
     """Return the signed turn for three marker vertices."""
-    return (
-        (second[0] - first[0]) * (third[1] - second[1])
-        - (second[1] - first[1]) * (third[0] - second[0])
+    return (second[0] - first[0]) * (third[1] - second[1]) - (second[1] - first[1]) * (
+        third[0] - second[0]
     )
 
 
@@ -1917,12 +2016,9 @@ def _project_marker_quadrilateral_type(
     """Classify one simple four-point marker as diamond or stealth."""
     if len(points) != 4:
         return None
-    if (
-        _project_marker_segments_cross(points[0], points[1], points[2], points[3])
-        or _project_marker_segments_cross(
-            points[1], points[2], points[3], points[0]
-        )
-    ):
+    if _project_marker_segments_cross(
+        points[0], points[1], points[2], points[3]
+    ) or _project_marker_segments_cross(points[1], points[2], points[3], points[0]):
         return None
     turns = [
         _project_marker_cross(
@@ -1935,7 +2031,7 @@ def _project_marker_quadrilateral_type(
     if any(abs(turn) <= 1e-12 for turn in turns):
         return None
     signs = {turn > 0 for turn in turns}
-    return 'diamond' if len(signs) == 1 else 'stealth'
+    return "diamond" if len(signs) == 1 else "stealth"
 
 
 def classify_project_marker_shape(marker_elem: ET.Element) -> str | None:
@@ -1943,31 +2039,30 @@ def classify_project_marker_shape(marker_elem: ET.Element) -> str | None:
     visual_children = [
         child
         for child in list(marker_elem)
-        if _svg_element_tag(child)
-        not in PROJECT_NON_VISUAL_DEFINITION_CHILD_TAGS
+        if _svg_element_tag(child) not in PROJECT_NON_VISUAL_DEFINITION_CHILD_TAGS
     ]
     if len(visual_children) != 1:
         return None
     shape = visual_children[0]
-    tag = (_svg_element_tag(shape) or '').lower()
-    if tag in {'circle', 'ellipse'}:
-        return 'oval'
-    if tag == 'path':
-        path_data = shape.get('d', '')
+    tag = (_svg_element_tag(shape) or "").lower()
+    if tag in {"circle", "ellipse"}:
+        return "oval"
+    if tag == "path":
+        path_data = shape.get("d", "")
         if _PROJECT_MARKER_TRIANGLE_PATH_RE.fullmatch(path_data):
-            return 'triangle'
+            return "triangle"
         if _PROJECT_MARKER_ARROW_PATH_RE.fullmatch(path_data):
-            return 'arrow'
+            return "arrow"
         if _PROJECT_MARKER_DIAMOND_PATH_RE.fullmatch(path_data):
             points = _project_marker_path_points(path_data)
             return _project_marker_quadrilateral_type(points)
         return None
-    if tag == 'polygon':
-        points = _project_marker_polygon_points(shape.get('points', ''))
+    if tag == "polygon":
+        points = _project_marker_polygon_points(shape.get("points", ""))
         if points is None:
             return None
         if len(points) == 3:
-            return 'triangle'
+            return "triangle"
         return _project_marker_quadrilateral_type(points)
     return None
 
@@ -1980,7 +2075,7 @@ def _project_effective_presentation_value(
     """Resolve one inherited presentation value for project validation."""
     current: ET.Element | None = elem
     while current is not None:
-        style_values = parse_inline_style(current.get('style'))
+        style_values = parse_inline_style(current.get("style"))
         if name in style_values:
             return style_values[name]
         direct = current.get(name)
@@ -1994,45 +2089,39 @@ def project_marker_errors(root: ET.Element) -> list[str]:
     """Validate SVG line-end markers against the native arrow contract."""
     definitions, _duplicates = project_definition_index(root)
     parent_by_id = {
-        id(child): parent
-        for parent in root.iter()
-        for child in list(parent)
+        id(child): parent for parent in root.iter() for child in list(parent)
     }
     errors: set[str] = set()
     checked_markers: set[str] = set()
 
     for elem in root.iter():
-        for attribute_name in ('marker-start', 'marker-end'):
+        for attribute_name in ("marker-start", "marker-end"):
             raw_reference = elem.get(attribute_name)
-            if (
-                raw_reference is None
-                or raw_reference.strip().lower() == 'none'
-            ):
+            if raw_reference is None or raw_reference.strip().lower() == "none":
                 continue
 
             label = _transform_element_label(elem)
-            tag = (_svg_element_tag(elem) or '').lower()
-            if tag not in {'line', 'path'}:
+            tag = (_svg_element_tag(elem) or "").lower()
+            if tag not in {"line", "path"}:
                 errors.add(
-                    f'{label} {attribute_name} is allowed only on <line> '
-                    'or <path>'
+                    f"{label} {attribute_name} is allowed only on <line> or <path>"
                 )
 
-            match = re.fullmatch(r'url\(#([^)]+)\)', raw_reference.strip())
+            match = re.fullmatch(r"url\(#([^)]+)\)", raw_reference.strip())
             if match is None:
                 errors.add(
-                    f'{label} {attribute_name} must be an exact local '
-                    f'url(#id) reference; got {raw_reference!r}'
+                    f"{label} {attribute_name} must be an exact local "
+                    f"url(#id) reference; got {raw_reference!r}"
                 )
                 continue
 
             marker_id = match.group(1)
             marker = definitions.get(marker_id)
-            if marker is None or _svg_element_tag(marker) != 'marker':
+            if marker is None or _svg_element_tag(marker) != "marker":
                 errors.add(
-                    f'{label} {attribute_name}=url(#{marker_id}) has no '
+                    f"{label} {attribute_name}=url(#{marker_id}) has no "
                     f'matching direct <defs><marker id="{marker_id}"> '
-                    'definition'
+                    "definition"
                 )
                 continue
 
@@ -2044,28 +2133,25 @@ def project_marker_errors(root: ET.Element) -> list[str]:
             ]
             shape = visual_children[0] if len(visual_children) == 1 else None
             marker_shape_type = (
-                classify_project_marker_shape(marker)
-                if shape is not None
-                else None
+                classify_project_marker_shape(marker) if shape is not None else None
             )
             if marker_id not in checked_markers:
                 checked_markers.add(marker_id)
                 marker_label = f'<marker id="{marker_id}">'
-                if marker.get('orient') not in {
-                    'auto',
-                    'auto-start-reverse',
+                if marker.get("orient") not in {
+                    "auto",
+                    "auto-start-reverse",
                 }:
                     errors.add(
                         f'{marker_label} requires orient="auto" or '
                         'orient="auto-start-reverse"'
                     )
-                marker_units = marker.get('markerUnits', 'strokeWidth')
-                if marker_units not in {'strokeWidth', 'userSpaceOnUse'}:
+                marker_units = marker.get("markerUnits", "strokeWidth")
+                if marker_units not in {"strokeWidth", "userSpaceOnUse"}:
                     errors.add(
-                        f'{marker_label} has unsupported '
-                        f'markerUnits={marker_units!r}'
+                        f"{marker_label} has unsupported markerUnits={marker_units!r}"
                     )
-                for size_attribute in ('markerWidth', 'markerHeight'):
+                for size_attribute in ("markerWidth", "markerHeight"):
                     raw_size = marker.get(size_attribute)
                     if raw_size is None:
                         continue
@@ -2075,86 +2161,88 @@ def project_marker_errors(root: ET.Element) -> list[str]:
                         size = math.nan
                     if not math.isfinite(size) or size <= 0:
                         errors.add(
-                            f'{marker_label} {size_attribute} must be a '
-                            f'positive finite number; got {raw_size!r}'
+                            f"{marker_label} {size_attribute} must be a "
+                            f"positive finite number; got {raw_size!r}"
                         )
 
                 if shape is None:
                     errors.add(
-                        f'{marker_label} must contain exactly one direct '
-                        'triangle, stealth, arrow, diamond, or oval shape'
+                        f"{marker_label} must contain exactly one direct "
+                        "triangle, stealth, arrow, diamond, or oval shape"
                     )
                 else:
-                    shape_tag = (_svg_element_tag(shape) or '').lower()
-                    if shape.get('transform'):
+                    shape_tag = (_svg_element_tag(shape) or "").lower()
+                    if shape.get("transform"):
                         errors.add(
-                            f'{marker_label} child <{shape_tag}> cannot use '
-                            'transform'
+                            f"{marker_label} child <{shape_tag}> cannot use transform"
                         )
-                    if marker_shape_type is None and shape_tag == 'path':
+                    if marker_shape_type is None and shape_tag == "path":
                         errors.add(
-                            f'{marker_label} path must be a closed 3-vertex '
-                            'triangle, a simple closed 4-vertex '
-                            'diamond/stealth, or an open 3-vertex arrow, '
-                            'with one explicit M/L command per vertex'
+                            f"{marker_label} path must be a closed 3-vertex "
+                            "triangle, a simple closed 4-vertex "
+                            "diamond/stealth, or an open 3-vertex arrow, "
+                            "with one explicit M/L command per vertex"
                         )
-                    elif (
-                        marker_shape_type is None
-                        and shape_tag == 'polygon'
-                    ):
+                    elif marker_shape_type is None and shape_tag == "polygon":
                         errors.add(
-                            f'{marker_label} polygon must contain exactly '
-                            '3 finite vertices or 4 finite vertices forming '
-                            'a simple diamond/stealth quadrilateral'
+                            f"{marker_label} polygon must contain exactly "
+                            "3 finite vertices or 4 finite vertices forming "
+                            "a simple diamond/stealth quadrilateral"
                         )
-                    elif (
-                        marker_shape_type is None
-                        and shape_tag not in {'circle', 'ellipse'}
-                    ):
+                    elif marker_shape_type is None and shape_tag not in {
+                        "circle",
+                        "ellipse",
+                    }:
                         errors.add(
-                            f'{marker_label} child <{shape_tag}> has no native '
-                            'line-end mapping'
+                            f"{marker_label} child <{shape_tag}> has no native "
+                            "line-end mapping"
                         )
 
             if shape is None:
                 continue
             stroke_value = _project_effective_presentation_value(
                 elem,
-                'stroke',
+                "stroke",
                 parent_by_id,
             )
-            marker_fill = _project_effective_presentation_value(
-                shape,
-                'fill',
-                parent_by_id,
-            ) or '#000000'
-            if marker_shape_type == 'arrow':
-                if marker_fill.strip().lower() != 'none':
+            marker_fill = (
+                _project_effective_presentation_value(
+                    shape,
+                    "fill",
+                    parent_by_id,
+                )
+                or "#000000"
+            )
+            if marker_shape_type == "arrow":
+                if marker_fill.strip().lower() != "none":
                     errors.add(
-                        f'{label} {attribute_name}=url(#{marker_id}) open '
+                        f"{label} {attribute_name}=url(#{marker_id}) open "
                         'arrow marker requires fill="none"'
                     )
-                marker_channel = 'stroke'
-                marker_paint = _project_effective_presentation_value(
-                    shape,
-                    marker_channel,
-                    parent_by_id,
-                ) or 'none'
+                marker_channel = "stroke"
+                marker_paint = (
+                    _project_effective_presentation_value(
+                        shape,
+                        marker_channel,
+                        parent_by_id,
+                    )
+                    or "none"
+                )
             else:
-                marker_channel = 'fill'
+                marker_channel = "fill"
                 marker_paint = marker_fill
-            stroke_color, _stroke_alpha = parse_svg_color(stroke_value or '')
+            stroke_color, _stroke_alpha = parse_svg_color(stroke_value or "")
             marker_color, _marker_alpha = parse_svg_color(marker_paint)
             if stroke_color is None or marker_color is None:
                 errors.add(
-                    f'{label} {attribute_name} marker {marker_channel} and '
-                    'line stroke must both be supported solid colors'
+                    f"{label} {attribute_name} marker {marker_channel} and "
+                    "line stroke must both be supported solid colors"
                 )
             elif stroke_color != marker_color:
                 errors.add(
-                    f'{label} {attribute_name}=url(#{marker_id}) marker '
-                    f'{marker_channel} {marker_paint!r} does not match '
-                    f'effective line stroke {stroke_value!r}'
+                    f"{label} {attribute_name}=url(#{marker_id}) marker "
+                    f"{marker_channel} {marker_paint!r} does not match "
+                    f"effective line stroke {stroke_value!r}"
                 )
 
     return sorted(errors)
@@ -2162,41 +2250,41 @@ def project_marker_errors(root: ET.Element) -> list[str]:
 
 def resolve_project_text_image_fill(pattern: ET.Element) -> tuple[str, ET.Element]:
     """Resolve the controlled one-image pattern used for native text picture fills."""
-    if _svg_element_tag(pattern) != 'pattern':
-        raise ValueError('definition must be an SVG <pattern>')
+    if _svg_element_tag(pattern) != "pattern":
+        raise ValueError("definition must be an SVG <pattern>")
 
-    mode = pattern.get(PROJECT_TEXT_IMAGE_FILL_ATTR, '')
+    mode = pattern.get(PROJECT_TEXT_IMAGE_FILL_ATTR, "")
     if mode not in PROJECT_TEXT_IMAGE_FILL_MODES:
-        supported = ', '.join(sorted(PROJECT_TEXT_IMAGE_FILL_MODES))
-        raise ValueError(f'{PROJECT_TEXT_IMAGE_FILL_ATTR} must be one of: {supported}')
+        supported = ", ".join(sorted(PROJECT_TEXT_IMAGE_FILL_MODES))
+        raise ValueError(f"{PROJECT_TEXT_IMAGE_FILL_ATTR} must be one of: {supported}")
     preset_attributes = [
         name
-        for name in ('data-pptx-pattern', 'data-pptx-fg', 'data-pptx-bg')
+        for name in ("data-pptx-pattern", "data-pptx-fg", "data-pptx-bg")
         if pattern.get(name) is not None
     ]
     if preset_attributes:
         raise ValueError(
-            'text image fill must not combine preset-pattern attributes: '
-            f'{", ".join(preset_attributes)}'
+            "text image fill must not combine preset-pattern attributes: "
+            f"{', '.join(preset_attributes)}"
         )
-    if pattern.get('patternTransform') is not None:
-        raise ValueError('pattern must not use patternTransform')
+    if pattern.get("patternTransform") is not None:
+        raise ValueError("pattern must not use patternTransform")
 
     children = list(pattern)
-    if len(children) != 1 or children[0].tag != f'{{{SVG_NS}}}image':
-        raise ValueError('pattern must contain exactly one direct SVG <image> child')
+    if len(children) != 1 or children[0].tag != f"{{{SVG_NS}}}image":
+        raise ValueError("pattern must contain exactly one direct SVG <image> child")
 
     image = children[0]
     unsupported = [
         name
         for name in (
-            'clip-path',
-            'filter',
-            'fill-opacity',
-            'mask',
-            'opacity',
-            'style',
-            'transform',
+            "clip-path",
+            "filter",
+            "fill-opacity",
+            "mask",
+            "opacity",
+            "style",
+            "transform",
         )
         if image.get(name) is not None
     ]
@@ -2211,18 +2299,25 @@ def project_paint_reference_errors(root: ET.Element) -> list[str]:
     pattern_descendant_ids = {
         id(descendant)
         for pattern in root.iter()
-        if _svg_element_tag(pattern) == 'pattern'
+        if _svg_element_tag(pattern) == "pattern"
         for descendant in pattern.iter()
         if descendant is not pattern
     }
-    fill_shape_tags = frozenset({
-        'rect', 'circle', 'ellipse', 'path', 'polygon', 'polyline',
-    })
-    stroke_shape_tags = fill_shape_tags | {'line'}
+    fill_shape_tags = frozenset(
+        {
+            "rect",
+            "circle",
+            "ellipse",
+            "path",
+            "polygon",
+            "polyline",
+        }
+    )
+    stroke_shape_tags = fill_shape_tags | {"line"}
     errors: set[str] = set()
 
     for elem in root.iter():
-        style_values = parse_inline_style(elem.get('style'))
+        style_values = parse_inline_style(elem.get("style"))
         for property_name in PROJECT_REFERENCE_PAINT_PROPERTIES:
             raw = (
                 style_values[property_name]
@@ -2238,7 +2333,7 @@ def project_paint_reference_errors(root: ET.Element) -> list[str]:
                 )
             except ValueError:
                 continue
-            if kind != 'reference' or reference_id is None:
+            if kind != "reference" or reference_id is None:
                 continue
 
             elem_tag = _svg_element_tag(elem) or str(elem.tag)
@@ -2246,85 +2341,91 @@ def project_paint_reference_errors(root: ET.Element) -> list[str]:
             target = definitions.get(reference_id)
             if target is None:
                 errors.add(
-                    f'<{elem_tag}> {property_name}=url(#{reference_id}) has no '
-                    'matching direct <defs> definition'
+                    f"<{elem_tag}> {property_name}=url(#{reference_id}) has no "
+                    "matching direct <defs> definition"
                 )
                 continue
 
             has_text_descendant = any(
-                (_svg_element_tag(descendant) or '').lower() in {'text', 'tspan'}
+                (_svg_element_tag(descendant) or "").lower() in {"text", "tspan"}
                 for descendant in elem.iter()
                 if descendant is not elem
             )
             if id(elem) in pattern_descendant_ids:
                 allowed_tags: tuple[str, ...] = ()
-            elif property_name == 'fill' and elem_tag_lower in fill_shape_tags:
-                allowed_tags = ('lineargradient', 'radialgradient', 'pattern')
-            elif property_name == 'stroke' and elem_tag_lower in stroke_shape_tags:
-                allowed_tags = ('lineargradient', 'radialgradient')
-            elif property_name == 'fill' and elem_tag_lower in {'text', 'tspan'}:
+            elif property_name == "fill" and elem_tag_lower in fill_shape_tags:
+                allowed_tags = ("lineargradient", "radialgradient", "pattern")
+            elif property_name == "stroke" and elem_tag_lower in stroke_shape_tags:
+                allowed_tags = ("lineargradient", "radialgradient")
+            elif property_name == "fill" and elem_tag_lower in {"text", "tspan"}:
                 target_tag = (_svg_element_tag(target) or str(target.tag)).lower()
-                if target_tag == 'pattern' and target.get(PROJECT_TEXT_IMAGE_FILL_ATTR) is not None:
-                    allowed_tags = ('lineargradient', 'radialgradient', 'pattern')
+                if (
+                    target_tag == "pattern"
+                    and target.get(PROJECT_TEXT_IMAGE_FILL_ATTR) is not None
+                ):
+                    allowed_tags = ("lineargradient", "radialgradient", "pattern")
                 else:
-                    allowed_tags = ('lineargradient', 'radialgradient')
-            elif property_name == 'fill' and elem_tag_lower == 'g':
+                    allowed_tags = ("lineargradient", "radialgradient")
+            elif property_name == "fill" and elem_tag_lower == "g":
                 allowed_tags = (
-                    ('lineargradient', 'radialgradient')
+                    ("lineargradient", "radialgradient")
                     if has_text_descendant
-                    else ('lineargradient', 'radialgradient', 'pattern')
+                    else ("lineargradient", "radialgradient", "pattern")
                 )
             elif (
-                property_name == 'stroke'
-                and elem_tag_lower == 'g'
+                property_name == "stroke"
+                and elem_tag_lower == "g"
                 and not has_text_descendant
             ):
-                allowed_tags = ('lineargradient', 'radialgradient')
+                allowed_tags = ("lineargradient", "radialgradient")
             else:
                 allowed_tags = ()
 
             if not allowed_tags:
                 errors.add(
-                    f'<{elem_tag}> {property_name}=url(#{reference_id}) is not '
-                    'supported by native PPTX conversion in this context'
+                    f"<{elem_tag}> {property_name}=url(#{reference_id}) is not "
+                    "supported by native PPTX conversion in this context"
                 )
                 continue
 
             target_tag = (_svg_element_tag(target) or str(target.tag)).lower()
             is_text_image_fill = (
-                target_tag == 'pattern'
+                target_tag == "pattern"
                 and target.get(PROJECT_TEXT_IMAGE_FILL_ATTR) is not None
             )
             if is_text_image_fill and not (
-                property_name == 'fill'
-                and elem_tag_lower in {'text', 'tspan'}
+                property_name == "fill" and elem_tag_lower in {"text", "tspan"}
             ):
                 errors.add(
-                    f'<{elem_tag}> {property_name}=url(#{reference_id}) uses a '
-                    'text image fill pattern outside <text>/<tspan>'
+                    f"<{elem_tag}> {property_name}=url(#{reference_id}) uses a "
+                    "text image fill pattern outside <text>/<tspan>"
                 )
                 continue
             if target_tag not in allowed_tags:
                 tag_labels = {
-                    'lineargradient': 'linearGradient',
-                    'radialgradient': 'radialGradient',
-                    'pattern': 'pattern',
+                    "lineargradient": "linearGradient",
+                    "radialgradient": "radialGradient",
+                    "pattern": "pattern",
                 }
-                expected = '/'.join(tag_labels[tag] for tag in allowed_tags)
+                expected = "/".join(tag_labels[tag] for tag in allowed_tags)
                 errors.add(
-                    f'<{elem_tag}> {property_name}=url(#{reference_id}) resolves '
-                    f'to <{_svg_element_tag(target) or target.tag}>; expected '
-                    f'{expected}'
+                    f"<{elem_tag}> {property_name}=url(#{reference_id}) resolves "
+                    f"to <{_svg_element_tag(target) or target.tag}>; expected "
+                    f"{expected}"
                 )
                 continue
 
-            if property_name == 'fill' and elem_tag_lower in {'text', 'tspan'} and target_tag == 'pattern':
+            if (
+                property_name == "fill"
+                and elem_tag_lower in {"text", "tspan"}
+                and target_tag == "pattern"
+            ):
                 try:
                     resolve_project_text_image_fill(target)
                 except ValueError as exc:
                     errors.add(
-                        f'<{elem_tag}> fill=url(#{reference_id}) has an invalid '
-                        f'text image fill: {exc}'
+                        f"<{elem_tag}> fill=url(#{reference_id}) has an invalid "
+                        f"text image fill: {exc}"
                     )
     return sorted(errors)
 
@@ -2334,27 +2435,24 @@ def project_mask_errors(root: ET.Element) -> list[str]:
     errors: set[str] = set()
     for elem in root.iter():
         label = _transform_element_label(elem)
-        if _svg_element_tag(elem) == 'mask':
+        if _svg_element_tag(elem) == "mask":
             errors.add(
-                f'{label} is an unsupported SVG mask definition; replace it '
-                'with editable overlay or Boolean/cutout shapes, an image '
-                'clip-path, or pre-rendered alpha imagery'
+                f"{label} is an unsupported SVG mask definition; replace it "
+                "with editable overlay or Boolean/cutout shapes, an image "
+                "clip-path, or pre-rendered alpha imagery"
             )
 
         sources: list[str] = []
-        if any(
-            name.rsplit('}', 1)[-1].lower() == 'mask'
-            for name in elem.attrib
-        ):
-            sources.append('mask attribute')
-        if 'mask' in parse_inline_style(elem.get('style')):
-            sources.append('inline style mask property')
+        if any(name.rsplit("}", 1)[-1].lower() == "mask" for name in elem.attrib):
+            sources.append("mask attribute")
+        if "mask" in parse_inline_style(elem.get("style")):
+            sources.append("inline style mask property")
         if sources:
             errors.add(
-                f'{label} uses unsupported SVG mask presentation via '
-                f'{", ".join(sources)}; native PPTX export would drop the '
-                'effect. Use editable overlay or Boolean/cutout shapes, an '
-                'image clip-path, or pre-rendered alpha imagery'
+                f"{label} uses unsupported SVG mask presentation via "
+                f"{', '.join(sources)}; native PPTX export would drop the "
+                "effect. Use editable overlay or Boolean/cutout shapes, an "
+                "image clip-path, or pre-rendered alpha imagery"
             )
     return sorted(errors)
 
@@ -2362,30 +2460,28 @@ def project_mask_errors(root: ET.Element) -> list[str]:
 def parse_project_gradient_ratio(raw: str) -> float:
     """Parse one normalized gradient coordinate or stop offset."""
     number, unit = _parse_svg_length_parts(raw)
-    if unit == '%':
+    if unit == "%":
         number /= 100.0
     elif unit:
-        raise ValueError('must be unitless or a percentage')
+        raise ValueError("must be unitless or a percentage")
     if not 0.0 <= number <= 1.0:
-        raise ValueError('must be within 0..1 or 0%..100%')
+        raise ValueError("must be within 0..1 or 0%..100%")
     return number
 
 
 def parse_project_linear_gradient_coordinate(raw: str) -> float:
     """Parse one objectBoundingBox linear-gradient projection coordinate."""
     number, unit = _parse_svg_length_parts(raw)
-    if unit == '%':
+    if unit == "%":
         number /= 100.0
     elif unit:
-        raise ValueError('must be unitless or a percentage')
+        raise ValueError("must be unitless or a percentage")
     if not (
         PROJECT_LINEAR_GRADIENT_COORDINATE_MIN
         <= number
         <= PROJECT_LINEAR_GRADIENT_COORDINATE_MAX
     ):
-        raise ValueError(
-            'must be within -0.105..1.105 or -10.5%..110.5%'
-        )
+        raise ValueError("must be within -0.105..1.105 or -10.5%..110.5%")
     return number
 
 
@@ -2393,10 +2489,9 @@ def is_project_radial_focus_point(focus_x: float, focus_y: float) -> bool:
     """Return whether a focus lies inside the canonical SVG radial circle."""
     if not math.isfinite(focus_x) or not math.isfinite(focus_y):
         return False
-    return (
-        (focus_x - 0.5) ** 2 + (focus_y - 0.5) ** 2
-        <= 0.25 + PROJECT_RADIAL_FOCUS_TOLERANCE
-    )
+    return (focus_x - 0.5) ** 2 + (
+        focus_y - 0.5
+    ) ** 2 <= 0.25 + PROJECT_RADIAL_FOCUS_TOLERANCE
 
 
 def project_gradient_errors(root: ET.Element) -> list[str]:
@@ -2406,34 +2501,31 @@ def project_gradient_errors(root: ET.Element) -> list[str]:
         tag = _svg_element_tag(gradient)
         if tag not in PROJECT_GRADIENT_TAGS:
             continue
-        gradient_id = gradient.get('id')
-        label = f'<{tag} id="{gradient_id}">' if gradient_id else f'<{tag}>'
-        attribute_names = {
-            name.rsplit('}', 1)[-1]
-            for name in gradient.attrib
-        }
-        if 'href' in attribute_names:
+        gradient_id = gradient.get("id")
+        label = f'<{tag} id="{gradient_id}">' if gradient_id else f"<{tag}>"
+        attribute_names = {name.rsplit("}", 1)[-1] for name in gradient.attrib}
+        if "href" in attribute_names:
             errors.add(
-                f'{label} cannot inherit from href/xlink:href; '
-                'define gradient stops directly'
+                f"{label} cannot inherit from href/xlink:href; "
+                "define gradient stops directly"
             )
-        if 'gradientTransform' in attribute_names:
-            errors.add(f'{label} cannot use gradientTransform')
-        if 'spreadMethod' in attribute_names:
-            errors.add(f'{label} cannot use spreadMethod')
-        gradient_units = gradient.get('gradientUnits')
-        if gradient_units not in {None, 'objectBoundingBox'}:
+        if "gradientTransform" in attribute_names:
+            errors.add(f"{label} cannot use gradientTransform")
+        if "spreadMethod" in attribute_names:
+            errors.add(f"{label} cannot use spreadMethod")
+        gradient_units = gradient.get("gradientUnits")
+        if gradient_units not in {None, "objectBoundingBox"}:
             errors.add(
-                f'{label} cannot use gradientUnits={gradient_units!r}; '
-                'use normalized objectBoundingBox coordinates'
+                f"{label} cannot use gradientUnits={gradient_units!r}; "
+                "use normalized objectBoundingBox coordinates"
             )
 
-        if tag == 'linearGradient':
+        if tag == "linearGradient":
             coordinate_defaults = {
-                'x1': '0',
-                'y1': '0',
-                'x2': '1',
-                'y2': '0',
+                "x1": "0",
+                "y1": "0",
+                "x2": "1",
+                "y2": "0",
             }
             coordinates: dict[str, float] = {}
             for coordinate_name, default in coordinate_defaults.items():
@@ -2444,32 +2536,32 @@ def project_gradient_errors(root: ET.Element) -> list[str]:
                     )
                 except ValueError:
                     errors.add(
-                        f'{label} {coordinate_name} must be a finite '
-                        'objectBoundingBox projection coordinate within '
-                        '-0.105..1.105 or -10.5%..110.5%; '
-                        f'got {raw_coordinate!r}'
+                        f"{label} {coordinate_name} must be a finite "
+                        "objectBoundingBox projection coordinate within "
+                        "-0.105..1.105 or -10.5%..110.5%; "
+                        f"got {raw_coordinate!r}"
                     )
             if len(coordinates) == 4 and (
                 math.isclose(
-                    coordinates['x1'],
-                    coordinates['x2'],
+                    coordinates["x1"],
+                    coordinates["x2"],
                     rel_tol=0.0,
                     abs_tol=1e-12,
                 )
                 and math.isclose(
-                    coordinates['y1'],
-                    coordinates['y2'],
+                    coordinates["y1"],
+                    coordinates["y2"],
                     rel_tol=0.0,
                     abs_tol=1e-12,
                 )
             ):
                 errors.add(
-                    f'{label} linear gradient axis must not collapse to one '
-                    'point; use different x1/y1 and x2/y2 coordinates'
+                    f"{label} linear gradient axis must not collapse to one "
+                    "point; use different x1/y1 and x2/y2 coordinates"
                 )
         else:
             radial_coordinates: dict[str, float] = {}
-            for coordinate_name in ('cx', 'cy', 'r', 'fx', 'fy'):
+            for coordinate_name in ("cx", "cy", "r", "fx", "fy"):
                 raw_coordinate = gradient.get(coordinate_name)
                 if raw_coordinate is None:
                     continue
@@ -2477,38 +2569,29 @@ def project_gradient_errors(root: ET.Element) -> list[str]:
                     coordinate = parse_project_gradient_ratio(raw_coordinate)
                 except ValueError:
                     errors.add(
-                        f'{label} {coordinate_name} must be a normalized finite '
-                        'value from 0 to 1 or 0% to 100%; '
-                        f'got {raw_coordinate!r}'
+                        f"{label} {coordinate_name} must be a normalized finite "
+                        "value from 0 to 1 or 0% to 100%; "
+                        f"got {raw_coordinate!r}"
                     )
                     continue
                 radial_coordinates[coordinate_name] = coordinate
-                if coordinate_name == 'r' and coordinate <= 0:
-                    errors.add(f'{label} r must be greater than 0')
-            focus_x_name = (
-                'fx' if gradient.get('fx') is not None else 'cx'
-            )
-            focus_y_name = (
-                'fy' if gradient.get('fy') is not None else 'cy'
-            )
+                if coordinate_name == "r" and coordinate <= 0:
+                    errors.add(f"{label} r must be greater than 0")
+            focus_x_name = "fx" if gradient.get("fx") is not None else "cx"
+            focus_y_name = "fy" if gradient.get("fy") is not None else "cy"
             focus_is_valid = (
-                (
-                    gradient.get(focus_x_name) is None
-                    or focus_x_name in radial_coordinates
-                )
-                and (
-                    gradient.get(focus_y_name) is None
-                    or focus_y_name in radial_coordinates
-                )
+                gradient.get(focus_x_name) is None or focus_x_name in radial_coordinates
+            ) and (
+                gradient.get(focus_y_name) is None or focus_y_name in radial_coordinates
             )
             if focus_is_valid:
                 focus_x = radial_coordinates.get(focus_x_name, 0.5)
                 focus_y = radial_coordinates.get(focus_y_name, 0.5)
                 if not is_project_radial_focus_point(focus_x, focus_y):
                     errors.add(
-                        f'{label} effective focus (fx/fy, otherwise cx/cy) '
-                        'must lie within the canonical circle centered at '
-                        f'0.5,0.5 with radius 0.5; got ({focus_x}, {focus_y})'
+                        f"{label} effective focus (fx/fy, otherwise cx/cy) "
+                        "must lie within the canonical circle centered at "
+                        f"0.5,0.5 with radius 0.5; got ({focus_x}, {focus_y})"
                     )
 
         stops: list[ET.Element] = []
@@ -2516,45 +2599,42 @@ def project_gradient_errors(root: ET.Element) -> list[str]:
             child_tag = _svg_element_tag(child) or str(child.tag)
             if child_tag in PROJECT_NON_VISUAL_DEFINITION_CHILD_TAGS:
                 continue
-            if child_tag != 'stop':
+            if child_tag != "stop":
                 errors.add(
-                    f'{label} has unsupported direct child <{child_tag}>; '
-                    'gradient definitions may contain only direct <stop> children'
+                    f"{label} has unsupported direct child <{child_tag}>; "
+                    "gradient definitions may contain only direct <stop> children"
                 )
                 continue
             stops.append(child)
         if len(stops) < 2:
             errors.add(
-                f'{label} requires at least two direct <stop> children for '
-                'native PPTX gradient interpolation'
+                f"{label} requires at least two direct <stop> children for "
+                "native PPTX gradient interpolation"
             )
         previous_offset: float | None = None
         for index, stop in enumerate(stops, start=1):
-            stop_label = f'{label} stop #{index}'
-            raw_offset = stop.get('offset')
+            stop_label = f"{label} stop #{index}"
+            raw_offset = stop.get("offset")
             try:
                 if raw_offset is None:
                     raise ValueError
                 offset = parse_project_gradient_ratio(raw_offset)
             except ValueError:
                 errors.add(
-                    f'{stop_label} offset must be explicit and within 0..1 '
-                    f'or 0%..100%; got {raw_offset!r}'
+                    f"{stop_label} offset must be explicit and within 0..1 "
+                    f"or 0%..100%; got {raw_offset!r}"
                 )
             else:
-                if (
-                    previous_offset is not None
-                    and offset < previous_offset
-                ):
+                if previous_offset is not None and offset < previous_offset:
                     errors.add(
-                        f'{label} stop offsets must be non-decreasing; '
-                        f'stop #{index} offset {raw_offset!r} precedes a '
-                        f'larger offset at stop #{index - 1}'
+                        f"{label} stop offsets must be non-decreasing; "
+                        f"stop #{index} offset {raw_offset!r} precedes a "
+                        f"larger offset at stop #{index - 1}"
                     )
                 previous_offset = offset
-            style_values = parse_inline_style(stop.get('style'))
-            if not (style_values.get('stop-color') or stop.get('stop-color')):
-                errors.add(f'{stop_label} requires an explicit stop-color')
+            style_values = parse_inline_style(stop.get("style"))
+            if not (style_values.get("stop-color") or stop.get("stop-color")):
+                errors.add(f"{stop_label} requires an explicit stop-color")
     return sorted(errors)
 
 
@@ -2562,11 +2642,11 @@ def parse_project_filter_params(
     filter_elem: ET.Element,
 ) -> dict[str, float | str | bool]:
     """Extract the shared native shadow/glow parameters from one filter."""
-    primitive_units = filter_elem.get('primitiveUnits')
-    if primitive_units not in (None, 'userSpaceOnUse'):
+    primitive_units = filter_elem.get("primitiveUnits")
+    if primitive_units not in (None, "userSpaceOnUse"):
         raise ValueError(
-            'filter primitiveUnits must be userSpaceOnUse when explicit; '
-            f'got {primitive_units!r}'
+            "filter primitiveUnits must be userSpaceOnUse when explicit; "
+            f"got {primitive_units!r}"
         )
     std_dev: float | None = None
     dx = 0.0
@@ -2574,33 +2654,31 @@ def parse_project_filter_params(
     paint_opacity: float | None = None
     transfer_opacity: float | None = None
     color_alpha = 1.0
-    color = '000000'
+    color = "000000"
     has_offset = False
 
     def required_number(primitive: ET.Element, attribute_name: str) -> float:
         primitive_tag = _svg_element_tag(primitive) or str(primitive.tag)
         raw_value = primitive.get(attribute_name)
         if raw_value is None:
-            raise ValueError(
-                f'<{primitive_tag}> requires explicit {attribute_name}'
-            )
+            raise ValueError(f"<{primitive_tag}> requires explicit {attribute_name}")
         try:
             value = float(raw_value)
         except (TypeError, ValueError) as exc:
             raise ValueError(
-                f'<{primitive_tag}> {attribute_name} must be a finite number; '
-                f'got {raw_value!r}'
+                f"<{primitive_tag}> {attribute_name} must be a finite number; "
+                f"got {raw_value!r}"
             ) from exc
         if not math.isfinite(value):
             raise ValueError(
-                f'<{primitive_tag}> {attribute_name} must be a finite number; '
-                f'got {raw_value!r}'
+                f"<{primitive_tag}> {attribute_name} must be a finite number; "
+                f"got {raw_value!r}"
             )
         return value
 
     for child in filter_elem.iter():
         tag = _svg_element_tag(child)
-        style_values = parse_inline_style(child.get('style'))
+        style_values = parse_inline_style(child.get("style"))
 
         def effect_attr(name: str, default: str | None = None) -> str | None:
             return style_values.get(name) or child.get(name, default)
@@ -2608,59 +2686,57 @@ def parse_project_filter_params(
         def required_effect_attr(name: str) -> str:
             raw_value = effect_attr(name)
             if raw_value is None:
-                raise ValueError(f'<{tag}> requires explicit {name}')
+                raise ValueError(f"<{tag}> requires explicit {name}")
             return raw_value
 
-        if tag == 'feDropShadow':
-            std_dev = required_number(child, 'stdDeviation')
-            dx = required_number(child, 'dx')
-            dy = required_number(child, 'dy')
+        if tag == "feDropShadow":
+            std_dev = required_number(child, "stdDeviation")
+            dx = required_number(child, "dx")
+            dy = required_number(child, "dy")
             if abs(dx) > 0.01 or abs(dy) > 0.01:
                 has_offset = True
             paint_opacity = parse_opacity(
-                required_effect_attr('flood-opacity'),
+                required_effect_attr("flood-opacity"),
                 allow_percentage=True,
             )
             parsed_color, parsed_alpha = parse_svg_color(
-                effect_attr('flood-color', '#000000')
+                effect_attr("flood-color", "#000000")
             )
             if parsed_color:
                 color = parsed_color
                 color_alpha = parsed_alpha
-        elif tag == 'feGaussianBlur':
-            if child.get('edgeMode') is not None:
+        elif tag == "feGaussianBlur":
+            if child.get("edgeMode") is not None:
                 raise ValueError(
-                    '<feGaussianBlur> edgeMode is unsupported by the native '
-                    'effect mapping'
+                    "<feGaussianBlur> edgeMode is unsupported by the native "
+                    "effect mapping"
                 )
-            std_dev = required_number(child, 'stdDeviation')
-        elif tag == 'feOffset':
-            dx = _f(child.get('dx'), 0.0)
-            dy = _f(child.get('dy'), 0.0)
+            std_dev = required_number(child, "stdDeviation")
+        elif tag == "feOffset":
+            dx = _f(child.get("dx"), 0.0)
+            dy = _f(child.get("dy"), 0.0)
             if abs(dx) > 0.01 or abs(dy) > 0.01:
                 has_offset = True
-        elif tag == 'feFlood':
+        elif tag == "feFlood":
             paint_opacity = parse_opacity(
-                required_effect_attr('flood-opacity'),
+                required_effect_attr("flood-opacity"),
                 allow_percentage=True,
             )
             parsed_color, parsed_alpha = parse_svg_color(
-                effect_attr('flood-color', '#000000')
+                effect_attr("flood-color", "#000000")
             )
             if parsed_color:
                 color = parsed_color
                 color_alpha = parsed_alpha
-        elif tag == 'feFuncA' and child.get('type') == 'linear':
-            if child.get('intercept') is not None:
+        elif tag == "feFuncA" and child.get("type") == "linear":
+            if child.get("intercept") is not None:
                 raise ValueError(
-                    '<feFuncA> intercept is unsupported; project alpha '
-                    'transfer maps slope multiplication only'
+                    "<feFuncA> intercept is unsupported; project alpha "
+                    "transfer maps slope multiplication only"
                 )
-            slope = required_number(child, 'slope')
+            slope = required_number(child, "slope")
             transfer_opacity = (
-                slope
-                if transfer_opacity is None
-                else transfer_opacity * slope
+                slope if transfer_opacity is None else transfer_opacity * slope
             )
 
     if paint_opacity is None:
@@ -2672,15 +2748,15 @@ def parse_project_filter_params(
     opacity = max(0.0, min(1.0, opacity * color_alpha))
 
     if std_dev is None:
-        raise ValueError('filter requires feDropShadow or feGaussianBlur')
+        raise ValueError("filter requires feDropShadow or feGaussianBlur")
 
     return {
-        'std_dev': std_dev,
-        'dx': dx,
-        'dy': dy,
-        'opacity': opacity,
-        'color': color,
-        'has_offset': has_offset,
+        "std_dev": std_dev,
+        "dx": dx,
+        "dy": dy,
+        "opacity": opacity,
+        "color": color,
+        "has_offset": has_offset,
     }
 
 
@@ -2689,32 +2765,32 @@ def project_filter_drawingml_coordinates(
     effect_kind: str | None = None,
 ) -> dict[str, int]:
     """Map filter geometry into validated DrawingML effect coordinates."""
-    kind = effect_kind or ('shadow' if params['has_offset'] else 'glow')
-    std_dev = float(params['std_dev'])
-    dx = float(params['dx'])
-    dy = float(params['dy'])
-    if kind == 'shadow':
+    kind = effect_kind or ("shadow" if params["has_offset"] else "glow")
+    std_dev = float(params["std_dev"])
+    dx = float(params["dx"])
+    dy = float(params["dy"])
+    if kind == "shadow":
         coordinates_px = {
-            'blurRad': std_dev * 2.0,
-            'dist': math.hypot(dx, dy),
+            "blurRad": std_dev * 2.0,
+            "dist": math.hypot(dx, dy),
         }
-    elif kind == 'glow':
-        coordinates_px = {'rad': std_dev}
+    elif kind == "glow":
+        coordinates_px = {"rad": std_dev}
     else:
-        raise ValueError(f'unsupported native filter kind {kind!r}')
+        raise ValueError(f"unsupported native filter kind {kind!r}")
 
     coordinates: dict[str, int] = {}
     for attribute_name, value_px in coordinates_px.items():
         scaled = value_px * EMU_PER_PX
         if not math.isfinite(scaled):
             raise ValueError(
-                f'DrawingML {attribute_name} must be finite after EMU mapping'
+                f"DrawingML {attribute_name} must be finite after EMU mapping"
             )
         mapped = round(scaled)
         if not 0 <= mapped <= OOXML_COORDINATE_MAX:
             raise ValueError(
-                f'DrawingML {attribute_name} must map within '
-                f'0..{OOXML_COORDINATE_MAX}; got {mapped}'
+                f"DrawingML {attribute_name} must map within "
+                f"0..{OOXML_COORDINATE_MAX}; got {mapped}"
             )
         coordinates[attribute_name] = mapped
     return coordinates
@@ -2726,26 +2802,22 @@ def project_filter_errors(root: ET.Element) -> list[str]:
     filters_by_id = {
         filter_id: elem
         for filter_id, elem in definitions.items()
-        if _svg_element_tag(elem) == 'filter'
+        if _svg_element_tag(elem) == "filter"
     }
     errors: set[str] = set()
-    parents = {
-        child: parent
-        for parent in root.iter()
-        for child in parent
-    }
+    parents = {child: parent for parent in root.iter() for child in parent}
 
     for elem in root.iter():
         tag = (_svg_element_tag(elem) or str(elem.tag)).lower()
         label = _transform_element_label(elem)
-        style_values = parse_inline_style(elem.get('style'))
-        if style_values.get('filter'):
+        style_values = parse_inline_style(elem.get("style"))
+        if style_values.get("filter"):
             errors.add(
                 f'{label} filter must use a direct filter="url(#id)" '
-                'attribute; inline style filters are not supported'
+                "attribute; inline style filters are not supported"
             )
 
-        raw_filter = elem.get('filter')
+        raw_filter = elem.get("filter")
         if raw_filter is None:
             continue
         if (
@@ -2755,38 +2827,38 @@ def project_filter_errors(root: ET.Element) -> list[str]:
             and not is_picture_effect_carrier(elem)
         ):
             errors.add(
-                f'{label} cannot use filter; supported native targets are '
-                'rect, circle, image, path, text, a validated compact authored-'
-                'preset shape, and an exact registered carrier group'
+                f"{label} cannot use filter; supported native targets are "
+                "rect, circle, image, path, text, a validated compact authored-"
+                "preset shape, and an exact registered carrier group"
             )
-        if tag == 'image' and elem.get('clip-path') is not None:
+        if tag == "image" and elem.get("clip-path") is not None:
             errors.add(
-                f'{label} cannot combine filter and clip-path on the same '
-                'image; put the filter on an exact single-image outer <g>'
+                f"{label} cannot combine filter and clip-path on the same "
+                "image; put the filter on an exact single-image outer <g>"
             )
-        match = re.fullmatch(r'url\(#([^)]+)\)', raw_filter.strip())
+        match = re.fullmatch(r"url\(#([^)]+)\)", raw_filter.strip())
         if match is None:
             errors.add(
-                f'{label} filter must be an exact local url(#id) reference; '
-                f'got {raw_filter!r}'
+                f"{label} filter must be an exact local url(#id) reference; "
+                f"got {raw_filter!r}"
             )
             continue
         filter_id = match.group(1)
         if filter_id not in filters_by_id:
             errors.add(
-                f'{label} filter=url(#{filter_id}) has no matching direct '
+                f"{label} filter=url(#{filter_id}) has no matching direct "
                 f'<defs><filter id="{filter_id}"> definition'
             )
 
     for filter_id, filter_elem in filters_by_id.items():
-        label = f'filter #{filter_id}'
+        label = f"filter #{filter_id}"
         parameters_are_valid = True
-        primitive_units = filter_elem.get('primitiveUnits')
-        if primitive_units not in (None, 'userSpaceOnUse'):
+        primitive_units = filter_elem.get("primitiveUnits")
+        if primitive_units not in (None, "userSpaceOnUse"):
             parameters_are_valid = False
             errors.add(
-                f'{label} primitiveUnits must be userSpaceOnUse when '
-                f'explicit; got {primitive_units!r}'
+                f"{label} primitiveUnits must be userSpaceOnUse when "
+                f"explicit; got {primitive_units!r}"
             )
         primitives = [
             _svg_element_tag(descendant) or str(descendant.tag)
@@ -2796,8 +2868,8 @@ def project_filter_errors(root: ET.Element) -> list[str]:
         unsupported = sorted(set(primitives) - PROJECT_FILTER_PRIMITIVES)
         if unsupported:
             errors.add(
-                f'{label} uses unsupported filter primitive(s): '
-                f'{", ".join(unsupported)}'
+                f"{label} uses unsupported filter primitive(s): "
+                f"{', '.join(unsupported)}"
             )
         effect_primitives = [
             primitive
@@ -2805,64 +2877,60 @@ def project_filter_errors(root: ET.Element) -> list[str]:
             if primitive in PROJECT_FILTER_EFFECT_PRIMITIVES
         ]
         if not effect_primitives:
-            errors.add(f'{label} must contain feDropShadow or feGaussianBlur')
+            errors.add(f"{label} must contain feDropShadow or feGaussianBlur")
         elif len(effect_primitives) > 1:
             errors.add(
-                f'{label} contains multiple shadow/glow primitives; one '
-                'filter must map to exactly one native effect'
+                f"{label} contains multiple shadow/glow primitives; one "
+                "filter must map to exactly one native effect"
             )
         if any(
-            _svg_element_tag(descendant) == 'feFuncA'
-            and descendant.get('type') != 'linear'
+            _svg_element_tag(descendant) == "feFuncA"
+            and descendant.get("type") != "linear"
             for descendant in filter_elem.iter()
         ):
             errors.add(f'{label} requires feFuncA type="linear"')
 
         for primitive in filter_elem.iter():
             primitive_tag = _svg_element_tag(primitive)
-            if primitive_tag in {'feDropShadow', 'feFlood'}:
-                style_values = parse_inline_style(primitive.get('style'))
+            if primitive_tag in {"feDropShadow", "feFlood"}:
+                style_values = parse_inline_style(primitive.get("style"))
                 if (
-                    primitive.get('flood-opacity') is None
-                    and 'flood-opacity' not in style_values
+                    primitive.get("flood-opacity") is None
+                    and "flood-opacity" not in style_values
                 ):
                     parameters_are_valid = False
                     errors.add(
-                        f'{label} <{primitive_tag}> requires explicit '
-                        'flood-opacity'
+                        f"{label} <{primitive_tag}> requires explicit flood-opacity"
                     )
-            if (
-                primitive_tag == 'feFuncA'
-                and primitive.get('intercept') is not None
-            ):
+            if primitive_tag == "feFuncA" and primitive.get("intercept") is not None:
                 parameters_are_valid = False
                 errors.add(
-                    f'{label} <feFuncA> intercept is unsupported; project '
-                    'alpha transfer maps slope multiplication only'
+                    f"{label} <feFuncA> intercept is unsupported; project "
+                    "alpha transfer maps slope multiplication only"
                 )
             if (
-                primitive_tag == 'feGaussianBlur'
-                and primitive.get('edgeMode') is not None
+                primitive_tag == "feGaussianBlur"
+                and primitive.get("edgeMode") is not None
             ):
                 parameters_are_valid = False
                 errors.add(
-                    f'{label} <feGaussianBlur> edgeMode is unsupported by '
-                    'the native effect mapping'
+                    f"{label} <feGaussianBlur> edgeMode is unsupported by "
+                    "the native effect mapping"
                 )
             numeric_attrs: tuple[tuple[str, bool, bool], ...] = ()
-            if primitive_tag in {'feDropShadow', 'feGaussianBlur'}:
-                numeric_attrs = (('stdDeviation', True, True),)
-            elif primitive_tag == 'feOffset':
+            if primitive_tag in {"feDropShadow", "feGaussianBlur"}:
+                numeric_attrs = (("stdDeviation", True, True),)
+            elif primitive_tag == "feOffset":
                 numeric_attrs = (
-                    ('dx', False, False),
-                    ('dy', False, False),
+                    ("dx", False, False),
+                    ("dy", False, False),
                 )
-            elif primitive_tag == 'feFuncA':
-                numeric_attrs = (('slope', True, True),)
-            if primitive_tag == 'feDropShadow':
+            elif primitive_tag == "feFuncA":
+                numeric_attrs = (("slope", True, True),)
+            if primitive_tag == "feDropShadow":
                 numeric_attrs += (
-                    ('dx', False, True),
-                    ('dy', False, True),
+                    ("dx", False, True),
+                    ("dy", False, True),
                 )
             for attribute_name, non_negative, required in numeric_attrs:
                 raw_value = primitive.get(attribute_name)
@@ -2870,8 +2938,8 @@ def project_filter_errors(root: ET.Element) -> list[str]:
                     if required:
                         parameters_are_valid = False
                         errors.add(
-                            f'{label} <{primitive_tag}> requires explicit '
-                            f'{attribute_name}'
+                            f"{label} <{primitive_tag}> requires explicit "
+                            f"{attribute_name}"
                         )
                     continue
                 try:
@@ -2882,38 +2950,34 @@ def project_filter_errors(root: ET.Element) -> list[str]:
                     not math.isfinite(value)
                     or (non_negative and value < 0)
                     or (
-                        primitive_tag == 'feFuncA'
-                        and attribute_name == 'slope'
+                        primitive_tag == "feFuncA"
+                        and attribute_name == "slope"
                         and value > 1
                     )
                 ):
-                    if attribute_name in {'stdDeviation', 'dx', 'dy'}:
+                    if attribute_name in {"stdDeviation", "dx", "dy"}:
                         parameters_are_valid = False
-                    qualifier = (
-                        ' from 0 to 1'
-                        if primitive_tag == 'feFuncA'
-                        else ''
-                    )
+                    qualifier = " from 0 to 1" if primitive_tag == "feFuncA" else ""
                     errors.add(
-                        f'{label} <{primitive_tag}> {attribute_name} must be a '
-                        f'finite number{qualifier}; got {raw_value!r}'
+                        f"{label} <{primitive_tag}> {attribute_name} must be a "
+                        f"finite number{qualifier}; got {raw_value!r}"
                     )
         if len(effect_primitives) == 1 and parameters_are_valid:
             try:
                 params = parse_project_filter_params(filter_elem)
                 project_filter_drawingml_coordinates(params)
             except (TypeError, ValueError) as exc:
-                errors.add(f'{label} {exc}')
+                errors.add(f"{label} {exc}")
     return sorted(errors)
 
 
 def _is_compact_authored_preset_filter_target(elem: ET.Element) -> bool:
     """Recognize one validated project-authored preset shape filter target."""
     if (
-        _svg_element_tag(elem) != 'g'
-        or elem.get('data-pptx-authoring') != 'preset'
-        or elem.get('data-pptx-object') != 'shape'
-        or elem.get('data-pptx-part') is not None
+        _svg_element_tag(elem) != "g"
+        or elem.get("data-pptx-authoring") != "preset"
+        or elem.get("data-pptx-object") != "shape"
+        or elem.get("data-pptx-part") is not None
     ):
         return False
     from pptx_to_svg.preset_authoring import (  # Local to avoid layer coupling.
@@ -2921,10 +2985,9 @@ def _is_compact_authored_preset_filter_target(elem: ET.Element) -> bool:
         validate_authored_preset_group,
     )
 
-    return (
-        authored_preset_encoding(elem) == 'compact'
-        and not validate_authored_preset_group(elem)
-    )
+    return authored_preset_encoding(
+        elem
+    ) == "compact" and not validate_authored_preset_group(elem)
 
 
 def _is_imported_preset_preview_filter_target(
@@ -2941,50 +3004,44 @@ def _is_imported_preset_preview_filter_target(
     forms remain outside the project contract.
     """
     if (
-        _svg_element_tag(elem) != 'g'
-        or elem.get('data-pptx-part') != 'geometry-preview'
+        _svg_element_tag(elem) != "g"
+        or elem.get("data-pptx-part") != "geometry-preview"
     ):
         return False
     parent = parents.get(elem)
     if (
         parent is None
-        or _svg_element_tag(parent) != 'g'
-        or parent.get('data-pptx-object') not in {'shape', 'connector'}
-        or not parent.get('data-pptx-prst')
-        or not parent.get('data-pptx-frame')
+        or _svg_element_tag(parent) != "g"
+        or parent.get("data-pptx-object") not in {"shape", "connector"}
+        or not parent.get("data-pptx-prst")
+        or not parent.get("data-pptx-frame")
     ):
         return False
     previews = [
-        child
-        for child in parent
-        if child.get('data-pptx-part') == 'geometry-preview'
+        child for child in parent if child.get("data-pptx-part") == "geometry-preview"
     ]
     if len(previews) != 1 or previews[0] is not elem:
         return False
     preview_children = list(elem)
     if not preview_children or any(
-        _svg_element_tag(child) != 'path'
-        or child.get('data-pptx-part') != 'geometry-detail'
+        _svg_element_tag(child) != "path"
+        or child.get("data-pptx-part") != "geometry-detail"
         or len(child) != 0
         for child in preview_children
     ):
         return False
-    carriers = [
-        child
-        for child in parent
-        if child.get('data-pptx-part') == 'geometry'
-    ]
+    carriers = [child for child in parent if child.get("data-pptx-part") == "geometry"]
     if len(carriers) != 1:
         return False
     carrier = carriers[0]
     if not (
-        _svg_element_tag(carrier) == 'path'
-        and carrier.get('visibility') == 'hidden'
-        and carrier.get('pointer-events') == 'none'
-        and carrier.get('data-pptx-object') == parent.get('data-pptx-object')
-        and carrier.get('data-pptx-prst') == parent.get('data-pptx-prst')
-        and carrier.get('data-pptx-frame') == parent.get('data-pptx-frame')
-        and carrier.get('filter') == elem.get('filter')
+        _svg_element_tag(carrier) == "path"
+        and carrier.get("visibility") == "hidden"
+        and carrier.get("pointer-events") == "none"
+        and carrier.get("data-pptx-object") == parent.get("data-pptx-object")
+        and carrier.get("data-pptx-prst") == parent.get("data-pptx-prst")
+        and carrier.get("data-pptx-frame") == parent.get("data-pptx-frame")
+        and carrier.get("filter") == elem.get("filter")
     ):
         return False
     try:
@@ -3000,70 +3057,66 @@ def _is_imported_preset_preview_filter_target(
 def is_picture_effect_carrier(elem: ET.Element) -> bool:
     """Recognize one effect carrier around exactly one clipped picture."""
     if (
-        _svg_element_tag(elem) != 'g'
-        or elem.get('data-pptx-object') == 'group'
+        _svg_element_tag(elem) != "g"
+        or elem.get("data-pptx-object") == "group"
         or re.fullmatch(
-            r'url\(#([^)]+)\)',
-            (elem.get('filter') or '').strip(),
-        ) is None
-        or elem.get('data-pptx-layer') not in {None, 'master', 'layout'}
+            r"url\(#([^)]+)\)",
+            (elem.get("filter") or "").strip(),
+        )
+        is None
+        or elem.get("data-pptx-layer") not in {None, "master", "layout"}
         or any(
             elem.get(attribute) is not None
             for attribute in (
-                'data-pptx-placeholder',
-                'data-pptx-binding',
-                'data-pptx-replace-with',
-                'data-pptx-native',
+                "data-pptx-placeholder",
+                "data-pptx-binding",
+                "data-pptx-replace-with",
+                "data-pptx-native",
             )
         )
     ):
         return False
     children = [
-        child for child in elem
+        child
+        for child in elem
         if _svg_element_tag(child) not in PROJECT_NON_VISUAL_DEFINITION_CHILD_TAGS
     ]
     if len(children) != 1:
         return False
     picture = children[0]
-    if picture.get('filter') is not None:
+    if picture.get("filter") is not None:
         return False
-    owner_kind = elem.get('data-pptx-object')
-    if _svg_element_tag(picture) == 'image':
-        if resolve_url_id(picture.get('clip-path', '')) is None:
+    owner_kind = elem.get("data-pptx-object")
+    if _svg_element_tag(picture) == "image":
+        if resolve_url_id(picture.get("clip-path", "")) is None:
             return False
         if owner_kind is None:
             return True
-        shape_id = elem.get('data-pptx-shape-id')
+        shape_id = elem.get("data-pptx-shape-id")
         return (
-            owner_kind == 'picture'
+            owner_kind == "picture"
             and shape_id is not None
-            and picture.get('data-pptx-object') == 'picture'
-            and picture.get('data-pptx-shape-id') == shape_id
+            and picture.get("data-pptx-object") == "picture"
+            and picture.get("data-pptx-shape-id") == shape_id
         )
     if (
-        _svg_element_tag(picture) != 'svg'
-        or owner_kind != 'picture'
-        or picture.get('data-pptx-object') != 'picture'
-        or picture.get('viewBox') is None
-        or picture.get('preserveAspectRatio') != 'none'
+        _svg_element_tag(picture) != "svg"
+        or owner_kind != "picture"
+        or picture.get("data-pptx-object") != "picture"
+        or picture.get("viewBox") is None
+        or picture.get("preserveAspectRatio") != "none"
     ):
         return False
-    shape_id = elem.get('data-pptx-shape-id')
-    if (
-        shape_id is None
-        or picture.get('data-pptx-shape-id') != shape_id
-    ):
+    shape_id = elem.get("data-pptx-shape-id")
+    if shape_id is None or picture.get("data-pptx-shape-id") != shape_id:
         return False
     crop_children = list(picture)
-    return (
-        len(crop_children) == 1
-        and _svg_element_tag(crop_children[0]) == 'image'
-    )
+    return len(crop_children) == 1 and _svg_element_tag(crop_children[0]) == "image"
 
 
 def parse_hex_color(color_str: str) -> str | None:
     """Parse SVG color values to ``RRGGBB``, ignoring any alpha channel."""
-    if color_str and color_str.strip().lower() == 'transparent':
+    if color_str and color_str.strip().lower() == "transparent":
         return None
     color, _alpha = parse_svg_color(color_str)
     return color
@@ -3094,11 +3147,11 @@ def parse_stop_style(style_str: str) -> tuple[str | None, float]:
     if not style_values:
         return color, stop_opacity
 
-    if 'stop-color' in style_values:
-        color, color_alpha = parse_svg_color(style_values['stop-color'])
-    if 'stop-opacity' in style_values:
+    if "stop-color" in style_values:
+        color, color_alpha = parse_svg_color(style_values["stop-color"])
+    if "stop-opacity" in style_values:
         stop_opacity = parse_opacity(
-            style_values['stop-opacity'],
+            style_values["stop-opacity"],
             allow_percentage=True,
         )
 
@@ -3109,13 +3162,13 @@ def resolve_url_id(url_str: str) -> str | None:
     """Extract ID from 'url(#someId)' reference."""
     if not url_str:
         return None
-    m = re.match(r'url\(#([^)]+)\)', url_str.strip())
+    m = re.match(r"url\(#([^)]+)\)", url_str.strip())
     return m.group(1) if m else None
 
 
 def get_effective_filter_id(elem: ET.Element, ctx: ConvertContext) -> str | None:
     """Get the effective filter ID for an element, including inherited context."""
-    filt = elem.get('filter')
+    filt = elem.get("filter")
     if filt:
         return resolve_url_id(filt)
     return ctx.filter_id
@@ -3125,6 +3178,7 @@ def get_effective_filter_id(elem: ET.Element, ctx: ConvertContext) -> str | None
 # Font parsing
 # ---------------------------------------------------------------------------
 
+
 def parse_font_family(font_family_str: str) -> dict[str, str]:
     """Parse CSS font-family into latin/ea typeface names.
 
@@ -3132,9 +3186,9 @@ def parse_font_family(font_family_str: str) -> dict[str, str]:
     Windows. macOS/Linux-only fonts are mapped via FONT_FALLBACK_WIN.
     """
     if not font_family_str:
-        return {'latin': 'Segoe UI', 'ea': 'Microsoft YaHei'}
+        return {"latin": "Segoe UI", "ea": "Microsoft YaHei"}
 
-    fonts = [f.strip().strip("'\"") for f in font_family_str.split(',')]
+    fonts = [f.strip().strip("'\"") for f in font_family_str.split(",")]
     latin_font = None
     ea_font = None
 
@@ -3156,13 +3210,13 @@ def parse_font_family(font_family_str: str) -> dict[str, str]:
     if not latin_font and ea_font:
         latin_font = ea_font
 
-    final_latin = latin_font or 'Segoe UI'
+    final_latin = latin_font or "Segoe UI"
 
     # EA must always be a CJK-capable font
     if not ea_font:
-        ea_font = 'SimSun' if final_latin in _SERIF_LATIN else 'Microsoft YaHei'
+        ea_font = "SimSun" if final_latin in _SERIF_LATIN else "Microsoft YaHei"
 
-    return {'latin': final_latin, 'ea': ea_font}
+    return {"latin": final_latin, "ea": ea_font}
 
 
 def unsafe_exported_font_faces(font_family_str: str) -> dict[str, str]:
@@ -3188,10 +3242,7 @@ def _is_han_char(ch: str) -> bool:
 
 def _is_hiragana_char(ch: str) -> bool:
     cp = ord(ch)
-    return (
-        0x3040 <= cp <= 0x309F
-        or 0x1B001 <= cp <= 0x1B11F
-    )
+    return 0x3040 <= cp <= 0x309F or 0x1B001 <= cp <= 0x1B11F
 
 
 def _is_katakana_char(ch: str) -> bool:
@@ -3240,11 +3291,7 @@ def _contains_codepoint_range(
     ranges: tuple[tuple[int, int], ...],
 ) -> bool:
     """Return whether text contains a code point in one of the ranges."""
-    return any(
-        start <= ord(ch) <= end
-        for ch in text
-        for start, end in ranges
-    )
+    return any(start <= ord(ch) <= end for ch in text for start, end in ranges)
 
 
 def _default_language_for_script(
@@ -3260,16 +3307,16 @@ def _default_language_for_script(
 
 def text_has_rtl_characters(text: str) -> bool:
     """Return whether text contains a strong right-to-left character."""
-    return any(unicodedata.bidirectional(ch) in {'R', 'AL'} for ch in text)
+    return any(unicodedata.bidirectional(ch) in {"R", "AL"} for ch in text)
 
 
 def text_uses_rtl(text: str, default_language: str | None = None) -> bool:
     """Resolve paragraph direction from its first strong character or project."""
     for char in text:
         direction = unicodedata.bidirectional(char)
-        if direction in {'R', 'AL'}:
+        if direction in {"R", "AL"}:
             return True
-        if direction == 'L':
+        if direction == "L":
             return False
     return bool(default_language and language_uses_rtl(default_language))
 
@@ -3284,95 +3331,106 @@ def detect_text_lang(
     has_east_asian_text = False
     for ch in text:
         has_hangul = has_hangul or _is_hangul_char(ch)
-        has_kana = (
-            has_kana
-            or _is_hiragana_char(ch)
-            or _is_katakana_char(ch)
-        )
+        has_kana = has_kana or _is_hiragana_char(ch) or _is_katakana_char(ch)
         has_east_asian_text = has_east_asian_text or is_cjk_char(ch)
     if has_hangul:
         return _default_language_for_script(
             default_language,
-            frozenset({'ko'}),
-            'ko-KR',
+            frozenset({"ko"}),
+            "ko-KR",
         )
     if has_kana:
         return _default_language_for_script(
             default_language,
-            frozenset({'ja'}),
-            'ja-JP',
+            frozenset({"ja"}),
+            "ja-JP",
         )
     if has_east_asian_text:
         return _default_language_for_script(
             default_language,
-            frozenset({'zh', 'ja', 'ko'}),
-            'zh-CN',
+            frozenset({"zh", "ja", "ko"}),
+            "zh-CN",
         )
-    if _contains_codepoint_range(text, (
-        (0x0600, 0x06FF),
-        (0x0750, 0x077F),
-        (0x08A0, 0x08FF),
-        (0xFB50, 0xFDFF),
-        (0xFE70, 0xFEFF),
-        (0x1EE00, 0x1EEFF),
-    )):
+    if _contains_codepoint_range(
+        text,
+        (
+            (0x0600, 0x06FF),
+            (0x0750, 0x077F),
+            (0x08A0, 0x08FF),
+            (0xFB50, 0xFDFF),
+            (0xFE70, 0xFEFF),
+            (0x1EE00, 0x1EEFF),
+        ),
+    ):
         return _default_language_for_script(
             default_language,
-            frozenset({'ar', 'fa', 'ps', 'sd', 'ug', 'ur'}),
-            'ar-SA',
+            frozenset({"ar", "fa", "ps", "sd", "ug", "ur"}),
+            "ar-SA",
         )
-    if _contains_codepoint_range(text, (
-        (0x0590, 0x05FF),
-        (0xFB1D, 0xFB4F),
-    )):
+    if _contains_codepoint_range(
+        text,
+        (
+            (0x0590, 0x05FF),
+            (0xFB1D, 0xFB4F),
+        ),
+    ):
         return _default_language_for_script(
             default_language,
-            frozenset({'he', 'yi'}),
-            'he-IL',
+            frozenset({"he", "yi"}),
+            "he-IL",
         )
-    if _contains_codepoint_range(text, (
-        (0x0900, 0x097F),
-        (0xA8E0, 0xA8FF),
-    )):
+    if _contains_codepoint_range(
+        text,
+        (
+            (0x0900, 0x097F),
+            (0xA8E0, 0xA8FF),
+        ),
+    ):
         return _default_language_for_script(
             default_language,
-            frozenset({'hi', 'mr', 'ne', 'sa'}),
-            'hi-IN',
+            frozenset({"hi", "mr", "ne", "sa"}),
+            "hi-IN",
         )
     if _contains_codepoint_range(text, ((0x0E00, 0x0E7F),)):
         return _default_language_for_script(
             default_language,
-            frozenset({'th'}),
-            'th-TH',
+            frozenset({"th"}),
+            "th-TH",
         )
-    if _contains_codepoint_range(text, (
-        (0x0400, 0x052F),
-        (0x1C80, 0x1C8F),
-        (0x2DE0, 0x2DFF),
-        (0xA640, 0xA69F),
-    )):
+    if _contains_codepoint_range(
+        text,
+        (
+            (0x0400, 0x052F),
+            (0x1C80, 0x1C8F),
+            (0x2DE0, 0x2DFF),
+            (0xA640, 0xA69F),
+        ),
+    ):
         return _default_language_for_script(
             default_language,
-            frozenset({'be', 'bg', 'kk', 'ky', 'mk', 'mn', 'ru', 'sr', 'uk'}),
-            'ru-RU',
+            frozenset({"be", "bg", "kk", "ky", "mk", "mn", "ru", "sr", "uk"}),
+            "ru-RU",
         )
-    if _contains_codepoint_range(text, (
-        (0x0370, 0x03FF),
-        (0x1F00, 0x1FFF),
-    )):
+    if _contains_codepoint_range(
+        text,
+        (
+            (0x0370, 0x03FF),
+            (0x1F00, 0x1FFF),
+        ),
+    ):
         return _default_language_for_script(
             default_language,
-            frozenset({'el'}),
-            'el-GR',
+            frozenset({"el"}),
+            "el-GR",
         )
-    return default_language or 'en-US'
+    return default_language or "en-US"
 
 
 def _is_grapheme_extend(ch: str) -> bool:
     """Return whether ``ch`` extends the preceding rendered character."""
     cp = ord(ch)
     return (
-        unicodedata.category(ch) in {'Mn', 'Mc', 'Me'}
+        unicodedata.category(ch) in {"Mn", "Mc", "Me"}
         or 0xFE00 <= cp <= 0xFE0F
         or 0xE0100 <= cp <= 0xE01EF
         or 0x1F3FB <= cp <= 0x1F3FF
@@ -3385,11 +3443,11 @@ def _is_regional_indicator(ch: str) -> bool:
 
 
 def _is_virama(ch: str) -> bool:
-    name = unicodedata.name(ch, '')
+    name = unicodedata.name(ch, "")
     return (
         unicodedata.combining(ch) == 9
-        or 'VIRAMA' in name
-        or name.endswith(' SIGN HALANT')
+        or "VIRAMA" in name
+        or name.endswith(" SIGN HALANT")
     )
 
 
@@ -3400,29 +3458,29 @@ def _is_emoji_base(ch: str) -> bool:
 
 def _unicode_script_key(ch: str) -> str | None:
     """Return the stable Unicode-name prefix used for project script joins."""
-    name = unicodedata.name(ch, '')
+    name = unicodedata.name(ch, "")
     if not name:
         return None
     tokens = name.split()
     boundary_tokens = {
-        'CONSONANT',
-        'LETTER',
-        'SIGN',
-        'SYLLABLE',
-        'VOWEL',
+        "CONSONANT",
+        "LETTER",
+        "SIGN",
+        "SYLLABLE",
+        "VOWEL",
     }
     for index, token in enumerate(tokens):
         if index > 0 and token in boundary_tokens:
-            return ' '.join(tokens[:index])
-    if tokens[0] in {'MEETEI', 'OL', 'TAI'} and len(tokens) > 1:
-        return ' '.join(tokens[:2])
+            return " ".join(tokens[:index])
+    if tokens[0] in {"MEETEI", "OL", "TAI"} and len(tokens) > 1:
+        return " ".join(tokens[:2])
     return tokens[0]
 
 
 def _virama_script_key(cluster: str, virama: str) -> str | None:
     virama_script = _unicode_script_key(virama)
     for ch in reversed(cluster):
-        if not unicodedata.category(ch).startswith('L'):
+        if not unicodedata.category(ch).startswith("L"):
             continue
         base_script = _unicode_script_key(ch)
         return base_script if base_script == virama_script else None
@@ -3446,7 +3504,7 @@ def split_project_text_clusters(text: str) -> list[str]:
 
         cluster = clusters[-1]
         previous = cluster[-1]
-        if ch == '\n' and previous == '\r':
+        if ch == "\n" and previous == "\r":
             clusters[-1] += ch
             virama_script = None
             emoji_join = False
@@ -3454,16 +3512,16 @@ def split_project_text_clusters(text: str) -> list[str]:
             if _is_virama(ch):
                 virama_script = _virama_script_key(cluster, ch)
             clusters[-1] += ch
-        elif ch == '\u200d':
+        elif ch == "\u200d":
             clusters[-1] += ch
             emoji_join = any(_is_emoji_base(item) for item in cluster)
-        elif ch == '\u200c':
+        elif ch == "\u200c":
             clusters[-1] += ch
             virama_script = None
             emoji_join = False
         elif (
             virama_script is not None
-            and unicodedata.category(ch).startswith('L')
+            and unicodedata.category(ch).startswith("L")
             and _unicode_script_key(ch) == virama_script
         ):
             clusters[-1] += ch
@@ -3487,22 +3545,22 @@ def split_project_text_clusters(text: str) -> list[str]:
 
 def resolve_text_run_fonts(text: str, fonts: dict[str, str]) -> dict[str, str]:
     """Return DrawingML latin/ea/cs typefaces for one text run."""
-    latin = fonts['latin']
+    latin = fonts["latin"]
     if any(is_cjk_char(ch) for ch in text):
-        ea = fonts['ea']
+        ea = fonts["ea"]
     else:
         ea = latin
-    return {'latin': latin, 'ea': ea, 'cs': latin}
+    return {"latin": latin, "ea": ea, "cs": latin}
 
 
 def _estimate_character_width(ch: str, font_size: float) -> float:
     if is_cjk_char(ch):
         return font_size
-    if ch == ' ':
+    if ch == " ":
         return font_size * 0.3
-    if ch in 'mMwWOQ%':
+    if ch in "mMwWOQ%":
         return font_size * 0.75
-    if ch in 'iIlj!|':
+    if ch in "iIlj!|":
         return font_size * 0.3
     if ch.isdigit():
         # digits are tabular (uniform ~0.55em) in most UI fonts, including
@@ -3514,15 +3572,17 @@ def _estimate_character_width(ch: str, font_size: float) -> float:
 
 def _estimate_grapheme_width(cluster: str, font_size: float) -> float:
     bases = [
-        ch for ch in cluster
-        if ch not in {'\u200c', '\u200d'} and not _is_grapheme_extend(ch)
+        ch
+        for ch in cluster
+        if ch not in {"\u200c", "\u200d"} and not _is_grapheme_extend(ch)
     ]
     if not bases:
         return font_size * 0.55
     if (
-        len(bases) > 1
-        and all(_is_regional_indicator(ch) for ch in bases)
-    ) or '\u20e3' in cluster or any(_is_emoji_base(ch) for ch in bases):
+        (len(bases) > 1 and all(_is_regional_indicator(ch) for ch in bases))
+        or "\u20e3" in cluster
+        or any(_is_emoji_base(ch) for ch in bases)
+    ):
         return font_size
     return max(_estimate_character_width(ch, font_size) for ch in bases)
 
@@ -3530,26 +3590,28 @@ def _estimate_grapheme_width(cluster: str, font_size: float) -> float:
 def estimate_text_cluster_widths(
     text: str,
     font_size: float,
-    font_weight: str = '400',
+    font_weight: str = "400",
 ) -> list[float]:
     """Estimate each project text cluster without inserting tracking."""
     widths = [
         _estimate_grapheme_width(cluster, font_size)
         for cluster in split_project_text_clusters(text)
     ]
-    if font_weight in ('bold', '600', '700', '800', '900'):
+    if font_weight in ("bold", "600", "700", "800", "900"):
         widths = [width * 1.05 for width in widths]
     return widths
 
 
-def estimate_text_width(text: str, font_size: float, font_weight: str = '400') -> float:
+def estimate_text_width(text: str, font_size: float, font_weight: str = "400") -> float:
     """Estimate text width in SVG pixels."""
     return sum(estimate_text_cluster_widths(text, font_size, font_weight))
 
 
 def _xml_escape(text: str) -> str:
     """Escape XML special characters."""
-    return (text.replace('&', '&amp;')
-                .replace('<', '&lt;')
-                .replace('>', '&gt;')
-                .replace('"', '&quot;'))
+    return (
+        text.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )

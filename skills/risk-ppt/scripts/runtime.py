@@ -52,9 +52,7 @@ _ALLOWED_PPTX_ATTRIBUTES = {
     "data-pptx-role",
 }
 _EXTERNAL_VALUE = re.compile(r"(?:https?|ftp|file|data):|(?:^|[\s(])//", re.IGNORECASE)
-_RAW_PATH = re.compile(
-    r"(?:(?:^|[\s\"'(])[A-Za-z]:[\\/]|/(?:Users|home|var|tmp)/|\\\\)"
-)
+_RAW_PATH = re.compile(r"(?:(?:^|[\s\"'(])[A-Za-z]:[\\/]|/(?:Users|home|var|tmp)/|\\\\)")
 _UNRESOLVED = re.compile(r"\{\{[^{}]+\}\}|\b(?:TODO|TBD)\b", re.IGNORECASE)
 _GROUP_ID = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
 
@@ -325,8 +323,7 @@ def render_svg_previews(
             pixmap = page.get_pixmap(matrix=matrix, alpha=False)
             if (pixmap.width, pixmap.height) != (1280, 720):
                 raise RuntimeError(
-                    f"preview size mismatch for {svg_path.name}: "
-                    f"{pixmap.width}x{pixmap.height}"
+                    f"preview size mismatch for {svg_path.name}: {pixmap.width}x{pixmap.height}"
                 )
             target = target_dir / f"{svg_path.stem}.png"
             pixmap.save(target)
@@ -380,7 +377,10 @@ def convert_svg_deck(
 
     builder = _load_upstream("svg_to_pptx.pptx_package.builder")
     trace_path = receipt_target.with_name("upstream_conversion_trace.json")
-    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+    with (
+        contextlib.redirect_stdout(io.StringIO()),
+        contextlib.redirect_stderr(io.StringIO()),
+    ):
         converted = builder.create_pptx_with_native_svg(
             svg_files=list(checked_files),
             output_path=target,

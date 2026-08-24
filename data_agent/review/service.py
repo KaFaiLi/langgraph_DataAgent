@@ -118,9 +118,7 @@ class ReviewService:
             completed_specialists=self._completed_specialists(root),
         )
 
-    def _build_graph(
-        self, checkpointer: BaseCheckpointSaver | None = None
-    ) -> CompiledStateGraph:
+    def _build_graph(self, checkpointer: BaseCheckpointSaver | None = None) -> CompiledStateGraph:
         return build_parent_graph(
             llm_provider=self.llm_provider,
             checkpointer=checkpointer,
@@ -183,7 +181,5 @@ class ReviewService:
         if not directory.is_dir():
             return []
         return sorted(
-            path.stem
-            for path in directory.glob("*.json")
-            if ".verification" not in path.name
+            path.stem for path in directory.glob("*.json") if ".verification" not in path.name
         )

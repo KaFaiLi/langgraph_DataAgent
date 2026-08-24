@@ -131,5 +131,3 @@ def test_reviewed_output_adapter_never_reopens_unapproved_raw_evidence() -> None
     assert not result.valid
     assert result.failures[0].disposition is EvidenceDisposition.REVISE
     assert result.failures[0].code is EvidenceFailureCode.REVIEWED_OUTPUT_UNAPPROVED
-
-

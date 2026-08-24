@@ -139,9 +139,7 @@ def _json_structured(model: Runnable[Any, Any], schema: type[BaseModel]) -> Runn
     return RunnableLambda(invoke)
 
 
-def _json_mode_structured(
-    model: Runnable[Any, Any], schema: type[BaseModel]
-) -> Runnable[Any, Any]:
+def _json_mode_structured(model: Runnable[Any, Any], schema: type[BaseModel]) -> Runnable[Any, Any]:
     runnable = model.with_structured_output(schema, method="json_mode")
     instruction = HumanMessage(
         content=(

@@ -49,7 +49,9 @@ def _scrubbed_env() -> dict[str, str]:
 
     env = {key: value for key, value in os.environ.items() if value is not None}
     for key in list(env):
-        if any(key.startswith(prefix) or key == prefix for prefix in _SCRUB_PREFIXES) or _SENSITIVE_ENV_NAME.search(key):
+        if any(
+            key.startswith(prefix) or key == prefix for prefix in _SCRUB_PREFIXES
+        ) or _SENSITIVE_ENV_NAME.search(key):
             env.pop(key, None)
     # ``-I`` ignores these for Python itself; removing them also protects
     # libraries that inspect the process environment directly.
@@ -176,11 +178,19 @@ def register(
         code: Annotated[str, Field(description="Analysis code; no network or process APIs.")],
         timeout_seconds: Annotated[
             float,
-            Field(ge=0.1, le=MAX_TIMEOUT_SECONDS, description="Hard subprocess timeout in seconds."),
+            Field(
+                ge=0.1,
+                le=MAX_TIMEOUT_SECONDS,
+                description="Hard subprocess timeout in seconds.",
+            ),
         ] = DEFAULT_TIMEOUT_SECONDS,
         max_output_chars: Annotated[
             int,
-            Field(ge=1, le=MAX_OUTPUT_CHARS, description="Maximum stdout/stderr characters."),
+            Field(
+                ge=1,
+                le=MAX_OUTPUT_CHARS,
+                description="Maximum stdout/stderr characters.",
+            ),
         ] = MAX_OUTPUT_CHARS,
     ) -> dict[str, Any]:
         """Execute bounded Python over configured data with no network/process access."""

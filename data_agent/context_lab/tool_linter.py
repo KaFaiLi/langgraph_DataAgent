@@ -82,9 +82,7 @@ def lint_tool(tool: Any) -> LintReport:
             report.warnings.append(f"Name is long (>{MAX_NAME_CHARS} chars).")
             report.score -= 5
         if not _SNAKE_CASE.match(name):
-            report.warnings.append(
-                "Name is not lower_snake_case; consider a verb_noun name."
-            )
+            report.warnings.append("Name is not lower_snake_case; consider a verb_noun name.")
             report.score -= 5
 
     # --- description -----------------------------------------------------
@@ -124,4 +122,3 @@ def lint_tool(tool: Any) -> LintReport:
 def lint_tools(tools: list[Any]) -> list[LintReport]:
     """Lint a list of tools, returning one report per tool."""
     return [lint_tool(t) for t in tools]
-

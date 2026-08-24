@@ -67,9 +67,7 @@ class PresetShapeRegistry:
         definitions: tuple[PresetShapeDefinition, ...],
         expected_names: tuple[str, ...],
     ) -> None:
-        self._definitions = {
-            definition.name: definition for definition in definitions
-        }
+        self._definitions = {definition.name: definition for definition in definitions}
         self._names = tuple(expected_names)
         if len(self._definitions) != len(definitions):
             raise PresetShapeDataError("Preset registry contains duplicate names")
@@ -156,8 +154,7 @@ class PresetShapeRegistry:
             adjustments=immutable_mapping(evaluated_adjustments),
             guides=immutable_mapping(evaluated_guides),
             handles=tuple(
-                _evaluate_handle(handle, evaluator)
-                for handle in definition.handles
+                _evaluate_handle(handle, evaluator) for handle in definition.handles
             ),
             connections=tuple(
                 EvaluatedConnectionSite(

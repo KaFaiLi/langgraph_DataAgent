@@ -122,13 +122,20 @@ def _classic_chart_style(
 ) -> dict[str, str | None]:
     inherited_styles = inherited_styles or {}
     fallback_background = _inferred_chart_background(elem)
-    text_color = _most_common_color(
-        _fallback_text_colors(elem, inherited_styles.get("fill"))
-    ) or "404040"
+    text_color = (
+        _most_common_color(_fallback_text_colors(elem, inherited_styles.get("fill")))
+        or "404040"
+    )
     stroke_colors = _fallback_stroke_colors(elem, inherited_styles.get("stroke"))
-    darkest_stroke = min(stroke_colors, key=_relative_luminance) if stroke_colors else None
-    lightest_stroke = max(stroke_colors, key=_relative_luminance) if stroke_colors else None
-    raw_font_face = _chart_style_value(payload, "font_family", "fontFamily", "font_face", "fontFace")
+    darkest_stroke = (
+        min(stroke_colors, key=_relative_luminance) if stroke_colors else None
+    )
+    lightest_stroke = (
+        max(stroke_colors, key=_relative_luminance) if stroke_colors else None
+    )
+    raw_font_face = _chart_style_value(
+        payload, "font_family", "fontFamily", "font_face", "fontFace"
+    )
     fallback_font_face = _most_common_value(
         _fallback_text_attr_values(
             elem,
@@ -136,11 +143,14 @@ def _classic_chart_style(
             inherited_styles.get("font-family"),
         )
     )
-    font_face = str(raw_font_face).strip() if raw_font_face is not None else fallback_font_face
+    font_face = (
+        str(raw_font_face).strip() if raw_font_face is not None else fallback_font_face
+    )
     axis_color = darkest_stroke or text_color
     grid_color = (
         lightest_stroke
-        if lightest_stroke and _relative_luminance(lightest_stroke) > _relative_luminance(axis_color)
+        if lightest_stroke
+        and _relative_luminance(lightest_stroke) > _relative_luminance(axis_color)
         else "D9DED8"
     )
     chart_fill = _chart_style_color(
@@ -176,7 +186,14 @@ def _classic_chart_style(
         ),
         "text_color": _chart_style_color(
             payload,
-            ("text_color", "textColor", "label_color", "labelColor", "font_color", "fontColor"),
+            (
+                "text_color",
+                "textColor",
+                "label_color",
+                "labelColor",
+                "font_color",
+                "fontColor",
+            ),
             text_color,
         ),
         "font_face": font_face or None,
@@ -198,7 +215,8 @@ def _chart_text_sizes(
                 inherited_styles.get("font-size"),
             )
         )
-        if elem is not None else None
+        if elem is not None
+        else None
     )
     base_raw = _first_present(
         payload.get("font_size"),
@@ -290,7 +308,7 @@ def _chart_line_sp_pr_xml(color: str | None, *, width: int = 9525) -> str:
 
 
 def _major_gridlines_xml(color: str | None) -> str:
-    return f'<c:majorGridlines>{_chart_line_sp_pr_xml(color, width=6350)}</c:majorGridlines>'
+    return f"<c:majorGridlines>{_chart_line_sp_pr_xml(color, width=6350)}</c:majorGridlines>"
 
 
 def _font_face_xml(font_face: str | None) -> str:
@@ -314,24 +332,23 @@ def _chart_tx_pr_xml(
     font_face: str | None = None,
     language: str | None = None,
 ) -> str:
-    fill_xml = (
-        f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
-        if color else ""
-    )
+    fill_xml = f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>' if color else ""
     bold_attr = ' b="1"' if bold else ""
-    resolved_language = language or 'en-US'
-    rtl_attr = ' rtl="1"' if text_uses_rtl('', language) else ''
+    resolved_language = language or "en-US"
+    rtl_attr = ' rtl="1"' if text_uses_rtl("", language) else ""
     return (
         f"<c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr{rtl_attr}>"
         f'<a:defRPr lang="{resolved_language}" sz="{font_size}"{bold_attr}>'
-        f'{fill_xml}{_font_face_xml(font_face)}</a:defRPr>'
+        f"{fill_xml}{_font_face_xml(font_face)}</a:defRPr>"
         f'</a:pPr><a:endParaRPr lang="{resolved_language}"/></a:p></c:txPr>'
     )
 
 
 def _chart_text_entry(value: Any) -> tuple[str, dict[str, Any]] | None:
     if isinstance(value, dict):
-        text = _first_present(value.get("text"), value.get("value"), value.get("content"))
+        text = _first_present(
+            value.get("text"), value.get("value"), value.get("content")
+        )
         if text is None or not str(text).strip():
             return None
         return str(text).strip(), value
@@ -354,14 +371,21 @@ def _chart_text_entry_font_size(item: dict[str, Any], fallback: int) -> int:
 
 
 def _chart_text_entry_color(item: dict[str, Any], fallback: str | None) -> str | None:
-    return _hex_or_none(_first_present(
-        item.get("color"),
-        item.get("font_color"),
-        item.get("fontColor"),
-    )) or fallback
+    return (
+        _hex_or_none(
+            _first_present(
+                item.get("color"),
+                item.get("font_color"),
+                item.get("fontColor"),
+            )
+        )
+        or fallback
+    )
 
 
-def _chart_text_entry_font_face(item: dict[str, Any], fallback: str | None) -> str | None:
+def _chart_text_entry_font_face(
+    item: dict[str, Any], fallback: str | None
+) -> str | None:
     raw = _first_present(
         item.get("font_family"),
         item.get("fontFamily"),
@@ -405,15 +429,12 @@ def _axis_title_xml(
     text_color = _chart_text_entry_color(item, color)
     fill_xml = (
         f'<a:solidFill><a:srgbClr val="{text_color}"/></a:solidFill>'
-        if text_color else ""
+        if text_color
+        else ""
     )
     lang = detect_text_lang(text, primary_language)
-    rtl_attr = (
-        ' rtl="1"'
-        if text_uses_rtl(text, primary_language)
-        else ''
-    )
-    run_rtl = '<a:rtl val="1"/>' if text_has_rtl_characters(text) else ''
+    rtl_attr = ' rtl="1"' if text_uses_rtl(text, primary_language) else ""
+    run_rtl = '<a:rtl val="1"/>' if text_has_rtl_characters(text) else ""
     return (
         "<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/>"
         f'<a:p><a:pPr{rtl_attr}/><a:r><a:rPr lang="{lang}" '
@@ -421,7 +442,7 @@ def _axis_title_xml(
         f"{fill_xml}{_font_face_xml(_chart_text_entry_font_face(item, font_face))}"
         f"{run_rtl}</a:rPr>"
         f"<a:t>{_xml_escape(text)}</a:t></a:r></a:p>"
-        "</c:rich></c:tx><c:layout/><c:overlay val=\"0\"/></c:title>"
+        '</c:rich></c:tx><c:layout/><c:overlay val="0"/></c:title>'
     )
 
 
@@ -459,15 +480,19 @@ def _axis_titles(payload: dict[str, Any]) -> dict[str, Any]:
     def pick(axis_keys: tuple[str, ...], root_keys: tuple[str, ...]) -> Any:
         values: list[Any] = []
         for key in root_keys:
-            values.extend((
-                payload.get(key),
-                style.get(key),
-            ))
+            values.extend(
+                (
+                    payload.get(key),
+                    style.get(key),
+                )
+            )
         for key in axis_keys + root_keys:
-            values.extend((
-                axis_map.get(key),
-                style_axis_map.get(key),
-            ))
+            values.extend(
+                (
+                    axis_map.get(key),
+                    style_axis_map.get(key),
+                )
+            )
         return _first_present(*values)
 
     return {
@@ -536,7 +561,9 @@ def _native_chart_export_payload(
             target["style"] = style
         return style
 
-    def drop_map_keys(source: dict[str, Any], map_key: str, keys: tuple[str, ...]) -> None:
+    def drop_map_keys(
+        source: dict[str, Any], map_key: str, keys: tuple[str, ...]
+    ) -> None:
         raw_map = source.get(map_key)
         if not isinstance(raw_map, dict):
             return
@@ -614,7 +641,14 @@ def _legend_candidate_texts(payload: dict[str, Any]) -> list[str]:
                 if isinstance(item, dict) and item.get("name") is not None:
                     series_values.append(str(item.get("name")))
     chart_type = _compact_key(payload.get("type") or payload.get("chart_type") or "")
-    category_legend_types = {"pie", "doughnut", "donut", "ofpie", "pieofpie", "barofpie"}
+    category_legend_types = {
+        "pie",
+        "doughnut",
+        "donut",
+        "ofpie",
+        "pieofpie",
+        "barofpie",
+    }
     values = category_values if chart_type in category_legend_types else series_values
     normalized: list[str] = []
     for value in values:
@@ -624,7 +658,9 @@ def _legend_candidate_texts(payload: dict[str, Any]) -> list[str]:
     return normalized
 
 
-def _native_chart_chrome_warnings(elem: ET.Element, payload: dict[str, Any]) -> list[str]:
+def _native_chart_chrome_warnings(
+    elem: ET.Element, payload: dict[str, Any]
+) -> list[str]:
     fallback_texts = set(_visible_fallback_texts(elem))
     warnings: list[str] = []
     style = payload.get("style") if isinstance(payload.get("style"), dict) else {}
@@ -650,7 +686,11 @@ def _native_chart_chrome_warnings(elem: ET.Element, payload: dict[str, Any]) -> 
             missing_companion.append(text)
     if missing_companion:
         sample = ", ".join(repr(text) for text in missing_companion[:5])
-        suffix = "" if len(missing_companion) <= 5 else f", and {len(missing_companion) - 5} more"
+        suffix = (
+            ""
+            if len(missing_companion) <= 5
+            else f", and {len(missing_companion) - 5} more"
+        )
         warnings.append(
             "Native PPTX chart companion text is not visible inside the fallback "
             "marker and may appear only after --native-charts-and-tables: "
@@ -687,22 +727,12 @@ def _text_box_xml(
         "left": "l",
         "l": "l",
     }.get(align_key, "l")
-    fill_xml = (
-        f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>'
-        if color else ""
-    )
+    fill_xml = f'<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>' if color else ""
     bold_attr = ' b="1"' if bold else ""
     lang = detect_text_lang(text, ctx.primary_language)
-    run_rtl = '<a:rtl val="1"/>' if text_has_rtl_characters(text) else ''
-    run_properties_xml = (
-        f'{fill_xml}{_font_face_xml(font_face)}'
-        f'{run_rtl}'
-    )
-    rtl_attr = (
-        ' rtl="1"'
-        if text_uses_rtl(text, ctx.primary_language)
-        else ''
-    )
+    run_rtl = '<a:rtl val="1"/>' if text_has_rtl_characters(text) else ""
+    run_properties_xml = f"{fill_xml}{_font_face_xml(font_face)}{run_rtl}"
+    rtl_attr = ' rtl="1"' if text_uses_rtl(text, ctx.primary_language) else ""
     name = _xml_escape(f"Chart {role.title()} {shape_id}")
     return f'''<p:sp>
 <p:nvSpPr>
@@ -739,7 +769,9 @@ def _chart_companion_entries(
         values = value if isinstance(value, list) else [value]
         for item in values:
             if isinstance(item, dict):
-                text = _first_present(item.get("text"), item.get("value"), item.get("content"))
+                text = _first_present(
+                    item.get("text"), item.get("value"), item.get("content")
+                )
                 if text:
                     entries.append({"role": role, **item, "text": str(text)})
             elif str(item).strip():
@@ -842,8 +874,14 @@ def _chart_companion_text_xml(
         text = str(item.get("text") or "").strip()
         if not text:
             continue
-        font_size = _font_size_hpt(item.get("font_size", item.get("fontSize")), 16 if role == "title" else 12)
-        if role == "title" and item.get("font_size") is None and item.get("fontSize") is None:
+        font_size = _font_size_hpt(
+            item.get("font_size", item.get("fontSize")), 16 if role == "title" else 12
+        )
+        if (
+            role == "title"
+            and item.get("font_size") is None
+            and item.get("fontSize") is None
+        ):
             font_size = title_font_size
         elif item.get("font_size") is None and item.get("fontSize") is None:
             font_size = note_font_size
@@ -869,18 +907,20 @@ def _chart_companion_text_xml(
             ext_cx = chart_ext_cx
             ext_cy = px_to_emu(16)
             below_index += 1
-        parts.append(_text_box_xml(
-            ctx,
-            text=text,
-            role=role,
-            off_x=off_x,
-            off_y=off_y,
-            ext_cx=ext_cx,
-            ext_cy=ext_cy,
-            font_size=font_size,
-            color=color,
-            align=align,
-            bold=bold,
-            font_face=font_face,
-        ))
+        parts.append(
+            _text_box_xml(
+                ctx,
+                text=text,
+                role=role,
+                off_x=off_x,
+                off_y=off_y,
+                ext_cx=ext_cx,
+                ext_cy=ext_cy,
+                font_size=font_size,
+                color=color,
+                align=align,
+                bold=bold,
+                font_face=font_face,
+            )
+        )
     return "".join(parts)

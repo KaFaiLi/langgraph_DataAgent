@@ -247,5 +247,3 @@ def _truncate(text: str) -> str:
     if len(text) <= MAX_SNIPPET_CHARS:
         return text
     return text[:MAX_SNIPPET_CHARS] + "\n... (truncated)"
-
-

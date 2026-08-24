@@ -122,5 +122,3 @@ class EvidenceReference(BaseModel):
     @property
     def parsed(self) -> Locator:
         return parse_locator(self.locator)
-
-

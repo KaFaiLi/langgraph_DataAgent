@@ -102,8 +102,7 @@ def _frame_from_excel(path: Path, sheet: str | None) -> pl.DataFrame:
     if not rows:
         return pl.DataFrame()
     headers = [
-        str(value) if value is not None else f"col_{index}"
-        for index, value in enumerate(rows[0])
+        str(value) if value is not None else f"col_{index}" for index, value in enumerate(rows[0])
     ]
     # Duplicate Excel headings are ambiguous and Polars rejects them.  Keep
     # names deterministic while retaining the first heading verbatim.
@@ -308,8 +307,7 @@ def _iter_table_paths(root: Path) -> list[Path]:
     files = [
         candidate
         for candidate in root.rglob("*")
-        if _is_safe_table_file(candidate, root)
-        and candidate.suffix.lower() in SUPPORTED_SUFFIXES
+        if _is_safe_table_file(candidate, root) and candidate.suffix.lower() in SUPPORTED_SUFFIXES
     ]
     return sorted(files, key=lambda candidate: candidate.relative_to(root).as_posix())[
         :MAX_REGISTERED_FILES
@@ -321,7 +319,16 @@ def _duckdb_type(dtype: pl.DataType) -> str:
 
     if dtype == pl.Boolean:
         return "BOOLEAN"
-    if dtype in {pl.Int8, pl.Int16, pl.Int32, pl.Int64, pl.UInt8, pl.UInt16, pl.UInt32, pl.UInt64}:
+    if dtype in {
+        pl.Int8,
+        pl.Int16,
+        pl.Int32,
+        pl.Int64,
+        pl.UInt8,
+        pl.UInt16,
+        pl.UInt32,
+        pl.UInt64,
+    }:
         return "BIGINT"
     if dtype in {pl.Float32, pl.Float64}:
         return "DOUBLE"
@@ -348,7 +355,7 @@ def _register_frame(
     """Register a frame using parameterized inserts (PyArrow is optional)."""
 
     if not frame.columns:
-        connection.execute(f"CREATE TEMP TABLE {_quote_identifier(name)} (\"_empty\" BOOLEAN)")
+        connection.execute(f'CREATE TEMP TABLE {_quote_identifier(name)} ("_empty" BOOLEAN)')
         return
     columns = ", ".join(
         f"{_quote_identifier(column)} {_duckdb_type(dtype)}"
@@ -390,7 +397,10 @@ def _register_tables(root: Path, connection: duckdb.DuckDBPyConnection) -> None:
                     workbook.close()
                 for sheet in sheets:
                     try:
-                        register(_table_name(relative, sheet), _frame_for(root, relative.as_posix(), sheet))
+                        register(
+                            _table_name(relative, sheet),
+                            _frame_for(root, relative.as_posix(), sheet),
+                        )
                     except (ToolError, ValueError, OSError):
                         continue
             else:
@@ -495,7 +505,9 @@ def register(
         path: Annotated[str, Field(description="Relative tabular path.")],
         group_columns: Annotated[list[str], Field(description="Columns to group by.")],
         agg_column: Annotated[str, Field(description="Column to aggregate.")],
-        agg: Annotated[str, Field(description="sum, mean, count, min, max, median, or std.")] = "sum",
+        agg: Annotated[
+            str, Field(description="sum, mean, count, min, max, median, or std.")
+        ] = "sum",
         sheet: Annotated[str | None, Field(description="Excel sheet name, when needed.")] = None,
     ) -> list[dict[str, Any]]:
         """Aggregate one column by grouping columns, returning at most 1000 groups."""
@@ -517,7 +529,9 @@ def register(
 
     @mcp.tool(name="run_duckdb_query")
     def run_duckdb_query_tool(
-        sql: Annotated[str, Field(description="One read-only SELECT/WITH query over src_* tables.")],
+        sql: Annotated[
+            str, Field(description="One read-only SELECT/WITH query over src_* tables.")
+        ],
         max_rows: Annotated[int, Field(ge=1, le=MAX_QUERY_ROWS)] = MAX_QUERY_ROWS,
     ) -> list[dict[str, Any]]:
         """Run a bounded read-only DuckDB query over configured tabular files."""

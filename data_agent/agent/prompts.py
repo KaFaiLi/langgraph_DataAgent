@@ -17,4 +17,3 @@ Operating principles:
 def build_system_prompt(skills_overview: str) -> str:
     """Combine the base prompt with the (cheap) skills catalog."""
     return f"{BASE_SYSTEM_PROMPT}\n{skills_overview}\n"
-

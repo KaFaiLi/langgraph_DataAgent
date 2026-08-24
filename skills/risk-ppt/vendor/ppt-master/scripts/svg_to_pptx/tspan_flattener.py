@@ -34,6 +34,7 @@ def _flatten_module():
     if str(scripts_dir) not in sys.path:
         sys.path.insert(0, str(scripts_dir))
     from svg_finalize import flatten_tspan  # type: ignore
+
     return flatten_tspan
 
 

@@ -85,17 +85,19 @@ SEMANTIC_SCOPES = ("general", "literal", "flowchart", "navigation")
 
 _QUERY_TOKEN_RE = re.compile(r"[a-z0-9]+")
 _CAMEL_BOUNDARY_RE = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
-_QUERY_STOP_WORDS = frozenset({
-    "a",
-    "an",
-    "and",
-    "for",
-    "of",
-    "or",
-    "the",
-    "to",
-    "with",
-})
+_QUERY_STOP_WORDS = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "for",
+        "of",
+        "or",
+        "the",
+        "to",
+        "with",
+    }
+)
 
 
 class PresetShapeSemantics:
@@ -228,17 +230,17 @@ class PresetShapeSemantics:
                 assert isinstance(presets, dict)
                 matching_presets = []
                 group_matches = _matches_query(
-                    {
-                        key: value
-                        for key, value in group.items()
-                        if key != "presets"
-                    },
+                    {key: value for key, value in group.items() if key != "presets"},
                     query_tokens,
                 )
                 for name, details in presets.items():
-                    if query_tokens and not group_matches and not _matches_query(
-                        {"preset": name, **details},
-                        query_tokens,
+                    if (
+                        query_tokens
+                        and not group_matches
+                        and not _matches_query(
+                            {"preset": name, **details},
+                            query_tokens,
+                        )
                     ):
                         continue
                     matching_presets.append(name)
@@ -428,6 +430,7 @@ class PresetShapeSemantics:
             "presets": normalized_presets,
         }
 
+
 @lru_cache(maxsize=1)
 def get_preset_shape_semantics() -> PresetShapeSemantics:
     """Return the process-wide, lazily loaded bundled semantic catalog."""
@@ -499,8 +502,7 @@ def _require_choices(
 def _require_string_list(value: object, label: str) -> tuple[str, ...]:
     items = _require_list(value, label)
     values = tuple(
-        _require_string(item, f"{label}[{index}]")
-        for index, item in enumerate(items)
+        _require_string(item, f"{label}[{index}]") for index, item in enumerate(items)
     )
     if len(values) != len(set(values)):
         raise PresetShapeDataError(f"{label} contains duplicate values")

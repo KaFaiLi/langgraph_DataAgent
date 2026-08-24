@@ -26,8 +26,7 @@ def render_skills_overview(skills: list[Skill]) -> str:
     for s in skills:
         lines.append(f"- {s.name}: {s.description}")
     lines.append(
-        "\nCall `load_skill(name=...)` to read a skill's full instructions, then "
-        "follow them."
+        "\nCall `load_skill(name=...)` to read a skill's full instructions, then follow them."
     )
     return "\n".join(lines)
 
@@ -52,9 +51,7 @@ def build_skill_tools(skills: list[Skill]) -> list[BaseTool]:
         skill = by_name.get(name)
         if skill is None:
             available = ", ".join(by_name) or "(none)"
-            raise ToolException(
-                f"Unknown skill {name!r}. Available skills: {available}."
-            )
+            raise ToolException(f"Unknown skill {name!r}. Available skills: {available}.")
         return skill.instructions
 
     load_tool = StructuredTool.from_function(

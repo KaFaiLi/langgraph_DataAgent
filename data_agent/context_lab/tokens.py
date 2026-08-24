@@ -41,4 +41,3 @@ def payload_stats(payload: str) -> dict[str, Any]:
         "characters": len(payload),
         "lines": payload.count("\n") + 1 if payload else 0,
     }
-

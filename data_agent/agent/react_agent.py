@@ -52,6 +52,7 @@ def _make_skill_planner_hook(skills: list[Skill]):
         # No skills → pass messages straight through on every call.
         def noop_hook(state: dict) -> dict:
             return {"llm_input_messages": state.get("messages", [])}
+
         return noop_hook
 
     skill_lines = "\n".join(f"  • {s.name}: {s.description}" for s in skills)
@@ -113,9 +114,7 @@ def build_mcp_client(settings: Settings | None = None) -> MultiServerMCPClient:
             "sse_read_timeout": settings.mcp_read_timeout,
         }
     else:
-        raise ValueError(
-            f"Unsupported MCP_TRANSPORT={transport!r}. Use 'stdio' or 'http'."
-        )
+        raise ValueError(f"Unsupported MCP_TRANSPORT={transport!r}. Use 'stdio' or 'http'.")
 
     # MCP tool errors are returned as ToolMessage(status="error") by
     # langchain-mcp-adapters, so the LLM can reason over them and continue

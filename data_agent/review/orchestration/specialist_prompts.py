@@ -92,5 +92,3 @@ def analyst_system_prompt(
 
 def verifier_system_prompt(domain_label: str, policy_text: str) -> str:
     return VERIFIER_SYSTEM_TEMPLATE.format(label=domain_label, policy=policy_text)
-
-

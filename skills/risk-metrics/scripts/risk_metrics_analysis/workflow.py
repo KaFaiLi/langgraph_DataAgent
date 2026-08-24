@@ -13,9 +13,7 @@ def _has_increase_id(item: ExcessRow) -> bool:
     return item.increase_id not in {"", "0", "0.0"}
 
 
-def _excess_workflow(
-    excesses: list[ExcessRow], sgmr: list[SgmrRow]
-) -> AnalysisResult:
+def _excess_workflow(excesses: list[ExcessRow], sgmr: list[SgmrRow]) -> AnalysisResult:
     flags: list[dict[str, object]] = []
     as_of_candidates = [item.day for item in sgmr]
     as_of_candidates.extend(item.created.date() for item in excesses)
@@ -67,9 +65,7 @@ def _excess_workflow(
                 (item.days_in_excess for item in rows if item.days_in_excess is not None),
                 default=None,
             ),
-            "example_locators": [
-                _locator(item.path, item.sheet, item.row) for item in rows[:3]
-            ],
+            "example_locators": [_locator(item.path, item.sheet, item.row) for item in rows[:3]],
         }
         tables.append(table)
         if len(rows) >= 3:
@@ -89,8 +85,7 @@ def _excess_workflow(
                     last_created=rows[-1].created.isoformat(),
                     max_last_usage=round(max(usages), 4),
                     locators=[
-                        _locator(item.path, item.sheet, item.row)
-                        for item in [*rows[:2], rows[-1]]
+                        _locator(item.path, item.sheet, item.row) for item in [*rows[:2], rows[-1]]
                     ],
                     detail="selected excess population; denominator is not all risk days",
                 )
@@ -125,10 +120,7 @@ def _excess_workflow(
         state_issue = (
             status_open != item.still_open
             or (item.still_open and (item.close_time is not None or item.closing_day is not None))
-            or (
-                not item.still_open
-                and (item.close_time is None or item.closing_day is None)
-            )
+            or (not item.still_open and (item.close_time is None or item.closing_day is None))
         )
         if state_issue:
             flags.append(
@@ -258,7 +250,10 @@ def _excess_workflow(
                 name
                 for name, value in (
                     ("increaseCreationDate", item.increase_created),
-                    ("increaseValidationTrdDirCreationDate", item.increase_trader_approved),
+                    (
+                        "increaseValidationTrdDirCreationDate",
+                        item.increase_trader_approved,
+                    ),
                     ("increaseValidationRisqCreationDate", item.increase_risk_approved),
                 )
                 if value is None

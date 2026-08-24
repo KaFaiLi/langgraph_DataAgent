@@ -15,4 +15,3 @@ else:  # pragma: no cover - supports direct trusted-script inspection in tests/t
     ).run_analysis
 
 __all__ = ["run_analysis"]
-

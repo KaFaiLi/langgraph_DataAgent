@@ -110,5 +110,3 @@ def test_rejects_reversed_review_window() -> None:
             review_start=date(2026, 1, 1),
             review_end=date(2025, 1, 1),
         )
-
-

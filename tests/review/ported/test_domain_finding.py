@@ -58,5 +58,3 @@ def test_optional_fields_default() -> None:
     assert finding.period is None
     assert finding.recommendation is None
     assert finding.alternative_explanations == []
-
-

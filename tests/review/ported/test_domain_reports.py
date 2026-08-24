@@ -82,5 +82,3 @@ def test_final_report_rejects_duplicate_final_ids() -> None:
             overall_desk_risk_assessment="a",
             key_findings=[finding, finding],
         )
-
-

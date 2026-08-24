@@ -24,6 +24,4 @@ def source_file(ctx: ToolContext, relative_path: str) -> Path:
         ctx.manifest.by_path(relative_path)
         return resolve_source_path(ctx.source_root, relative_path)
     except (KeyError, SourcePathError) as exc:
-        raise SourcePathError(
-            f"source is outside the review manifest: {relative_path!r}"
-        ) from exc
+        raise SourcePathError(f"source is outside the review manifest: {relative_path!r}") from exc

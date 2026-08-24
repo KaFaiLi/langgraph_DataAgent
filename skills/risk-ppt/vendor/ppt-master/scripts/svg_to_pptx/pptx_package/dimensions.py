@@ -22,11 +22,16 @@ try:
     from config import CANVAS_FORMATS
 except ImportError:
     CANVAS_FORMATS = {
-        'ppt169': {'name': 'PPT 16:9', 'dimensions': '1280×720', 'viewbox': '0 0 1280 720'},
+        "ppt169": {
+            "name": "PPT 16:9",
+            "dimensions": "1280×720",
+            "viewbox": "0 0 1280 720",
+        },
     }
 
     def get_project_info(path: str) -> dict:
-        return {'format': 'unknown', 'name': Path(path).name}
+        return {"format": "unknown", "name": Path(path).name}
+
 
 # EMU conversion constants
 EMU_PER_INCH = 914400
@@ -34,10 +39,10 @@ EMU_PER_PIXEL = EMU_PER_INCH / 96
 
 # XML namespaces
 NAMESPACES = {
-    'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
-    'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-    'p': 'http://schemas.openxmlformats.org/presentationml/2006/main',
-    'asvg': 'http://schemas.microsoft.com/office/drawing/2016/SVG/main',
+    "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+    "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+    "p": "http://schemas.openxmlformats.org/presentationml/2006/main",
+    "asvg": "http://schemas.microsoft.com/office/drawing/2016/SVG/main",
 }
 
 # Register namespaces for ElementTree output
@@ -62,10 +67,10 @@ def get_slide_dimensions(
         width_px, height_px = custom_pixels
     else:
         if canvas_format not in CANVAS_FORMATS:
-            canvas_format = 'ppt169'
+            canvas_format = "ppt169"
 
-        dimensions = CANVAS_FORMATS[canvas_format]['dimensions']
-        match = re.match(r'(\d+)[×x](\d+)', dimensions)
+        dimensions = CANVAS_FORMATS[canvas_format]["dimensions"]
+        match = re.match(r"(\d+)[×x](\d+)", dimensions)
         if match:
             width_px = int(match.group(1))
             height_px = int(match.group(2))
@@ -92,10 +97,10 @@ def get_pixel_dimensions(
         return custom_pixels
 
     if canvas_format not in CANVAS_FORMATS:
-        canvas_format = 'ppt169'
+        canvas_format = "ppt169"
 
-    dimensions = CANVAS_FORMATS[canvas_format]['dimensions']
-    match = re.match(r'(\d+)[×x](\d+)', dimensions)
+    dimensions = CANVAS_FORMATS[canvas_format]["dimensions"]
+    match = re.match(r"(\d+)[×x](\d+)", dimensions)
     if match:
         return int(match.group(1)), int(match.group(2))
     return 1280, 720
@@ -128,7 +133,7 @@ def detect_format_from_svg(svg_path: Path) -> str | None:
     viewbox = read_project_viewbox(svg_path)
     for fmt_key, fmt_info in CANVAS_FORMATS.items():
         expected = parse_project_viewbox(
-            fmt_info['viewbox'],
+            fmt_info["viewbox"],
             context=f"registered canvas {fmt_key!r}",
         )
         if viewbox == expected:
@@ -147,7 +152,7 @@ def resolve_svg_canvas(
     if canvas_format is not None:
         if canvas_format not in CANVAS_FORMATS:
             raise CanvasContractError(f"Unsupported canvas format: {canvas_format}")
-        format_viewbox = CANVAS_FORMATS[canvas_format]['viewbox']
+        format_viewbox = CANVAS_FORMATS[canvas_format]["viewbox"]
 
     if expected_viewbox is not None and format_viewbox is not None:
         locked = parse_project_viewbox(
@@ -180,7 +185,7 @@ def resolve_svg_canvas(
     if detected_format is None:
         for fmt_key, fmt_info in CANVAS_FORMATS.items():
             registered = parse_project_viewbox(
-                fmt_info['viewbox'],
+                fmt_info["viewbox"],
                 context=f"registered canvas {fmt_key!r}",
             )
             if viewbox == registered:

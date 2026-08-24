@@ -33,9 +33,7 @@ def main() -> None:
         parser.error("--max-concurrency must be at least 1")
 
     case_root = Path(__file__).resolve().parent / "case_01"
-    desk_context = json.loads(
-        (case_root / "desk_context.json").read_text(encoding="utf-8")
-    )
+    desk_context = json.loads((case_root / "desk_context.json").read_text(encoding="utf-8"))
     result = _EvaluationReviewService(max_concurrency=args.max_concurrency).start(
         ReviewRequest(
             source_root=case_root / "source",

@@ -33,34 +33,34 @@ configure_utf8_stdio()
 PROJECT_ROOT = Path(__file__).parent.parent
 
 # Core directories
-SCRIPTS_DIR = PROJECT_ROOT / 'scripts'
-REFERENCES_DIR = PROJECT_ROOT / 'references'
-TEMPLATES_DIR = PROJECT_ROOT / 'templates'
-WORKFLOWS_DIR = PROJECT_ROOT / 'workflows'
+SCRIPTS_DIR = PROJECT_ROOT / "scripts"
+REFERENCES_DIR = PROJECT_ROOT / "references"
+TEMPLATES_DIR = PROJECT_ROOT / "templates"
+WORKFLOWS_DIR = PROJECT_ROOT / "workflows"
 
 # Repository root directory
 REPO_ROOT = PROJECT_ROOT.parent.parent
-EXAMPLES_DIR = REPO_ROOT / 'examples'
-PROJECTS_DIR = REPO_ROOT / 'projects'
+EXAMPLES_DIR = REPO_ROOT / "examples"
+PROJECTS_DIR = REPO_ROOT / "projects"
 
 # Template subdirectories
-CHART_TEMPLATES_DIR = TEMPLATES_DIR / 'charts'
+CHART_TEMPLATES_DIR = TEMPLATES_DIR / "charts"
 
 
 # ============================================================
 # Environment Configuration
 # ============================================================
 
-USER_CONFIG_DIR = Path.home() / '.ppt-master'
-USER_ENV_FILE = USER_CONFIG_DIR / '.env'
+USER_CONFIG_DIR = Path.home() / ".ppt-master"
+USER_ENV_FILE = USER_CONFIG_DIR / ".env"
 
 
 def get_env_candidates() -> list[Path]:
     """Return the supported .env lookup order."""
     return [
-        Path.cwd() / '.env',
-        PROJECT_ROOT / '.env',
-        REPO_ROOT / '.env',
+        Path.cwd() / ".env",
+        PROJECT_ROOT / ".env",
+        REPO_ROOT / ".env",
         USER_ENV_FILE,
     ]
 
@@ -99,13 +99,13 @@ def strip_inline_env_comment(value: str) -> str:
         end = stripped.find(quote, 1)
         if end != -1:
             head = value[: len(value) - len(stripped) + end + 1]
-            tail = value[len(head):]
-            hash_pos = tail.find('#')
+            tail = value[len(head) :]
+            hash_pos = tail.find("#")
             if hash_pos == -1:
                 return value
             return head + tail[:hash_pos]
         return value
-    hash_pos = value.find('#')
+    hash_pos = value.find("#")
     if hash_pos == -1:
         return value
     return value[:hash_pos]
@@ -129,19 +129,19 @@ def load_prefixed_env_file(
         return None
 
     deprecated_keys = deprecated_keys or {}
-    with env_path.open('r', encoding='utf-8') as fh:
+    with env_path.open("r", encoding="utf-8") as fh:
         for lineno, raw_line in enumerate(fh, start=1):
             line = raw_line.strip()
-            if not line or line.startswith('#'):
+            if not line or line.startswith("#"):
                 continue
-            if line.startswith('export '):
+            if line.startswith("export "):
                 line = line[7:].lstrip()
-            if '=' not in line:
+            if "=" not in line:
                 raise ValueError(
                     f"Invalid line in {env_path}:{lineno}. Expected KEY=VALUE."
                 )
 
-            key, value = line.split('=', 1)
+            key, value = line.split("=", 1)
             key = key.strip()
             if not key:
                 raise ValueError(
@@ -165,78 +165,78 @@ def load_prefixed_env_file(
 # ============================================================
 
 CANVAS_FORMATS = {
-    'ppt169': {
-        'name': 'PPT 16:9',
-        'dimensions': '1280×720',
-        'viewbox': '0 0 1280 720',
-        'width': 1280,
-        'height': 720,
-        'aspect_ratio': '16:9',
-        'use_case': 'Modern projectors, online presentations'
+    "ppt169": {
+        "name": "PPT 16:9",
+        "dimensions": "1280×720",
+        "viewbox": "0 0 1280 720",
+        "width": 1280,
+        "height": 720,
+        "aspect_ratio": "16:9",
+        "use_case": "Modern projectors, online presentations",
     },
-    'ppt43': {
-        'name': 'PPT 4:3',
-        'dimensions': '1024×768',
-        'viewbox': '0 0 1024 768',
-        'width': 1024,
-        'height': 768,
-        'aspect_ratio': '4:3',
-        'use_case': 'Traditional projectors'
+    "ppt43": {
+        "name": "PPT 4:3",
+        "dimensions": "1024×768",
+        "viewbox": "0 0 1024 768",
+        "width": 1024,
+        "height": 768,
+        "aspect_ratio": "4:3",
+        "use_case": "Traditional projectors",
     },
-    'wechat': {
-        'name': 'WeChat Article Header',
-        'dimensions': '900×383',
-        'viewbox': '0 0 900 383',
-        'width': 900,
-        'height': 383,
-        'aspect_ratio': '2.35:1',
-        'use_case': 'WeChat article cover images'
+    "wechat": {
+        "name": "WeChat Article Header",
+        "dimensions": "900×383",
+        "viewbox": "0 0 900 383",
+        "width": 900,
+        "height": 383,
+        "aspect_ratio": "2.35:1",
+        "use_case": "WeChat article cover images",
     },
-    'xiaohongshu': {
-        'name': '小红书',
-        'dimensions': '1242×1660',
-        'viewbox': '0 0 1242 1660',
-        'width': 1242,
-        'height': 1660,
-        'aspect_ratio': '3:4',
-        'use_case': 'Knowledge sharing, product reviews'
+    "xiaohongshu": {
+        "name": "小红书",
+        "dimensions": "1242×1660",
+        "viewbox": "0 0 1242 1660",
+        "width": 1242,
+        "height": 1660,
+        "aspect_ratio": "3:4",
+        "use_case": "Knowledge sharing, product reviews",
     },
-    'moments': {
-        'name': 'Moments/Instagram',
-        'dimensions': '1080×1080',
-        'viewbox': '0 0 1080 1080',
-        'width': 1080,
-        'height': 1080,
-        'aspect_ratio': '1:1',
-        'use_case': 'Social media square images'
+    "moments": {
+        "name": "Moments/Instagram",
+        "dimensions": "1080×1080",
+        "viewbox": "0 0 1080 1080",
+        "width": 1080,
+        "height": 1080,
+        "aspect_ratio": "1:1",
+        "use_case": "Social media square images",
     },
-    'story': {
-        'name': 'Story/Vertical',
-        'dimensions': '1080×1920',
-        'viewbox': '0 0 1080 1920',
-        'width': 1080,
-        'height': 1920,
-        'aspect_ratio': '9:16',
-        'use_case': 'Short video covers, stories'
+    "story": {
+        "name": "Story/Vertical",
+        "dimensions": "1080×1920",
+        "viewbox": "0 0 1080 1920",
+        "width": 1080,
+        "height": 1920,
+        "aspect_ratio": "9:16",
+        "use_case": "Short video covers, stories",
     },
-    'banner': {
-        'name': 'Horizontal Banner',
-        'dimensions': '1920×1080',
-        'viewbox': '0 0 1920 1080',
-        'width': 1920,
-        'height': 1080,
-        'aspect_ratio': '16:9',
-        'use_case': 'Web banners, large screen displays'
+    "banner": {
+        "name": "Horizontal Banner",
+        "dimensions": "1920×1080",
+        "viewbox": "0 0 1920 1080",
+        "width": 1920,
+        "height": 1080,
+        "aspect_ratio": "16:9",
+        "use_case": "Web banners, large screen displays",
     },
-    'a4': {
-        'name': 'A4 Print',
-        'dimensions': '1240×1754',
-        'viewbox': '0 0 1240 1754',
-        'width': 1240,
-        'height': 1754,
-        'aspect_ratio': '√2:1',
-        'use_case': 'Print documents, PDF export'
-    }
+    "a4": {
+        "name": "A4 Print",
+        "dimensions": "1240×1754",
+        "viewbox": "0 0 1240 1754",
+        "width": 1240,
+        "height": 1754,
+        "aspect_ratio": "√2:1",
+        "use_case": "Print documents, PDF export",
+    },
 }
 
 
@@ -245,72 +245,72 @@ CANVAS_FORMATS = {
 # ============================================================
 
 DESIGN_COLORS = {
-    'consulting': {
-        'name': 'Consulting Style',
-        'primary': '#005587',
-        'secondary': '#0076A8',
-        'accent': '#F5A623',
-        'success': '#27AE60',
-        'warning': '#E74C3C',
-        'text_dark': '#1A252F',
-        'text_light': '#FFFFFF',
-        'text_muted': '#7F8C8D',
-        'background': '#FFFFFF',
-        'background_alt': '#F8F9FA'
+    "consulting": {
+        "name": "Consulting Style",
+        "primary": "#005587",
+        "secondary": "#0076A8",
+        "accent": "#F5A623",
+        "success": "#27AE60",
+        "warning": "#E74C3C",
+        "text_dark": "#1A252F",
+        "text_light": "#FFFFFF",
+        "text_muted": "#7F8C8D",
+        "background": "#FFFFFF",
+        "background_alt": "#F8F9FA",
     },
-    'general': {
-        'name': 'General Flexible Style',
-        'primary': '#2196F3',
-        'secondary': '#4CAF50',
-        'accent': '#FF9800',
-        'purple': '#9C27B0',
-        'success': '#27AE60',
-        'warning': '#E74C3C',
-        'text_dark': '#2C3E50',
-        'text_light': '#FFFFFF',
-        'text_muted': '#7F8C8D',
-        'background': '#FFFFFF',
-        'background_alt': '#F8F9FA'
+    "general": {
+        "name": "General Flexible Style",
+        "primary": "#2196F3",
+        "secondary": "#4CAF50",
+        "accent": "#FF9800",
+        "purple": "#9C27B0",
+        "success": "#27AE60",
+        "warning": "#E74C3C",
+        "text_dark": "#2C3E50",
+        "text_light": "#FFFFFF",
+        "text_muted": "#7F8C8D",
+        "background": "#FFFFFF",
+        "background_alt": "#F8F9FA",
     },
-    'tech': {
-        'name': 'Tech Style',
-        'primary': '#00D1FF',
-        'secondary': '#7B61FF',
-        'accent': '#00FF88',
-        'success': '#00FF88',
-        'warning': '#FF6B6B',
-        'text_dark': '#0A0E17',
-        'text_light': '#FFFFFF',
-        'text_muted': '#8892A0',
-        'background': '#0A0E17',
-        'background_alt': '#1A1F2E'
+    "tech": {
+        "name": "Tech Style",
+        "primary": "#00D1FF",
+        "secondary": "#7B61FF",
+        "accent": "#00FF88",
+        "success": "#00FF88",
+        "warning": "#FF6B6B",
+        "text_dark": "#0A0E17",
+        "text_light": "#FFFFFF",
+        "text_muted": "#8892A0",
+        "background": "#0A0E17",
+        "background_alt": "#1A1F2E",
     },
-    'academic': {
-        'name': 'Academic Style',
-        'primary': '#8B0000',
-        'secondary': '#1E3A5F',
-        'accent': '#C9B037',
-        'success': '#2E7D32',
-        'warning': '#D32F2F',
-        'text_dark': '#1A1A1A',
-        'text_light': '#FFFFFF',
-        'text_muted': '#666666',
-        'background': '#FFFFFF',
-        'background_alt': '#F5F5F5'
+    "academic": {
+        "name": "Academic Style",
+        "primary": "#8B0000",
+        "secondary": "#1E3A5F",
+        "accent": "#C9B037",
+        "success": "#2E7D32",
+        "warning": "#D32F2F",
+        "text_dark": "#1A1A1A",
+        "text_light": "#FFFFFF",
+        "text_muted": "#666666",
+        "background": "#FFFFFF",
+        "background_alt": "#F5F5F5",
     },
-    'government': {
-        'name': 'Government Style',
-        'primary': '#C41E3A',
-        'secondary': '#1E3A5F',
-        'accent': '#D4AF37',
-        'success': '#2E7D32',
-        'warning': '#B71C1C',
-        'text_dark': '#1A1A1A',
-        'text_light': '#FFFFFF',
-        'text_muted': '#555555',
-        'background': '#FFFFFF',
-        'background_alt': '#FFF8E1'
-    }
+    "government": {
+        "name": "Government Style",
+        "primary": "#C41E3A",
+        "secondary": "#1E3A5F",
+        "accent": "#D4AF37",
+        "success": "#2E7D32",
+        "warning": "#B71C1C",
+        "text_dark": "#1A1A1A",
+        "text_light": "#FFFFFF",
+        "text_muted": "#555555",
+        "background": "#FFFFFF",
+        "background_alt": "#FFF8E1",
+    },
 }
 
 
@@ -319,90 +319,90 @@ DESIGN_COLORS = {
 # ============================================================
 
 INDUSTRY_COLORS = {
-    'finance': {
-        'name': 'Finance/Banking',
-        'primary': '#003366',
-        'secondary': '#4A90D9',
-        'accent': '#D4AF37'
+    "finance": {
+        "name": "Finance/Banking",
+        "primary": "#003366",
+        "secondary": "#4A90D9",
+        "accent": "#D4AF37",
     },
-    'healthcare': {
-        'name': 'Healthcare/Medical',
-        'primary': '#00796B',
-        'secondary': '#4DB6AC',
-        'accent': '#FF7043'
+    "healthcare": {
+        "name": "Healthcare/Medical",
+        "primary": "#00796B",
+        "secondary": "#4DB6AC",
+        "accent": "#FF7043",
     },
-    'technology': {
-        'name': 'Technology/Internet',
-        'primary': '#1565C0',
-        'secondary': '#42A5F5',
-        'accent': '#00E676'
+    "technology": {
+        "name": "Technology/Internet",
+        "primary": "#1565C0",
+        "secondary": "#42A5F5",
+        "accent": "#00E676",
     },
-    'education': {
-        'name': 'Education/Training',
-        'primary': '#5E35B1',
-        'secondary': '#7E57C2',
-        'accent': '#FFD54F'
+    "education": {
+        "name": "Education/Training",
+        "primary": "#5E35B1",
+        "secondary": "#7E57C2",
+        "accent": "#FFD54F",
     },
-    'retail': {
-        'name': 'Retail/Consumer',
-        'primary': '#E53935',
-        'secondary': '#EF5350',
-        'accent': '#FFB300'
+    "retail": {
+        "name": "Retail/Consumer",
+        "primary": "#E53935",
+        "secondary": "#EF5350",
+        "accent": "#FFB300",
     },
-    'manufacturing': {
-        'name': 'Manufacturing/Industrial',
-        'primary': '#455A64',
-        'secondary': '#78909C',
-        'accent': '#FF6F00'
+    "manufacturing": {
+        "name": "Manufacturing/Industrial",
+        "primary": "#455A64",
+        "secondary": "#78909C",
+        "accent": "#FF6F00",
     },
-    'energy': {
-        'name': 'Energy/Environmental',
-        'primary': '#2E7D32',
-        'secondary': '#66BB6A',
-        'accent': '#FDD835'
+    "energy": {
+        "name": "Energy/Environmental",
+        "primary": "#2E7D32",
+        "secondary": "#66BB6A",
+        "accent": "#FDD835",
     },
-    'realestate': {
-        'name': 'Real Estate/Construction',
-        'primary': '#795548',
-        'secondary': '#A1887F',
-        'accent': '#4CAF50'
+    "realestate": {
+        "name": "Real Estate/Construction",
+        "primary": "#795548",
+        "secondary": "#A1887F",
+        "accent": "#4CAF50",
     },
-    'legal': {
-        'name': 'Legal/Compliance',
-        'primary': '#37474F',
-        'secondary': '#546E7A',
-        'accent': '#8D6E63'
+    "legal": {
+        "name": "Legal/Compliance",
+        "primary": "#37474F",
+        "secondary": "#546E7A",
+        "accent": "#8D6E63",
     },
-    'media': {
-        'name': 'Media/Entertainment',
-        'primary': '#7B1FA2',
-        'secondary': '#AB47BC',
-        'accent': '#FF4081'
+    "media": {
+        "name": "Media/Entertainment",
+        "primary": "#7B1FA2",
+        "secondary": "#AB47BC",
+        "accent": "#FF4081",
     },
-    'logistics': {
-        'name': 'Logistics/Supply Chain',
-        'primary': '#F57C00',
-        'secondary': '#FFB74D',
-        'accent': '#0288D1'
+    "logistics": {
+        "name": "Logistics/Supply Chain",
+        "primary": "#F57C00",
+        "secondary": "#FFB74D",
+        "accent": "#0288D1",
     },
-    'agriculture': {
-        'name': 'Agriculture/Food',
-        'primary': '#558B2F',
-        'secondary': '#8BC34A',
-        'accent': '#FFCA28'
+    "agriculture": {
+        "name": "Agriculture/Food",
+        "primary": "#558B2F",
+        "secondary": "#8BC34A",
+        "accent": "#FFCA28",
     },
-    'tourism': {
-        'name': 'Tourism/Hospitality',
-        'primary': '#00ACC1',
-        'secondary': '#4DD0E1',
-        'accent': '#FF7043'
+    "tourism": {
+        "name": "Tourism/Hospitality",
+        "primary": "#00ACC1",
+        "secondary": "#4DD0E1",
+        "accent": "#FF7043",
     },
-    'automotive': {
-        'name': 'Automotive/Transportation',
-        'primary': '#263238',
-        'secondary': '#455A64',
-        'accent': '#D32F2F'
-    }
+    "automotive": {
+        "name": "Automotive/Transportation",
+        "primary": "#263238",
+        "secondary": "#455A64",
+        "accent": "#D32F2F",
+    },
 }
 
 
@@ -411,21 +411,21 @@ INDUSTRY_COLORS = {
 # ============================================================
 
 FONTS = {
-    'system_ui': "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    'sans_serif': "'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif",
-    'monospace': "'SF Mono', Monaco, Consolas, 'Liberation Mono', monospace"
+    "system_ui": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "sans_serif": "'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif",
+    "monospace": "'SF Mono', Monaco, Consolas, 'Liberation Mono', monospace",
 }
 
 FONT_SIZES = {
-    'title_large': 48,
-    'title': 36,
-    'title_small': 28,
-    'heading': 24,
-    'subheading': 20,
-    'body': 18,
-    'body_small': 16,
-    'caption': 14,
-    'footnote': 12
+    "title_large": 48,
+    "title": 36,
+    "title_small": 28,
+    "heading": 24,
+    "subheading": 20,
+    "body": 18,
+    "body_small": 16,
+    "caption": 14,
+    "footnote": 12,
 }
 
 
@@ -434,53 +434,53 @@ FONT_SIZES = {
 # ============================================================
 
 LAYOUT_MARGINS = {
-    'ppt169': {
-        'top': 60,
-        'right': 60,
-        'bottom': 60,
-        'left': 60,
-        'content_width': 1160,
-        'content_height': 600
+    "ppt169": {
+        "top": 60,
+        "right": 60,
+        "bottom": 60,
+        "left": 60,
+        "content_width": 1160,
+        "content_height": 600,
     },
-    'ppt43': {
-        'top': 50,
-        'right': 50,
-        'bottom': 50,
-        'left': 50,
-        'content_width': 924,
-        'content_height': 608
+    "ppt43": {
+        "top": 50,
+        "right": 50,
+        "bottom": 50,
+        "left": 50,
+        "content_width": 924,
+        "content_height": 608,
     },
-    'xiaohongshu': {
-        'top': 80,
-        'right': 60,
-        'bottom': 80,
-        'left': 60,
-        'content_width': 1122,
-        'content_height': 1500
+    "xiaohongshu": {
+        "top": 80,
+        "right": 60,
+        "bottom": 80,
+        "left": 60,
+        "content_width": 1122,
+        "content_height": 1500,
     },
-    'moments': {
-        'top': 60,
-        'right': 60,
-        'bottom': 60,
-        'left': 60,
-        'content_width': 960,
-        'content_height': 960
+    "moments": {
+        "top": 60,
+        "right": 60,
+        "bottom": 60,
+        "left": 60,
+        "content_width": 960,
+        "content_height": 960,
     },
-    'story': {
-        'top': 120,
-        'right': 60,
-        'bottom': 180,
-        'left': 60,
-        'content_width': 960,
-        'content_height': 1620
+    "story": {
+        "top": 120,
+        "right": 60,
+        "bottom": 180,
+        "left": 60,
+        "content_width": 960,
+        "content_height": 1620,
     },
-    'wechat': {
-        'top': 40,
-        'right': 40,
-        'bottom': 40,
-        'left': 40,
-        'content_width': 820,
-        'content_height': 303
+    "wechat": {
+        "top": 40,
+        "right": 40,
+        "bottom": 40,
+        "left": 40,
+        "content_width": 820,
+        "content_height": 303,
     },
 }
 
@@ -494,20 +494,21 @@ LAYOUT_MARGINS = {
 # Keep the exported authority key as the compatibility router for existing
 # config consumers.
 SVG_CONSTRAINTS = {
-    'authority': 'skills/ppt-master/references/shared-standards.md',
-    'core_authority': 'skills/ppt-master/references/shared-standards-core.md',
-    'conditional_authorities': {
-        'effects': 'skills/ppt-master/references/svg-effects.md',
-        'native_data': 'skills/ppt-master/references/native-data-interface.md',
-        'pptx_structure': 'skills/ppt-master/references/pptx-structure-interface.md',
+    "authority": "skills/ppt-master/references/shared-standards.md",
+    "core_authority": "skills/ppt-master/references/shared-standards-core.md",
+    "conditional_authorities": {
+        "effects": "skills/ppt-master/references/svg-effects.md",
+        "native_data": "skills/ppt-master/references/native-data-interface.md",
+        "pptx_structure": "skills/ppt-master/references/pptx-structure-interface.md",
     },
-    'validator': 'skills/ppt-master/scripts/svg_quality_checker.py',
+    "validator": "skills/ppt-master/scripts/svg_quality_checker.py",
 }
 
 
 # ============================================================
 # Configuration Manager Class
 # ============================================================
+
 
 class Config:
     """Configuration manager."""
@@ -575,7 +576,7 @@ class Config:
         return LAYOUT_MARGINS.get(format_key)
 
     @staticmethod
-    def get_font(font_type: str = 'system_ui') -> str:
+    def get_font(font_type: str = "system_ui") -> str:
         """
         Get font declaration.
 
@@ -585,7 +586,7 @@ class Config:
         Returns:
             Font declaration string
         """
-        return FONTS.get(font_type, FONTS['system_ui'])
+        return FONTS.get(font_type, FONTS["system_ui"])
 
     @staticmethod
     def get_font_size(size_name: str) -> int:
@@ -598,10 +599,10 @@ class Config:
         Returns:
             Font size (pixels)
         """
-        return FONT_SIZES.get(size_name, FONT_SIZES['body'])
+        return FONT_SIZES.get(size_name, FONT_SIZES["body"])
 
     @staticmethod
-    def get_project_path(subdir: str = '') -> Path:
+    def get_project_path(subdir: str = "") -> Path:
         """
         Get project path.
 
@@ -616,7 +617,7 @@ class Config:
         return PROJECT_ROOT
 
     @staticmethod
-    def export_config(output_file: str = 'config_export.json'):
+    def export_config(output_file: str = "config_export.json"):
         """
         Export configuration to a JSON file.
 
@@ -624,15 +625,15 @@ class Config:
             output_file: Output file path
         """
         config_data = {
-            'canvas_formats': CANVAS_FORMATS,
-            'design_colors': DESIGN_COLORS,
-            'industry_colors': INDUSTRY_COLORS,
-            'fonts': FONTS,
-            'font_sizes': FONT_SIZES,
-            'svg_constraints': SVG_CONSTRAINTS
+            "canvas_formats": CANVAS_FORMATS,
+            "design_colors": DESIGN_COLORS,
+            "industry_colors": INDUSTRY_COLORS,
+            "fonts": FONTS,
+            "font_sizes": FONT_SIZES,
+            "svg_constraints": SVG_CONSTRAINTS,
         }
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(config_data, f, ensure_ascii=False, indent=2)
 
         print(f"Configuration exported to: {output_file}")
@@ -641,6 +642,7 @@ class Config:
 # ============================================================
 # Command Line Interface
 # ============================================================
+
 
 def build_parser() -> argparse.ArgumentParser:
     """Build the command-line parser."""
@@ -665,8 +667,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output JSON path (default: config_export.json)",
     )
 
-    format_parser = subparsers.add_parser("format", help="View a specific canvas format")
-    format_parser.add_argument("key", choices=sorted(CANVAS_FORMATS), help="Canvas format key")
+    format_parser = subparsers.add_parser(
+        "format", help="View a specific canvas format"
+    )
+    format_parser.add_argument(
+        "key", choices=sorted(CANVAS_FORMATS), help="Canvas format key"
+    )
     return parser
 
 
@@ -675,26 +681,27 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    if args.command == 'list-formats':
+    if args.command == "list-formats":
         print("\nCanvas Format List:\n")
         for key, info in CANVAS_FORMATS.items():
             print(
-                f"  {key:15} | {info['name']:15} | {info['dimensions']:12} | {info['use_case']}")
+                f"  {key:15} | {info['name']:15} | {info['dimensions']:12} | {info['use_case']}"
+            )
 
-    elif args.command == 'list-colors':
+    elif args.command == "list-colors":
         print("\nColor Scheme List:\n")
         for key, info in DESIGN_COLORS.items():
             print(f"  {key:12} | {info['name']:15} | Primary: {info['primary']}")
 
-    elif args.command == 'list-industries':
+    elif args.command == "list-industries":
         print("\nIndustry Color List:\n")
         for key, info in INDUSTRY_COLORS.items():
             print(f"  {key:15} | {info['name']:15} | Primary: {info['primary']}")
 
-    elif args.command == 'export':
+    elif args.command == "export":
         Config.export_config(args.output or args.output_path or "config_export.json")
 
-    elif args.command == 'format':
+    elif args.command == "format":
         info = Config.get_canvas_format(args.key)
         print(f"\nCanvas Format: {args.key}\n")
         for key, value in info.items():
@@ -703,5 +710,5 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     raise SystemExit(main())

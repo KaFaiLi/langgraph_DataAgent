@@ -13,9 +13,7 @@ from data_agent.tools.tabular_tools import load_table
 DATE_COLUMN_NAMES = {"date", "business_date", "trade_date", "asof", "as_of", "day"}
 
 
-def load_frame(
-    ctx: ToolContext, path: str, sheet: str | None = None
-) -> pl.DataFrame | None:
+def load_frame(ctx: ToolContext, path: str, sheet: str | None = None) -> pl.DataFrame | None:
     """Load a tabular source, returning None for anything unreadable."""
     try:
         return load_table(ctx.source_root, path, sheet)
@@ -69,9 +67,7 @@ def month_end_mask(dates: list[object]) -> list[bool]:
     return mask
 
 
-def group_sum(
-    frame: pl.DataFrame, group_col: str, value_col: str
-) -> list[dict[str, object]]:
+def group_sum(frame: pl.DataFrame, group_col: str, value_col: str) -> list[dict[str, object]]:
     grouped = (
         frame.group_by(group_col)
         .agg(pl.col(value_col).cast(pl.Float64).sum().alias("value"))

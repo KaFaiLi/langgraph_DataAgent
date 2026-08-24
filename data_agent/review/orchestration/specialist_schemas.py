@@ -37,9 +37,7 @@ class AnalystFinding(Finding):
         default_factory=list, max_length=4
     )
     analysis_performed: list[ShortAnalystText] = Field(default_factory=list, max_length=4)
-    alternative_explanations: list[ShortAnalystText] = Field(
-        default_factory=list, max_length=3
-    )
+    alternative_explanations: list[ShortAnalystText] = Field(default_factory=list, max_length=3)
     counter_evidence: list[AnalystEvidenceReference] = Field(  # type: ignore[assignment]
         default_factory=list, max_length=3
     )
@@ -98,9 +96,7 @@ class AnalystFinding(Finding):
 class AnalystOutput(BaseModel):
     """The flash analyst's structured output (one pass over the material)."""
 
-    findings: list[AnalystFinding] = Field(
-        default_factory=list, max_length=MAX_ANALYST_FINDINGS
-    )
+    findings: list[AnalystFinding] = Field(default_factory=list, max_length=MAX_ANALYST_FINDINGS)
     revision_notes: str = Field(default="", max_length=600)
     """On REVISE rounds: how the analyst addressed the verifier's feedback."""
 
@@ -130,5 +126,3 @@ class VerifierOutput(BaseModel):
     checks: list[str] = Field(default_factory=list)
     feedback: str = ""
     evidence_inaccessible: bool = False
-
-

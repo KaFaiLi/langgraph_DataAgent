@@ -56,4 +56,3 @@ def test_review_task_contract() -> None:
         source_ids=["SRC-001"],
     )
     assert task.domain is SpecialistDomain.RISK_METRICS
-

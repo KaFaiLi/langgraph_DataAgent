@@ -149,9 +149,7 @@ def _run_specialist(
                 list(result.get(collection, [])), validator
             )
             verification[collection] = clean
-            citation_failures.extend(
-                {"collection": collection, **failure} for failure in failures
-            )
+            citation_failures.extend({"collection": collection, **failure} for failure in failures)
         verification["citation_failures"] = citation_failures
         return _SpecialistOutcome(
             domain=domain,
@@ -165,9 +163,7 @@ def _run_specialist(
         return _SpecialistOutcome(
             domain=domain,
             source_ids=source_ids,
-            failure_reason=(
-                f"specialist {domain.value} failed: {type(exc).__name__}: {exc}"
-            ),
+            failure_reason=(f"specialist {domain.value} failed: {type(exc).__name__}: {exc}"),
         )
 
 
@@ -233,9 +229,7 @@ def _merge_outcomes(state: ParentState, outcomes: list[_SpecialistOutcome]) -> d
     coverage: list[dict] = [dict(entry) for entry in state.get("coverage", [])]
     output_dir = Path(state["output_dir"])
 
-    failure = next(
-        (outcome.failure_reason for outcome in outcomes if outcome.failure_reason), None
-    )
+    failure = next((outcome.failure_reason for outcome in outcomes if outcome.failure_reason), None)
     if failure is not None:
         return {"status": "failed", "failure_reason": failure}
 
@@ -248,9 +242,7 @@ def _merge_outcomes(state: ParentState, outcomes: list[_SpecialistOutcome]) -> d
         markdowns[domain.value] = outcome.markdown
 
         specialist_dir = output_dir / "specialists"
-        (specialist_dir / f"{domain.value}.md").write_text(
-            outcome.markdown, encoding="utf-8"
-        )
+        (specialist_dir / f"{domain.value}.md").write_text(outcome.markdown, encoding="utf-8")
         (specialist_dir / f"{domain.value}.json").write_text(
             json.dumps(outcome.report, indent=2, default=str),
             encoding="utf-8",

@@ -49,26 +49,56 @@ _ROLE_SLOTS = {
 }
 _USAGE_ROLE_ORDER = {
     "background": (
-        "bg", "background", "master_bg", "secondary_bg", "bg_secondary",
-        "primary", "accent", "secondary_accent",
+        "bg",
+        "background",
+        "master_bg",
+        "secondary_bg",
+        "bg_secondary",
+        "primary",
+        "accent",
+        "secondary_accent",
     ),
     "fill": (
-        "primary", "accent", "secondary_accent", "bg", "background",
-        "master_bg", "secondary_bg", "bg_secondary", "text", "body_text",
-        "text_secondary", "border",
+        "primary",
+        "accent",
+        "secondary_accent",
+        "bg",
+        "background",
+        "master_bg",
+        "secondary_bg",
+        "bg_secondary",
+        "text",
+        "body_text",
+        "text_secondary",
+        "border",
     ),
     "text": (
-        "text", "body_text", "text_secondary", "primary", "accent",
+        "text",
+        "body_text",
+        "text_secondary",
+        "primary",
+        "accent",
         "secondary_accent",
     ),
     "stroke": (
-        "border", "primary", "accent", "secondary_accent", "text",
-        "body_text", "text_secondary",
+        "border",
+        "primary",
+        "accent",
+        "secondary_accent",
+        "text",
+        "body_text",
+        "text_secondary",
     ),
     "chart": ("primary", "accent", "secondary_accent"),
 }
 _BACKGROUND_ROLE_TOKENS = (
-    "bg", "background", "surface", "paper", "card", "panel", "tint",
+    "bg",
+    "background",
+    "surface",
+    "paper",
+    "card",
+    "panel",
+    "tint",
 )
 _TEXT_ROLE_TOKENS = ("text", "ink", "muted")
 _STROKE_ROLE_TOKENS = ("border", "grid", "line", "stroke")
@@ -173,34 +203,54 @@ def load_theme_color_spec(project_path: Path) -> ThemeColorSpec | None:
     role_slots = {**_ROLE_SLOTS, **extra_slots}
 
     slots = dict(_OFFICE_DEFAULTS)
-    slots.update({
-        "lt1": _first_color(
-            roles,
-            "bg", "background", "master_bg",
-            default=slots["lt1"],
-        ),
-        "dk1": _first_color(
-            roles,
-            "text", "body_text", "primary",
-            default=slots["dk1"],
-        ),
-        "lt2": _first_color(
-            roles,
-            "secondary_bg", "bg_secondary", "bg", "background", "master_bg",
-            default=slots["lt2"],
-        ),
-        "dk2": _first_color(roles, "text_secondary", "text", default=slots["dk2"]),
-        "accent1": _first_color(roles, "primary", "accent", default=slots["accent1"]),
-        "accent2": _first_color(
-            roles,
-            "accent", "secondary_accent", "primary",
-            default=slots["accent2"],
-        ),
-        "accent3": _first_color(roles, "secondary_accent", "accent", default=slots["accent3"]),
-        "accent4": _first_color(roles, "border", "primary", default=slots["accent4"]),
-        "hlink": _first_color(roles, "accent", "primary", default=slots["hlink"]),
-        "folHlink": _first_color(roles, "secondary_accent", "accent", default=slots["folHlink"]),
-    })
+    slots.update(
+        {
+            "lt1": _first_color(
+                roles,
+                "bg",
+                "background",
+                "master_bg",
+                default=slots["lt1"],
+            ),
+            "dk1": _first_color(
+                roles,
+                "text",
+                "body_text",
+                "primary",
+                default=slots["dk1"],
+            ),
+            "lt2": _first_color(
+                roles,
+                "secondary_bg",
+                "bg_secondary",
+                "bg",
+                "background",
+                "master_bg",
+                default=slots["lt2"],
+            ),
+            "dk2": _first_color(roles, "text_secondary", "text", default=slots["dk2"]),
+            "accent1": _first_color(
+                roles, "primary", "accent", default=slots["accent1"]
+            ),
+            "accent2": _first_color(
+                roles,
+                "accent",
+                "secondary_accent",
+                "primary",
+                default=slots["accent2"],
+            ),
+            "accent3": _first_color(
+                roles, "secondary_accent", "accent", default=slots["accent3"]
+            ),
+            "accent4": _first_color(
+                roles, "border", "primary", default=slots["accent4"]
+            ),
+            "hlink": _first_color(roles, "accent", "primary", default=slots["hlink"]),
+            "folHlink": _first_color(
+                roles, "secondary_accent", "accent", default=slots["folHlink"]
+            ),
+        }
+    )
     for role, slot in extra_slots.items():
         slots[slot] = roles[role]
     return ThemeColorSpec(
@@ -275,8 +325,8 @@ def rewrite_chart_accent_colors(data: bytes, spec: ThemeColorSpec | None) -> byt
             return match.group(0)
         new_attrs = _VAL_RE.sub(f'val="{scheme}"', attrs, count=1)
         if paired:
-            return f'<a:schemeClr{new_attrs}>{match.group("body")}</a:schemeClr>'
-        return f'<a:schemeClr{new_attrs}/>'
+            return f"<a:schemeClr{new_attrs}>{match.group('body')}</a:schemeClr>"
+        return f"<a:schemeClr{new_attrs}/>"
 
     text = _SRGB_PAIR_RE.sub(lambda match: replacement(match, paired=True), text)
     text = _SRGB_EMPTY_RE.sub(lambda match: replacement(match, paired=False), text)

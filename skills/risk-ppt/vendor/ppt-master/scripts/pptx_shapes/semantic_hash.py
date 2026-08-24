@@ -23,29 +23,33 @@ import re
 from xml.etree import ElementTree as ET
 
 
-_ROOT_TEXT_STYLE_ATTRS = frozenset({
-    "class",
-    "fill",
-    "fill-opacity",
-    "font-family",
-    "font-size",
-    "font-style",
-    "font-weight",
-    "letter-spacing",
-    "opacity",
-    "style",
-    "text-anchor",
-    "text-decoration",
-    "word-spacing",
-})
+_ROOT_TEXT_STYLE_ATTRS = frozenset(
+    {
+        "class",
+        "fill",
+        "fill-opacity",
+        "font-family",
+        "font-size",
+        "font-style",
+        "font-weight",
+        "letter-spacing",
+        "opacity",
+        "style",
+        "text-anchor",
+        "text-decoration",
+        "word-spacing",
+    }
+)
 
 NATIVE_FALLBACK_SHA256_ATTR = "data-pptx-fallback-sha256"
 _NATIVE_FALLBACK_IGNORED_TAGS = frozenset({"metadata", "title", "desc"})
-_NATIVE_FALLBACK_IGNORED_ATTRS = frozenset({
-    "id",
-    "data-name",
-    "data-ph-type",
-})
+_NATIVE_FALLBACK_IGNORED_ATTRS = frozenset(
+    {
+        "id",
+        "data-name",
+        "data-ph-type",
+    }
+)
 _URL_ID_RE = re.compile(
     r"url\(\s*(?P<quote>['\"]?)#(?P<id>[^)'\"\s]+)(?P=quote)\s*\)",
     re.IGNORECASE,
@@ -179,8 +183,7 @@ def resolve_preset_preview_hash(root: ET.Element) -> str | None:
     generated preview without either hash is invalid rather than legacy SVG.
     """
     has_preview = any(
-        element.get("data-pptx-part")
-        in {"geometry-preview", "geometry-detail"}
+        element.get("data-pptx-part") in {"geometry-preview", "geometry-detail"}
         for element in root.iter()
     )
     carrier_hashes = {
@@ -225,7 +228,8 @@ def _preview_subtree(
                 is_root=False,
                 active=child_active,
             )
-        ) is not None
+        )
+        is not None
     ]
     if is_root:
         return {"children": children}
@@ -261,10 +265,12 @@ def _native_fallback_subtree(
             continue
         if name.startswith("data-pptx-"):
             continue
-        attrs.append((
-            raw_name,
-            _normalize_native_fallback_id_refs(name, raw_value, id_tokens),
-        ))
+        attrs.append(
+            (
+                raw_name,
+                _normalize_native_fallback_id_refs(name, raw_value, id_tokens),
+            )
+        )
 
     children = []
     for child in element:
@@ -275,9 +281,7 @@ def _native_fallback_subtree(
         if child_payload is None:
             continue
         entry = {"node": child_payload}
-        if child.tail and (
-            child.tail.strip() or tag in {"text", "tspan", "textPath"}
-        ):
+        if child.tail and (child.tail.strip() or tag in {"text", "tspan", "textPath"}):
             entry["tail"] = child.tail
         children.append(entry)
 

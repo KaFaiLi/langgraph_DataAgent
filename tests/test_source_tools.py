@@ -41,7 +41,11 @@ def test_search_text_is_source_only_and_bounded(source_root: Path):
 
     assert result["count"] == 1
     assert result["truncated"]
-    assert result["matches"][0] == {"path": "notes.md", "line": 1, "text": "first finding"}
+    assert result["matches"][0] == {
+        "path": "notes.md",
+        "line": 1,
+        "text": "first finding",
+    }
 
 
 def test_search_text_rejects_escape_and_invalid_regex(source_root: Path):
@@ -81,9 +85,7 @@ def test_read_document_section_reopens_rows_and_lines(source_root: Path):
     with pytest.raises(SourcePathError):
         read_document_section_data(source_root, "source://../outside.txt#lines=1:1")
     with pytest.raises(ValueError, match="exactly one"):
-        read_document_section_data(
-            source_root, "source://notes.md#lines=1:1&rows=1:1"
-        )
+        read_document_section_data(source_root, "source://notes.md#lines=1:1&rows=1:1")
     with pytest.raises(ValueError, match="out of range"):
         read_document_section_data(source_root, "source://risk.csv#rows=2:4")
 

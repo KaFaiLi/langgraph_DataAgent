@@ -42,7 +42,10 @@ def preflight(state: ParentState, config: RunnableConfig) -> dict:
 
     return {
         "run_id": run_id,
-        "review_period": {"start": period.start.isoformat(), "end": period.end.isoformat()},
+        "review_period": {
+            "start": period.start.isoformat(),
+            "end": period.end.isoformat(),
+        },
         "status": "running",
         "failure_reason": None,
     }
@@ -63,5 +66,3 @@ def _review_period(config: RunnableConfig) -> DateRange | None:
 def _new_run_id() -> str:
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     return f"RUN-{stamp}"
-
-

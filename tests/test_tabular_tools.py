@@ -27,7 +27,9 @@ def _tables(root: Path) -> None:
     (root / "owners.csv").write_text("desk,owner\nA,Alice\nB,Bob\n", encoding="utf-8")
 
 
-def test_tabular_tools_cover_inspection_reads_describe_group_join_and_sql(tmp_path: Path):
+def test_tabular_tools_cover_inspection_reads_describe_group_join_and_sql(
+    tmp_path: Path,
+):
     _tables(tmp_path)
 
     inspected = inspect_table(tmp_path, "sales.csv")
@@ -65,16 +67,19 @@ def test_tabular_paths_apply_hidden_and_secret_file_policy(tmp_path: Path):
         inspect_table(tmp_path, ".env.csv")
 
 
-@pytest.mark.parametrize("sql", [
-    "DELETE FROM src_sales_csv",
-    "SELECT 1; DROP TABLE src_sales_csv",
-    "PRAGMA enable_external_access",
-    "COPY (SELECT 1) TO 'out.csv'",
-    "SELECT * FROM read_csv_auto('../outside.csv')",
-    "SELECT * FROM read_json_auto('../outside.json')",
-    "SELECT * FROM read_text('../outside.txt')",
-    "SELECT * FROM '../outside.csv'",
-])
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "DELETE FROM src_sales_csv",
+        "SELECT 1; DROP TABLE src_sales_csv",
+        "PRAGMA enable_external_access",
+        "COPY (SELECT 1) TO 'out.csv'",
+        "SELECT * FROM read_csv_auto('../outside.csv')",
+        "SELECT * FROM read_json_auto('../outside.json')",
+        "SELECT * FROM read_text('../outside.txt')",
+        "SELECT * FROM '../outside.csv'",
+    ],
+)
 def test_duckdb_rejects_mutating_or_chained_sql(tmp_path: Path, sql: str):
     _tables(tmp_path)
     with pytest.raises(ToolError):
@@ -110,7 +115,7 @@ def test_python_sandbox_allows_analysis_but_blocks_paths_imports_and_processes(
         f"""
 import json
 from pathlib import Path
-print(Path(r'{source / 'input.txt'}').read_text())
+print(Path(r'{source / "input.txt"}').read_text())
 Path('result.json').write_text(json.dumps({{'ok': True}}))
 """,
     )
@@ -118,10 +123,14 @@ Path('result.json').write_text(json.dumps({{'ok': True}}))
     assert json.loads((workspace / "result.json").read_text()) == {"ok": True}
     monkeypatch.setenv("OPENAI_API_KEY", "secret")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "other-secret")
-    env = run_python_analysis(source, workspace, "import os; print(os.environ.get('OPENAI_API_KEY'))")
+    env = run_python_analysis(
+        source, workspace, "import os; print(os.environ.get('OPENAI_API_KEY'))"
+    )
     assert env["ok"] is True
     assert "secret" not in env["stdout"]
-    env = run_python_analysis(source, workspace, "import os; print(os.environ.get('AWS_SECRET_ACCESS_KEY'))")
+    env = run_python_analysis(
+        source, workspace, "import os; print(os.environ.get('AWS_SECRET_ACCESS_KEY'))"
+    )
     assert env["ok"] is True
     assert "other-secret" not in env["stdout"]
     blocked = run_python_analysis(source, workspace, "import socket")

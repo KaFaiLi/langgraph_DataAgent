@@ -7,7 +7,9 @@ from data_agent.review import ReviewRequest, ReviewStatus
 from data_agent.review.service import ReviewService
 
 
-def test_failed_preflight_is_persisted_and_visible_through_status(tmp_path: Path) -> None:
+def test_failed_preflight_is_persisted_and_visible_through_status(
+    tmp_path: Path,
+) -> None:
     request = ReviewRequest(
         source_root=tmp_path / "missing",
         output_dir=tmp_path / "run",

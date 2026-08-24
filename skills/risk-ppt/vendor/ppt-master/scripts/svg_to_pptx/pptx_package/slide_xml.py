@@ -11,7 +11,7 @@ def create_slide_xml_with_svg(
     svg_rid: str,
     width_emu: int,
     height_emu: int,
-    transition: str | None = 'fade',
+    transition: str | None = "fade",
     transition_duration: float = 0.5,
     auto_advance: float | None = None,
     use_compat_mode: bool = True,
@@ -32,7 +32,7 @@ def create_slide_xml_with_svg(
         auto_advance: Auto-advance interval in seconds.
         use_compat_mode: Whether to use compatibility mode (PNG + SVG dual format).
     """
-    transition_xml = ''
+    transition_xml = ""
     if transition is not None or auto_advance is not None:
         transition_fragment = create_transition_xml(
             effect=transition,
@@ -41,7 +41,7 @@ def create_slide_xml_with_svg(
             effect_options=transition_effect_options,
         )
         if transition_fragment:
-            transition_xml = '\n' + transition_fragment
+            transition_xml = "\n" + transition_fragment
 
     if use_compat_mode:
         blip_xml = f'''<a:blip r:embed="{png_rid}">

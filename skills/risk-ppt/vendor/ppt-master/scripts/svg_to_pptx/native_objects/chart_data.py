@@ -48,17 +48,22 @@ def _data_labels_config(payload: dict[str, Any]) -> dict[str, Any] | None:
     return raw
 
 
-def _data_label_position(value: Any, chart_type: str, grouping: str | None) -> str | None:
+def _data_label_position(
+    value: Any, chart_type: str, grouping: str | None
+) -> str | None:
     """Normalize and validate a label position for its chart plot."""
     if chart_type == "area":
         if value is not None:
-            raise RuntimeError("Native PPTX area data labels do not support label position")
+            raise RuntimeError(
+                "Native PPTX area data labels do not support label position"
+            )
         return None
     is_stacked = chart_type in {"bar", "column"} and grouping in {
-        "percentStacked", "stacked",
+        "percentStacked",
+        "stacked",
     }
-    default = "ctr" if is_stacked else (
-        "outEnd" if chart_type in {"bar", "column"} else "t"
+    default = (
+        "ctr" if is_stacked else ("outEnd" if chart_type in {"bar", "column"} else "t")
     )
     if value is None:
         return default
@@ -132,9 +137,13 @@ def _chart_data_labels(
         "data_labels.colors",
     )
     if colors and len(colors) != point_count:
-        raise RuntimeError("Native PPTX chart data_labels.colors must match point count")
+        raise RuntimeError(
+            "Native PPTX chart data_labels.colors must match point count"
+        )
     if any(_hex_or_none(color) is None for color in colors):
-        raise RuntimeError("Native PPTX chart data_labels.colors entries must be colors")
+        raise RuntimeError(
+            "Native PPTX chart data_labels.colors entries must be colors"
+        )
     return config
 
 
@@ -158,15 +167,23 @@ def _data_label_point_items(
             raw_index = item
             data = {}
         if isinstance(raw_index, bool):
-            raise RuntimeError("Native PPTX chart data_labels.points idx must be an integer")
+            raise RuntimeError(
+                "Native PPTX chart data_labels.points idx must be an integer"
+            )
         index_value = _number(raw_index, "data_labels.points idx")
         if not index_value.is_integer():
-            raise RuntimeError("Native PPTX chart data_labels.points idx must be an integer")
+            raise RuntimeError(
+                "Native PPTX chart data_labels.points idx must be an integer"
+            )
         index = int(index_value)
         if index < 0 or index >= point_count:
-            raise RuntimeError("Native PPTX chart data_labels.points idx is outside point range")
+            raise RuntimeError(
+                "Native PPTX chart data_labels.points idx is outside point range"
+            )
         if index in seen:
-            raise RuntimeError("Native PPTX chart data_labels.points idx values must be unique")
+            raise RuntimeError(
+                "Native PPTX chart data_labels.points idx values must be unique"
+            )
         _data_label_position(
             _first_present(data.get("position"), config.get("position")),
             chart_type,
@@ -249,15 +266,24 @@ def _chart_axes(
     unknown_roles = set(raw_axes) - allowed_roles
     if unknown_roles:
         roles = ", ".join(sorted(unknown_roles))
-        raise RuntimeError(f"Native PPTX chart axes contains unsupported role(s): {roles}")
+        raise RuntimeError(
+            f"Native PPTX chart axes contains unsupported role(s): {roles}"
+        )
 
     axes: dict[str, dict[str, Any]] = {}
     for role, raw_config in raw_axes.items():
         if not isinstance(raw_config, dict):
             raise RuntimeError(f"Native PPTX chart axes.{role} must be an object")
         allowed_fields = {
-            "kind", "label_position", "major_gridlines", "major_unit",
-            "maximum", "minimum", "number_format", "position", "reverse",
+            "kind",
+            "label_position",
+            "major_gridlines",
+            "major_unit",
+            "maximum",
+            "minimum",
+            "number_format",
+            "position",
+            "reverse",
             "visible",
         }
         unknown_fields = set(raw_config) - allowed_fields
@@ -277,7 +303,9 @@ def _chart_axes(
                 f"Native PPTX chart axes.{role}.kind must be date, text, or value"
             )
         if role in {"category", "secondary_category"} and kind not in {"date", "text"}:
-            raise RuntimeError(f"Native PPTX chart axes.{role}.kind must be date or text")
+            raise RuntimeError(
+                f"Native PPTX chart axes.{role}.kind must be date or text"
+            )
         if role in {"value", "secondary_value", "x", "y"} and kind != "value":
             raise RuntimeError(f"Native PPTX chart axes.{role}.kind must be value")
 
@@ -473,9 +501,7 @@ def _doughnut_hole_size(payload: dict[str, Any], chart_type: str) -> int | None:
         raise RuntimeError("Native PPTX doughnut hole_size must be an integer")
     hole_size = int(value)
     if not 10 <= hole_size <= 90:
-        raise RuntimeError(
-            "Native PPTX doughnut hole_size must be between 10 and 90"
-        )
+        raise RuntimeError("Native PPTX doughnut hole_size must be between 10 and 90")
     return hole_size
 
 
@@ -615,9 +641,16 @@ def _chart_kind(payload: dict[str, Any]) -> tuple[str, str | None, str | None]:
             f"Native PPTX {chart_type} chart is outside current basic chart support"
         )
 
-    supported = sorted(_CATEGORY_CHART_TYPES | _XY_CHART_TYPES | _CHARTEX_CHART_TYPES | {"combo", "stock"})
+    supported = sorted(
+        _CATEGORY_CHART_TYPES
+        | _XY_CHART_TYPES
+        | _CHARTEX_CHART_TYPES
+        | {"combo", "stock"}
+    )
     if chart_type not in supported:
-        raise RuntimeError(f"Native PPTX chart type must be one of: {', '.join(supported)}")
+        raise RuntimeError(
+            f"Native PPTX chart type must be one of: {', '.join(supported)}"
+        )
     return chart_type, grouping, style
 
 
@@ -626,7 +659,9 @@ def _chart_grouping(
     payload: dict[str, Any],
     alias_grouping: str | None,
 ) -> str | None:
-    grouping = payload.get("grouping") or payload.get("chart_grouping") or alias_grouping
+    grouping = (
+        payload.get("grouping") or payload.get("chart_grouping") or alias_grouping
+    )
     if not grouping and payload.get("stacked"):
         grouping = "stacked"
     if not grouping:
@@ -652,7 +687,9 @@ def _chart_grouping(
     if normalized not in allowed:
         if normalized in {"clustered", "standard"}:
             allowed_text = ", ".join(sorted(allowed))
-            raise RuntimeError(f"Native PPTX {chart_type} chart grouping must be one of: {allowed_text}")
+            raise RuntimeError(
+                f"Native PPTX {chart_type} chart grouping must be one of: {allowed_text}"
+            )
         raise RuntimeError(
             f"Native PPTX {grouping} grouping is outside current basic chart support"
         )
@@ -678,8 +715,12 @@ def _line_style(payload: dict[str, Any], alias_style: str | None) -> str:
     return style
 
 
-def _radar_style(payload: dict[str, Any], alias_style: str | None) -> tuple[str, str | None]:
-    raw_style = payload.get("radar_style") or payload.get("radarStyle") or alias_style or "line"
+def _radar_style(
+    payload: dict[str, Any], alias_style: str | None
+) -> tuple[str, str | None]:
+    raw_style = (
+        payload.get("radar_style") or payload.get("radarStyle") or alias_style or "line"
+    )
     aliases = {
         "filled": ("filled", None),
         "line": ("marker", "none"),
@@ -696,7 +737,9 @@ def _radar_style(payload: dict[str, Any], alias_style: str | None) -> tuple[str,
     return style
 
 
-def _category_series(payload: dict[str, Any], categories: list[Any]) -> list[dict[str, Any]]:
+def _category_series(
+    payload: dict[str, Any], categories: list[Any]
+) -> list[dict[str, Any]]:
     raw_series = payload.get("series", [])
     if not categories or not isinstance(raw_series, list) or not raw_series:
         raise RuntimeError("Native PPTX chart requires non-empty categories and series")
@@ -705,7 +748,9 @@ def _category_series(payload: dict[str, Any], categories: list[Any]) -> list[dic
         payload.get("pointColors"),
     )
     if root_point_colors is not None and len(raw_series) != 1:
-        raise RuntimeError("Native PPTX chart root point_colors is only valid for one series")
+        raise RuntimeError(
+            "Native PPTX chart root point_colors is only valid for one series"
+        )
 
     series: list[dict[str, Any]] = []
     for idx, item in enumerate(raw_series, start=1):
@@ -716,7 +761,9 @@ def _category_series(payload: dict[str, Any], categories: list[Any]) -> list[dic
             for value in _chart_list(item.get("values", []), "series[].values")
         ]
         if len(values) != len(categories):
-            raise RuntimeError("Native PPTX chart series values must match categories length")
+            raise RuntimeError(
+                "Native PPTX chart series values must match categories length"
+            )
         raw_point_colors = _first_present(
             item.get("point_colors"),
             item.get("pointColors"),
@@ -727,8 +774,13 @@ def _category_series(payload: dict[str, Any], categories: list[Any]) -> list[dic
             for color in _chart_list(raw_point_colors, "series[].point_colors")
         ]
         if point_colors and len(point_colors) != len(values):
-            raise RuntimeError("Native PPTX chart series point_colors must match values length")
-        series_item = {"name": str(item.get("name") or f"Series {idx}"), "values": values}
+            raise RuntimeError(
+                "Native PPTX chart series point_colors must match values length"
+            )
+        series_item = {
+            "name": str(item.get("name") or f"Series {idx}"),
+            "values": values,
+        }
         if point_colors:
             series_item["point_colors"] = point_colors
         fill_opacity = _first_present(
@@ -749,7 +801,9 @@ def _category_series(payload: dict[str, Any], categories: list[Any]) -> list[dic
         if line_width is not None:
             line_width = _number(line_width, "series line_width")
             if line_width <= 0:
-                raise RuntimeError("Native PPTX chart series line_width must be positive")
+                raise RuntimeError(
+                    "Native PPTX chart series line_width must be positive"
+                )
             _powerpoint_line_width_emu(line_width, "series line_width")
             series_item["line_width"] = line_width
         series.append(series_item)
@@ -786,7 +840,9 @@ def _category_chart_data(
     series = _category_series(payload, categories)
     if chart_type in {"doughnut", "of_pie", "pie"}:
         if len(series) != 1:
-            raise RuntimeError("Native PPTX pie-family charts support exactly one series")
+            raise RuntimeError(
+                "Native PPTX pie-family charts support exactly one series"
+            )
 
     of_pie_type = None
     if chart_type == "of_pie":
@@ -814,7 +870,9 @@ def _category_chart_data(
         radar_style, radar_marker_style = _radar_style(payload, alias_style)
 
     if alias_style == "exploded" or payload.get("exploded"):
-        raise RuntimeError("Native PPTX exploded pie/doughnut is outside current basic chart support")
+        raise RuntimeError(
+            "Native PPTX exploded pie/doughnut is outside current basic chart support"
+        )
 
     grouping = (
         _chart_grouping(chart_type, payload, alias_grouping)
@@ -869,11 +927,17 @@ def _combo_axis_name(plot_payload: dict[str, Any]) -> str:
     return normalized
 
 
-def _combo_plot_type(plot_payload: dict[str, Any]) -> tuple[str, str | None, str | None]:
+def _combo_plot_type(
+    plot_payload: dict[str, Any],
+) -> tuple[str, str | None, str | None]:
     chart_type, alias_grouping, alias_style = _chart_kind(plot_payload)
     if chart_type not in {"area", "column", "line"}:
-        raise RuntimeError("Native PPTX combo plots support column, line, and area only")
-    has_area_fill = bool(_first_present(plot_payload.get("area_fill"), plot_payload.get("areaFill")))
+        raise RuntimeError(
+            "Native PPTX combo plots support column, line, and area only"
+        )
+    has_area_fill = bool(
+        _first_present(plot_payload.get("area_fill"), plot_payload.get("areaFill"))
+    )
     if chart_type == "line" and has_area_fill:
         chart_type = "area"
     return chart_type, alias_grouping, alias_style
@@ -883,10 +947,13 @@ def _plot_series_area_style(plot_payload: dict[str, Any]) -> bool:
     for item in _chart_list(plot_payload.get("series", []), "series"):
         if not isinstance(item, dict):
             continue
-        if _first_present(
-            item.get("fill_opacity"),
-            item.get("fillOpacity"),
-        ) is not None:
+        if (
+            _first_present(
+                item.get("fill_opacity"),
+                item.get("fillOpacity"),
+            )
+            is not None
+        ):
             return True
     return False
 
@@ -930,13 +997,9 @@ def _combo_plot_entry(
     axis_is_date = axes.get(category_role, {}).get("kind") == "date"
     raw_numeric = plot_payload.get("category_numeric")
     if raw_numeric is not None and not isinstance(raw_numeric, bool):
-        raise RuntimeError(
-            "Native PPTX combo plot category_numeric must be a boolean"
-        )
+        raise RuntimeError("Native PPTX combo plot category_numeric must be a boolean")
     if axis_is_date and raw_numeric is False:
-        raise RuntimeError(
-            "Native PPTX combo date-axis categories must remain numeric"
-        )
+        raise RuntimeError("Native PPTX combo date-axis categories must remain numeric")
     plot_category_is_numeric = axis_is_date or (
         raw_numeric if raw_numeric is not None else category_is_numeric
     )
@@ -1008,12 +1071,14 @@ def _combo_chart_data(payload: dict[str, Any]) -> dict[str, Any]:
         for item in _chart_list(raw_plots, "plots"):
             if not isinstance(item, dict):
                 raise RuntimeError("Native PPTX combo plots must be objects")
-            plots.append(_combo_plot_entry(
-                item,
-                categories,
-                category_is_numeric=category_is_numeric,
-                axes=axes,
-            ))
+            plots.append(
+                _combo_plot_entry(
+                    item,
+                    categories,
+                    category_is_numeric=category_is_numeric,
+                    axes=axes,
+                )
+            )
     else:
         raw_series = _chart_list(payload.get("series", []), "series")
         if not raw_series:
@@ -1047,11 +1112,15 @@ def _combo_chart_data(payload: dict[str, Any]) -> dict[str, Any]:
             )
             previous = plots[-1] if plots else None
             previous_signature = (
-                previous.get("axis"),
-                previous.get("grouping"),
-                previous.get("line_style"),
-                previous.get("type"),
-            ) if previous else None
+                (
+                    previous.get("axis"),
+                    previous.get("grouping"),
+                    previous.get("line_style"),
+                    previous.get("type"),
+                )
+                if previous
+                else None
+            )
             if (
                 previous is not None
                 and signature == previous_signature
@@ -1067,7 +1136,8 @@ def _combo_chart_data(payload: dict[str, Any]) -> dict[str, Any]:
         raise RuntimeError("Native PPTX combo chart requires a primary-axis plot")
     has_secondary_plot = any(plot["axis"] == "secondary" for plot in plots)
     if not has_secondary_plot and {
-        "secondary_category", "secondary_value",
+        "secondary_category",
+        "secondary_value",
     }.intersection(axes):
         raise RuntimeError(
             "Native PPTX combo secondary axes require a secondary-axis plot"
@@ -1075,14 +1145,8 @@ def _combo_chart_data(payload: dict[str, Any]) -> dict[str, Any]:
     series_index_groups = [plot.get("series_indices") for plot in plots]
     if any(group is not None for group in series_index_groups):
         if any(group is None for group in series_index_groups):
-            raise RuntimeError(
-                "Native PPTX combo series_indices must cover every plot"
-            )
-        flat_indices = [
-            index
-            for group in series_index_groups
-            for index in group
-        ]
+            raise RuntimeError("Native PPTX combo series_indices must cover every plot")
+        flat_indices = [index for group in series_index_groups for index in group]
         if sorted(flat_indices) != list(range(len(flat_indices))):
             raise RuntimeError(
                 "Native PPTX combo series_indices must form one contiguous range"
@@ -1116,9 +1180,15 @@ def _combo_chart_data(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _chart_values(payload: dict[str, Any], field_name: str = "values") -> list[int | float]:
+def _chart_values(
+    payload: dict[str, Any], field_name: str = "values"
+) -> list[int | float]:
     raw_values = payload.get(field_name)
-    if raw_values is None and isinstance(payload.get("series"), list) and payload["series"]:
+    if (
+        raw_values is None
+        and isinstance(payload.get("series"), list)
+        and payload["series"]
+    ):
         first_series = payload["series"][0]
         if isinstance(first_series, dict):
             raw_values = first_series.get("values")
@@ -1135,7 +1205,9 @@ def _chart_categories(payload: dict[str, Any], count: int | None = None) -> list
         if not categories:
             categories = [f"Category {idx + 1}" for idx in range(count)]
         if len(categories) != count:
-            raise RuntimeError("Native PPTX chart categories length must match values length")
+            raise RuntimeError(
+                "Native PPTX chart categories length must match values length"
+            )
     elif not categories:
         raise RuntimeError("Native PPTX chart requires non-empty categories")
     return categories
@@ -1155,7 +1227,9 @@ def _hierarchy_levels(payload: dict[str, Any], count: int) -> list[list[str]]:
         else:
             path_rows = [[str(item)] for item in raw_categories]
         if len(path_rows) != count:
-            raise RuntimeError("Native PPTX hierarchical chart categories length must match values length")
+            raise RuntimeError(
+                "Native PPTX hierarchical chart categories length must match values length"
+            )
         max_depth = max((len(row) for row in path_rows), default=0)
         levels = [
             [row[depth] if depth < len(row) else "" for row in path_rows]
@@ -1163,15 +1237,21 @@ def _hierarchy_levels(payload: dict[str, Any], count: int) -> list[list[str]]:
         ]
 
     if not levels:
-        raise RuntimeError("Native PPTX hierarchical charts require levels or path categories")
+        raise RuntimeError(
+            "Native PPTX hierarchical charts require levels or path categories"
+        )
     for level in levels:
         if len(level) != count:
-            raise RuntimeError("Native PPTX hierarchical chart levels must match values length")
+            raise RuntimeError(
+                "Native PPTX hierarchical chart levels must match values length"
+            )
     return levels
 
 
 def _treemap_parent_labels(payload: dict[str, Any]) -> str:
-    raw = payload.get("parent_label_layout", payload.get("parent_labels", "overlapping"))
+    raw = payload.get(
+        "parent_label_layout", payload.get("parent_labels", "overlapping")
+    )
     aliases = {
         "banner": "banner",
         "none": "none",
@@ -1224,7 +1304,9 @@ def _chartex_chart_data(payload: dict[str, Any], chart_type: str) -> dict[str, A
             for value in _chart_list(raw_subtotals, "subtotals"):
                 index = _chart_number(value)
                 if not isinstance(index, int):
-                    raise RuntimeError("Native PPTX waterfall subtotal indices must be integers")
+                    raise RuntimeError(
+                        "Native PPTX waterfall subtotal indices must be integers"
+                    )
                 if index < 0 or index >= len(values):
                     raise RuntimeError(
                         "Native PPTX waterfall subtotal index is outside point range"
@@ -1246,52 +1328,78 @@ def _chartex_chart_data(payload: dict[str, Any], chart_type: str) -> dict[str, A
         for idx, item in enumerate(raw_series, start=1):
             if not isinstance(item, dict):
                 raise RuntimeError("Native PPTX chart series entries must be objects")
-            values = [_chart_number(value) for value in _chart_list(item.get("values", []), "series[].values")]
+            values = [
+                _chart_number(value)
+                for value in _chart_list(item.get("values", []), "series[].values")
+            ]
             if not values:
-                raise RuntimeError("Native PPTX boxWhisker series values must be non-empty")
+                raise RuntimeError(
+                    "Native PPTX boxWhisker series values must be non-empty"
+                )
             categories = item.get("categories")
             if categories is None:
                 categories = [str(item.get("name") or f"Series {idx}")] * len(values)
-            categories_list = [str(value) for value in _chart_list(categories, "series[].categories")]
+            categories_list = [
+                str(value) for value in _chart_list(categories, "series[].categories")
+            ]
             if len(categories_list) != len(values):
-                raise RuntimeError("Native PPTX boxWhisker series categories must match values length")
-            series.append({
-                "categories": categories_list,
-                "name": str(item.get("name") or f"Series {idx}"),
-                "values": values,
-            })
+                raise RuntimeError(
+                    "Native PPTX boxWhisker series categories must match values length"
+                )
+            series.append(
+                {
+                    "categories": categories_list,
+                    "name": str(item.get("name") or f"Series {idx}"),
+                    "values": values,
+                }
+            )
         return {
             "kind": "chartex",
             "series": series,
             "type": chart_type,
         }
 
-    raise RuntimeError(f"Native PPTX {chart_type} chart is outside current basic chart support")
+    raise RuntimeError(
+        f"Native PPTX {chart_type} chart is outside current basic chart support"
+    )
 
 
 def _stock_chart_data(payload: dict[str, Any]) -> dict[str, Any]:
     if _data_labels_config(payload) is not None:
-        raise RuntimeError("Native PPTX stock chart data labels are outside current support")
+        raise RuntimeError(
+            "Native PPTX stock chart data labels are outside current support"
+        )
     axes = _chart_axes(payload, {"category", "value"})
     if "category" in axes and not _category_axis_is_date(axes):
         raise RuntimeError("Native PPTX stock chart category axis must be date")
     categories = [
         _chart_number(item)
-        for item in _chart_list(payload.get("categories", payload.get("dates", [])), "categories")
+        for item in _chart_list(
+            payload.get("categories", payload.get("dates", [])), "categories"
+        )
     ]
     if not categories:
-        raise RuntimeError("Native PPTX stock chart requires non-empty categories or dates")
+        raise RuntimeError(
+            "Native PPTX stock chart requires non-empty categories or dates"
+        )
 
     raw_series = payload.get("series")
     if raw_series is None:
-        field_names = [("open", "Open"), ("high", "High"), ("low", "Low"), ("close", "Close")]
+        field_names = [
+            ("open", "Open"),
+            ("high", "High"),
+            ("low", "Low"),
+            ("close", "Close"),
+        ]
         raw_series = [
             {"name": default_name, "values": payload.get(field_name, [])}
             for field_name, default_name in field_names
         ]
     series = _category_series({"series": raw_series}, categories)
     if len(series) != 4:
-        raise RuntimeError("Native PPTX stock chart requires exactly four series: open, high, low, close")
+        raise RuntimeError(
+            "Native PPTX stock chart requires exactly four series: open, high, low, close"
+        )
     return {
         "axes": axes,
         "categories": categories,
@@ -1303,7 +1411,11 @@ def _stock_chart_data(payload: dict[str, Any]) -> dict[str, Any]:
 
 def _point_values(point: Any, *, chart_type: str) -> tuple[Any, Any, Any | None]:
     if isinstance(point, dict):
-        return point.get("x"), point.get("y"), point.get("size", point.get("bubble_size"))
+        return (
+            point.get("x"),
+            point.get("y"),
+            point.get("size", point.get("bubble_size")),
+        )
     if isinstance(point, (list, tuple)):
         if len(point) < 2:
             raise RuntimeError("Native PPTX XY chart points require x and y")
@@ -1338,7 +1450,9 @@ def _xy_chart_data(
             ]
             x_values = [_chart_number(point[0]) for point in points]
             y_values = [_chart_number(point[1]) for point in points]
-            size_values = [_chart_number(point[2]) for point in points if point[2] is not None]
+            size_values = [
+                _chart_number(point[2]) for point in points if point[2] is not None
+            ]
         else:
             x_raw = _chart_list(item.get("x", item.get("xs", [])), "series[].x")
             y_raw = _chart_list(
@@ -1354,18 +1468,26 @@ def _xy_chart_data(
             size_values = [_chart_number(value) for value in size_raw]
 
         if not x_values or len(x_values) != len(y_values):
-            raise RuntimeError("Native PPTX XY chart x/y values must be non-empty and same length")
+            raise RuntimeError(
+                "Native PPTX XY chart x/y values must be non-empty and same length"
+            )
         if chart_type == "bubble" and len(size_values) != len(x_values):
-            raise RuntimeError("Native PPTX bubble chart requires one size per x/y value")
+            raise RuntimeError(
+                "Native PPTX bubble chart requires one size per x/y value"
+            )
 
-        series.append({
-            "name": str(item.get("name") or f"Series {idx}"),
-            "sizes": size_values,
-            "x": x_values,
-            "y": y_values,
-        })
+        series.append(
+            {
+                "name": str(item.get("name") or f"Series {idx}"),
+                "sizes": size_values,
+                "x": x_values,
+                "y": y_values,
+            }
+        )
 
-    scatter_style = _compact_key(payload.get("scatter_style") or alias_style or "marker")
+    scatter_style = _compact_key(
+        payload.get("scatter_style") or alias_style or "marker"
+    )
     style_aliases = {
         "line": "line",
         "linemarker": "lineMarker",

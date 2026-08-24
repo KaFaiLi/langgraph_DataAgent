@@ -153,5 +153,3 @@ class DataOverview(BaseModel):
     @property
     def source_locators(self) -> list[str]:
         return [reference.locator for reference in self.evidence]
-
-

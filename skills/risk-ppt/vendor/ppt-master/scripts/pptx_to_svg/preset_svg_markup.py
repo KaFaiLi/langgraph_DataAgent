@@ -61,12 +61,10 @@ def serialize_preset_layers(
             remove_stroke_attrs(attrs)
             attrs["stroke"] = "none"
         attrs["data-pptx-part"] = "geometry-detail"
-        detail_layers.append(
-            f'<path d="{_xml_escape(layer.d)}"{attrs_to_xml(attrs)}/>'
-        )
+        detail_layers.append(f'<path d="{_xml_escape(layer.d)}"{attrs_to_xml(attrs)}/>')
 
     preview = (
-        f'<g{attrs_to_xml(preview_group_attrs)}>\n'
+        f"<g{attrs_to_xml(preview_group_attrs)}>\n"
         + "\n".join(detail_layers)
         + "\n</g>"
     )
@@ -83,10 +81,7 @@ def serialize_preset_layers(
         "pointer-events": "none",
     }
     combined_path = " ".join(layer.d for layer in layers)
-    carrier = (
-        f'<path d="{_xml_escape(combined_path)}"'
-        f'{attrs_to_xml(carrier_attrs)}/>'
-    )
+    carrier = f'<path d="{_xml_escape(combined_path)}"{attrs_to_xml(carrier_attrs)}/>'
     return PresetSvgMarkup(
         carrier=carrier,
         preview=preview,
@@ -120,9 +115,7 @@ def serialize_compact_preset_layers(
                 attrs["fill"] = derived_fill["fill"]
         if not layer.stroke and base_stroke != "none":
             attrs["stroke"] = "none"
-        detail_layers.append(
-            f'<path d="{_xml_escape(layer.d)}"{attrs_to_xml(attrs)}/>'
-        )
+        detail_layers.append(f'<path d="{_xml_escape(layer.d)}"{attrs_to_xml(attrs)}/>')
     return "\n".join(detail_layers)
 
 
@@ -138,10 +131,7 @@ def apply_preset_path_fill(attrs: dict[str, str], mode: str) -> None:
     if not color.startswith("#") or len(color) != 7:
         return
     try:
-        channels = tuple(
-            int(color[offset:offset + 2], 16)
-            for offset in (1, 3, 5)
-        )
+        channels = tuple(int(color[offset : offset + 2], 16) for offset in (1, 3, 5))
     except ValueError:
         return
     if mode in {"darken", "darkenLess"}:
@@ -150,14 +140,11 @@ def apply_preset_path_fill(attrs: dict[str, str], mode: str) -> None:
     elif mode in {"lighten", "lightenLess"}:
         amount = 0.4 if mode == "lighten" else 0.2
         adjusted = tuple(
-            round(channel + (255 - channel) * amount)
-            for channel in channels
+            round(channel + (255 - channel) * amount) for channel in channels
         )
     else:
         return
-    attrs["fill"] = "#" + "".join(
-        f"{channel:02X}" for channel in adjusted
-    )
+    attrs["fill"] = "#" + "".join(f"{channel:02X}" for channel in adjusted)
 
 
 def remove_stroke_attrs(attrs: dict[str, str]) -> None:
@@ -169,10 +156,7 @@ def remove_stroke_attrs(attrs: dict[str, str]) -> None:
 
 def attrs_to_xml(attrs: Mapping[str, str]) -> str:
     """Serialize SVG attributes in deterministic insertion order."""
-    return "".join(
-        f' {name}="{_xml_escape(value)}"'
-        for name, value in attrs.items()
-    )
+    return "".join(f' {name}="{_xml_escape(value)}"' for name, value in attrs.items())
 
 
 def _xml_escape(value: str) -> str:
@@ -180,8 +164,7 @@ def _xml_escape(value: str) -> str:
     if any(not _is_xml_10_character(character) for character in text):
         raise ValueError("SVG markup contains an XML 1.0-incompatible character")
     return (
-        text
-        .replace("&", "&amp;")
+        text.replace("&", "&amp;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
         .replace('"', "&quot;")

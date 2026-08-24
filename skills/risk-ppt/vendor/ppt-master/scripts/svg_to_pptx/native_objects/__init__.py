@@ -99,13 +99,17 @@ __all__ = [
 ]
 
 
-def _build_native_chart(elem: ET.Element, ctx: ConvertContext, payload: dict[str, Any]) -> ShapeResult:
+def _build_native_chart(
+    elem: ET.Element, ctx: ConvertContext, payload: dict[str, Any]
+) -> ShapeResult:
     chart_data = _chart_data(payload)
     off_x, off_y, ext_cx, ext_cy = _bounds(elem, payload, ctx)
 
     shape_id = ctx.next_id()
     rel_id = ctx.next_rel_id()
-    local_index = 1 + sum(1 for part in ctx.package_files if part.startswith("ppt/charts/chart"))
+    local_index = 1 + sum(
+        1 for part in ctx.package_files if part.startswith("ppt/charts/chart")
+    )
     part_index = ctx.slide_num * 100 + local_index
     workbook_name = f"Microsoft_Excel_Sheet{part_index}.xlsx"
     workbook_part = f"ppt/embeddings/{workbook_name}"
@@ -124,12 +128,16 @@ def _build_native_chart(elem: ET.Element, ctx: ConvertContext, payload: dict[str
             f'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
             f'r:id="{rel_id}"/>'
         )
-        ctx.rel_entries.append({
-            "id": rel_id,
-            "type": CHARTEX_REL_TYPE,
-            "target": f"../charts/{chart_name}",
-        })
-        ctx.package_files[chart_part] = _chart_ex_xml(payload, chart_data, chart_rels_id="rId1")
+        ctx.rel_entries.append(
+            {
+                "id": rel_id,
+                "type": CHARTEX_REL_TYPE,
+                "target": f"../charts/{chart_name}",
+            }
+        )
+        ctx.package_files[chart_part] = _chart_ex_xml(
+            payload, chart_data, chart_rels_id="rId1"
+        )
         ctx.package_files[chart_rels_part] = _chart_ex_rels_xml(
             f"../embeddings/{workbook_name}",
             style_name,
@@ -150,11 +158,13 @@ def _build_native_chart(elem: ET.Element, ctx: ConvertContext, payload: dict[str
             '<c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" '
             f'r:id="{rel_id}"/>'
         )
-        ctx.rel_entries.append({
-            "id": rel_id,
-            "type": CHART_REL_TYPE,
-            "target": f"../charts/{chart_name}",
-        })
+        ctx.rel_entries.append(
+            {
+                "id": rel_id,
+                "type": CHART_REL_TYPE,
+                "target": f"../charts/{chart_name}",
+            }
+        )
         ctx.package_files[chart_part] = _chart_xml(
             elem,
             payload,
@@ -164,14 +174,20 @@ def _build_native_chart(elem: ET.Element, ctx: ConvertContext, payload: dict[str
             primary_language=ctx.primary_language,
             chart_bounds=(off_x, off_y, ext_cx, ext_cy),
         )
-        ctx.package_files[chart_rels_part] = _chart_rels_xml(f"../embeddings/{workbook_name}")
+        ctx.package_files[chart_rels_part] = _chart_rels_xml(
+            f"../embeddings/{workbook_name}"
+        )
         if chart_data["kind"] == "xy":
             ctx.package_files[workbook_part] = _minimal_xy_chart_workbook(chart_data)
         else:
-            ctx.package_files[workbook_part] = _minimal_category_chart_workbook(chart_data)
+            ctx.package_files[workbook_part] = _minimal_category_chart_workbook(
+                chart_data
+            )
         ctx.content_type_overrides[chart_part] = CHART_CONTENT_TYPE
 
-    name = _xml_escape(str(payload.get("name") or elem.get("id") or f"Native Chart {shape_id}"))
+    name = _xml_escape(
+        str(payload.get("name") or elem.get("id") or f"Native Chart {shape_id}")
+    )
     chart_frame_xml = f'''<p:graphicFrame>
 <p:nvGraphicFramePr>
 <p:cNvPr id="{shape_id}" name="{name}"/>
@@ -195,13 +211,14 @@ def _build_native_chart(elem: ET.Element, ctx: ConvertContext, payload: dict[str
         note_font_size=text_sizes["note"],
         title_font_size=text_sizes["title"],
         include_title=(
-            chart_data["kind"] == "chartex"
-            or _chart_title_is_bounded(payload)
+            chart_data["kind"] == "chartex" or _chart_title_is_bounded(payload)
         ),
         include_subtitle_as_caption=chart_data["kind"] == "chartex",
     )
     xml = chart_frame_xml + companion_xml
-    return ShapeResult(xml=xml, bounds_emu=(off_x, off_y, off_x + ext_cx, off_y + ext_cy))
+    return ShapeResult(
+        xml=xml, bounds_emu=(off_x, off_y, off_x + ext_cx, off_y + ext_cy)
+    )
 
 
 def _validate_native_object_marker_payload(
@@ -253,8 +270,7 @@ def _validate_native_object_marker_payload(
             payload,
             chart_bounds=(off_x, off_y, ext_cx, ext_cy),
             include_title=(
-                chart_data["kind"] == "chartex"
-                or _chart_title_is_bounded(payload)
+                chart_data["kind"] == "chartex" or _chart_title_is_bounded(payload)
             ),
             include_subtitle_as_caption=chart_data["kind"] == "chartex",
         )
@@ -292,7 +308,8 @@ def validate_native_object_marker_with_warnings(
             elem,
             document_root=document_root,
         )
-        if kind in {"chart", "table"} else []
+        if kind in {"chart", "table"}
+        else []
     )
     if kind == "table" and isinstance(validated_data, list):
         warnings.extend(_native_table_warnings(elem, validated_data))

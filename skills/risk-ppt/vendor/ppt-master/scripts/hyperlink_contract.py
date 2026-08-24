@@ -26,8 +26,7 @@ from xml.etree import ElementTree as ET
 SVG_NS = "http://www.w3.org/2000/svg"
 XLINK_NS = "http://www.w3.org/1999/xlink"
 HYPERLINK_REL_TYPE = (
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/"
-    "hyperlink"
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"
 )
 SLIDE_REL_TYPE = (
     "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide"
@@ -37,31 +36,37 @@ SHAPE_HYPERLINK_ATTR = "data-pptx-shape-hyperlink"
 
 _SLIDE_TARGET_RE = re.compile(r"#slide-([1-9][0-9]*)")
 _URI_SCHEME_RE = re.compile(r"([A-Za-z][A-Za-z0-9+.-]*):")
-_FORBIDDEN_EXTERNAL_SCHEMES = frozenset({
-    "data",
-    "file",
-    "javascript",
-    "vbscript",
-})
-_NON_OUTPUT_ANCESTORS = frozenset({
-    "defs",
-    "desc",
-    "metadata",
-    "style",
-    "symbol",
-    "title",
-})
+_FORBIDDEN_EXTERNAL_SCHEMES = frozenset(
+    {
+        "data",
+        "file",
+        "javascript",
+        "vbscript",
+    }
+)
+_NON_OUTPUT_ANCESTORS = frozenset(
+    {
+        "defs",
+        "desc",
+        "metadata",
+        "style",
+        "symbol",
+        "title",
+    }
+)
 _INLINE_CONTAINER_TAGS = frozenset({"text", "tspan"})
 _INLINE_CONTENT_TAGS = frozenset({"tspan"})
-_UNSUPPORTED_LINK_BEHAVIOR_ATTRIBUTES = frozenset({
-    "download",
-    "hreflang",
-    "ping",
-    "referrerpolicy",
-    "rel",
-    "target",
-    "type",
-})
+_UNSUPPORTED_LINK_BEHAVIOR_ATTRIBUTES = frozenset(
+    {
+        "download",
+        "hreflang",
+        "ping",
+        "referrerpolicy",
+        "rel",
+        "target",
+        "type",
+    }
+)
 
 
 class HyperlinkContractError(ValueError):
@@ -167,14 +172,9 @@ def project_hyperlink_errors(
     """Return fail-closed diagnostics for every SVG hyperlink carrier."""
     errors: list[str] = []
     parent_by_id = {
-        id(child): parent
-        for parent in root.iter()
-        for child in list(parent)
+        id(child): parent for parent in root.iter() for child in list(parent)
     }
-    anchors = [
-        elem for elem in root.iter()
-        if _local_name(elem) == "a"
-    ]
+    anchors = [elem for elem in root.iter() if _local_name(elem) == "a"]
     for index, anchor in enumerate(anchors, 1):
         label = anchor.get("id") or f"anchor {index}"
         if anchor.tag != f"{{{SVG_NS}}}a":
@@ -189,8 +189,7 @@ def project_hyperlink_errors(
         unsupported_attrs = sorted(
             name
             for name in anchor.attrib
-            if name.rsplit("}", 1)[-1].lower()
-            in _UNSUPPORTED_LINK_BEHAVIOR_ATTRIBUTES
+            if name.rsplit("}", 1)[-1].lower() in _UNSUPPORTED_LINK_BEHAVIOR_ATTRIBUTES
         )
         if unsupported_attrs:
             errors.append(
@@ -232,11 +231,14 @@ def project_hyperlink_errors(
 
         inline = any(tag in _INLINE_CONTAINER_TAGS for tag in ancestor_tags)
         children = [
-            child for child in list(anchor)
+            child
+            for child in list(anchor)
             if _local_name(child) not in _NON_OUTPUT_ANCESTORS
         ]
         if inline:
-            if any(_local_name(child) not in _INLINE_CONTENT_TAGS for child in children):
+            if any(
+                _local_name(child) not in _INLINE_CONTENT_TAGS for child in children
+            ):
                 errors.append(
                     f"{label}: inline hyperlink content may contain only <tspan>"
                 )
@@ -280,7 +282,8 @@ def project_hyperlink_errors(
                     "wrap text in <text>"
                 )
             visible_children = [
-                child for child in children
+                child
+                for child in children
                 if child.get("data-pptx-part") != "geometry-detail"
             ]
             if not visible_children:
@@ -294,11 +297,7 @@ def project_hyperlink_errors(
                 )
 
     for index, carrier in enumerate(
-        (
-            elem
-            for elem in root.iter()
-            if elem.get(SHAPE_HYPERLINK_ATTR) is not None
-        ),
+        (elem for elem in root.iter() if elem.get(SHAPE_HYPERLINK_ATTR) is not None),
         1,
     ):
         label = carrier.get("id") or f"shape hyperlink transport {index}"
@@ -308,18 +307,14 @@ def project_hyperlink_errors(
         except HyperlinkContractError as exc:
             errors.append(f"{label}: {exc}")
         if _local_name(carrier) != "g":
-            errors.append(
-                f"{label}: {SHAPE_HYPERLINK_ATTR} is allowed only on <g>"
-            )
+            errors.append(f"{label}: {SHAPE_HYPERLINK_ATTR} is allowed only on <g>")
         ancestors: list[ET.Element] = []
         current = parent_by_id.get(id(carrier))
         while current is not None:
             ancestors.append(current)
             current = parent_by_id.get(id(current))
         if any(_local_name(elem) == "a" for elem in ancestors):
-            errors.append(
-                f"{label}: {SHAPE_HYPERLINK_ATTR} cannot be nested in <a>"
-            )
+            errors.append(f"{label}: {SHAPE_HYPERLINK_ATTR} cannot be nested in <a>")
         inline_anchors = [
             elem
             for elem in carrier.iter(f"{{{SVG_NS}}}a")
@@ -357,9 +352,7 @@ def trigger_shape_hyperlink_errors(
     if not trigger_group_ids:
         return []
     parent_by_id = {
-        id(child): parent
-        for parent in root.iter()
-        for child in list(parent)
+        id(child): parent for parent in root.iter() for child in list(parent)
     }
     errors: list[str] = []
     for elem in root.iter():

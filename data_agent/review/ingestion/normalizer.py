@@ -14,4 +14,3 @@ def read_text_file(path: Path) -> str:
         except UnicodeDecodeError:
             continue
     return data.decode("utf-8", errors="replace")
-

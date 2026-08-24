@@ -134,9 +134,7 @@ class _PathGuard:
         except (TypeError, ValueError) as exc:
             raise PermissionError("sandbox path must be a filesystem path") from exc
         wants_write = (
-            write
-            if write is not None
-            else any(flag in mode for flag in ("w", "a", "x", "+"))
+            write if write is not None else any(flag in mode for flag in ("w", "a", "x", "+"))
         )
         roots = self.write_roots if wants_write else self.read_roots
         if not self._within(candidate, roots):
@@ -192,7 +190,9 @@ def install_path_guard() -> None:
         if original is None:
             continue
 
-        def checked_read(path: Any, *args: object, _original: Any = original, **kwargs: object) -> Any:
+        def checked_read(
+            path: Any, *args: object, _original: Any = original, **kwargs: object
+        ) -> Any:
             guard.check_read(path)
             return _original(path, *args, **kwargs)
 
@@ -200,12 +200,22 @@ def install_path_guard() -> None:
 
     # Mutations are permitted only below workspace_root.  Capture originals
     # before wrapping, because pathlib delegates to these functions.
-    for name in ("remove", "unlink", "mkdir", "makedirs", "rmdir", "removedirs", "touch"):
+    for name in (
+        "remove",
+        "unlink",
+        "mkdir",
+        "makedirs",
+        "rmdir",
+        "removedirs",
+        "touch",
+    ):
         original = getattr(os, name, None)
         if original is None:
             continue
 
-        def checked_write(path: Any, *args: object, _original: Any = original, **kwargs: object) -> Any:
+        def checked_write(
+            path: Any, *args: object, _original: Any = original, **kwargs: object
+        ) -> Any:
             guard.check_write(path)
             return _original(path, *args, **kwargs)
 

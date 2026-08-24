@@ -80,9 +80,7 @@ def _render_overview(overview: DataOverview) -> str:
         lines.extend("| " + " | ".join(row) + " |" for row in visual.rows)
 
     lines += ["", "#### Evidence", ""]
-    lines.extend(
-        [f"- `{reference.locator}`" for reference in overview.evidence] or ["- none"]
-    )
+    lines.extend([f"- `{reference.locator}`" for reference in overview.evidence] or ["- none"])
     lines += ["", "#### Limitations", "", *_bullets(overview.limitations), ""]
     return "\n".join(lines)
 
@@ -90,9 +88,7 @@ def _render_overview(overview: DataOverview) -> str:
 def _render_finding(report: SpecialistReport, finding: Finding) -> str:
     rounds = _history(report, finding.finding_id)
     last: VerificationRound | None = rounds[-1] if rounds else None
-    period = (
-        f"{finding.period.start} to {finding.period.end}" if finding.period else "n/a"
-    )
+    period = f"{finding.period.start} to {finding.period.end}" if finding.period else "n/a"
     lines = [
         f"### {finding.finding_id} — {finding.title}",
         "",
@@ -311,5 +307,3 @@ def render_final_report(report: FinalReport) -> str:
         "",
     ]
     return "\n".join(lines)
-
-

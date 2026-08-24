@@ -25,9 +25,7 @@ def test_command_line_interface_has_one_owner() -> None:
 def test_review_catalog_maps_shared_source_metadata(tmp_path: Path) -> None:
     source = tmp_path / "source"
     source.mkdir()
-    (source / "risk.csv").write_text(
-        "date,value\n2025-01-02,1\n2025-01-03,2\n", encoding="utf-8"
-    )
+    (source / "risk.csv").write_text("date,value\n2025-01-02,1\n2025-01-03,2\n", encoding="utf-8")
 
     shared, truncated = discover_sources(source, max_sources=None)
     manifest = build_catalog(source)

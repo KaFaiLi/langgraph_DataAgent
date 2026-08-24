@@ -148,9 +148,7 @@ class FormulaEvaluator:
         top: float = 0.0,
         values: Mapping[str, float] | None = None,
     ) -> None:
-        self._builtins = dict(
-            build_builtin_guides(width, height, left=left, top=top)
-        )
+        self._builtins = dict(build_builtin_guides(width, height, left=left, top=top))
         self._values: dict[str, float] = {}
         if values:
             for name, value in values.items():

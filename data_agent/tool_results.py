@@ -38,4 +38,3 @@ def tool_json(result: Any) -> Any:
         return json.loads(text)
     except (json.JSONDecodeError, TypeError):
         return text
-

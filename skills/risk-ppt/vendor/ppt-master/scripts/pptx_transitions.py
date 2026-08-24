@@ -44,9 +44,7 @@ P159_NS = "http://schemas.microsoft.com/office/powerpoint/2015/09/main"
 MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
 PACKAGE_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 CONTENT_TYPES_NS = "http://schemas.openxmlformats.org/package/2006/content-types"
-RELATIONSHIPS_NS = (
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-)
+RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 
 PRESENTATION_PROPS_PART = "ppt/presProps.xml"
 PRESENTATION_RELS_PART = "ppt/_rels/presentation.xml.rels"
@@ -841,8 +839,7 @@ for _key, _spec in NATIVE_TRANSITIONS.items():
         _values = _option_spec.get("values")
         if not isinstance(_values, dict) or not _values:
             raise RuntimeError(
-                f"native transition {_key!r} option {_option_name!r} "
-                "must define values"
+                f"native transition {_key!r} option {_option_name!r} must define values"
             )
         if _option_spec.get("default") not in _values:
             raise RuntimeError(
@@ -985,9 +982,7 @@ def validate_seconds(
     try:
         number = float(value)
     except (TypeError, ValueError, OverflowError) as exc:
-        raise ValueError(
-            f"{field} must be a finite number: {display_value}"
-        ) from exc
+        raise ValueError(f"{field} must be a finite number: {display_value}") from exc
     if not math.isfinite(number):
         raise ValueError(f"{field} must be finite: {display_value}")
     if allow_zero:
@@ -998,7 +993,9 @@ def validate_seconds(
     return number
 
 
-def normalize_transition_effect(effect: object, *, allow_none: bool = True) -> str | None:
+def normalize_transition_effect(
+    effect: object, *, allow_none: bool = True
+) -> str | None:
     """Return one canonical PowerPoint transition or explicit no-effect."""
     if effect is None or effect == "none":
         if allow_none:
@@ -1031,9 +1028,7 @@ def normalize_transition_effect_options(
     if options is None:
         options = {}
     if not isinstance(options, Mapping):
-        raise ValueError(
-            f"transition effect_options must be an object: {options!r}"
-        )
+        raise ValueError(f"transition effect_options must be an object: {options!r}")
 
     option_specs = NATIVE_TRANSITIONS[effect]["effectOptions"]
     unknown = set(options) - set(option_specs)
@@ -1061,9 +1056,7 @@ def normalize_transition_effect_options(
                 raise ValueError(f"{field} must be a boolean: {value!r}")
             normalized[name] = value
         else:
-            raise AssertionError(
-                f"unhandled transition option type: {spec['type']!r}"
-            )
+            raise AssertionError(f"unhandled transition option type: {spec['type']!r}")
     return normalized
 
 
@@ -1087,9 +1080,7 @@ def normalize_transition_effect_request(
     elif isinstance(options, Mapping):
         explicit_options = options
     else:
-        raise ValueError(
-            f"transition effect_options must be an object: {options!r}"
-        )
+        raise ValueError(f"transition effect_options must be an object: {options!r}")
     for name, alias_value in alias_options.items():
         if name in explicit_options and explicit_options[name] != alias_value:
             raise ValueError(
@@ -1127,9 +1118,7 @@ def describe_transition_effect(effect: object) -> dict[str, Any]:
         "name": NATIVE_TRANSITIONS[canonical]["name"],
         "category": NATIVE_TRANSITIONS[canonical]["category"],
         "compatibility_alias": (
-            effect
-            if isinstance(effect, str) and effect in TRANSITION_ALIASES
-            else None
+            effect if isinstance(effect, str) and effect in TRANSITION_ALIASES else None
         ),
         "implied_effect_options": implied_options,
         "effect_options": option_contract,
@@ -1144,13 +1133,8 @@ def describe_transition_effect(effect: object) -> dict[str, Any]:
 def _seconds_to_ms(value: object, field: str, *, allow_zero: bool) -> int:
     seconds = validate_seconds(value, field, allow_zero=allow_zero)
     raw_milliseconds = seconds * 1000
-    if (
-        not math.isfinite(raw_milliseconds)
-        or raw_milliseconds > MAX_OOXML_MILLISECONDS
-    ):
-        raise ValueError(
-            f"{field} exceeds the OOXML millisecond limit: {value!r}"
-        )
+    if not math.isfinite(raw_milliseconds) or raw_milliseconds > MAX_OOXML_MILLISECONDS:
+        raise ValueError(f"{field} exceeds the OOXML millisecond limit: {value!r}")
     milliseconds = int(raw_milliseconds)
     return milliseconds if allow_zero else max(1, milliseconds)
 
@@ -1169,9 +1153,7 @@ def _effect_spec(
         name: option_spec["default"]
         for name, option_spec in info["effectOptions"].items()
     }
-    options.update(
-        normalize_transition_effect_options(effect, effect_options)
-    )
+    options.update(normalize_transition_effect_options(effect, effect_options))
     option_specs = info["effectOptions"]
     for name, value in options.items():
         override = option_specs[name]["values"][value]
@@ -1201,10 +1183,7 @@ def _effect_xml(
         effect,
         effect_options,
     )
-    attrs = " ".join(
-        f'{key}="{value}"'
-        for key, value in effect_attrs.items()
-    )
+    attrs = " ".join(f'{key}="{value}"' for key, value in effect_attrs.items())
     suffix = f" {attrs}" if attrs else ""
     return prefix, element, suffix
 
@@ -1245,9 +1224,7 @@ def _normalize_transition_sound(
     relationship_id = sound.get("relationship_id")
     name = sound.get("name")
     if not isinstance(relationship_id, str) or not relationship_id.strip():
-        raise ValueError(
-            "transition sound relationship_id must be a non-empty string"
-        )
+        raise ValueError("transition sound relationship_id must be a non-empty string")
     if not isinstance(name, str) or not name.strip():
         raise ValueError("transition sound name must be a non-empty string")
     return {
@@ -1298,9 +1275,7 @@ def create_transition_xml(
         )
     if advance_on_click is not None:
         if not isinstance(advance_on_click, bool):
-            raise ValueError(
-                "transition advance_on_click must be a boolean or None"
-            )
+            raise ValueError("transition advance_on_click must be a boolean or None")
     advance_ms = None
     if advance_after is not None:
         advance_ms = _seconds_to_ms(
@@ -1342,9 +1317,7 @@ def create_transition_xml(
             normalized_options,
         )
         fallback_effect = fallback or "fade"
-        fallback_prefix, fallback_name, fallback_attrs = _effect_xml(
-            fallback_effect
-        )
+        fallback_prefix, fallback_name, fallback_attrs = _effect_xml(fallback_effect)
         fallback_attr_text = _transition_attributes(
             duration_ms=None,
             advance_after_ms=advance_ms,
@@ -1422,9 +1395,7 @@ def _build_transition_element(
 
     if advance_on_click is not None:
         if not isinstance(advance_on_click, bool):
-            raise ValueError(
-                "transition advance_on_click must be a boolean or None"
-            )
+            raise ValueError("transition advance_on_click must be a boolean or None")
     duration_ms = (
         _seconds_to_ms(
             duration,
@@ -1465,8 +1436,8 @@ def _build_transition_element(
         if advance_ms is not None:
             transition.set("advTm", str(advance_ms))
         if effect_name is not None:
-            _prefix, namespace, element_name, effect_attrs, _fallback = (
-                _effect_spec(effect_name, options)
+            _prefix, namespace, element_name, effect_attrs, _fallback = _effect_spec(
+                effect_name, options
             )
             child = _new_element(context, _qn(namespace, element_name))
             for key, value in effect_attrs.items():
@@ -1507,9 +1478,7 @@ def _build_transition_element(
         )
     )
     fallback_node = _new_element(context, _qn(MC_NS, "Fallback"))
-    fallback_node.append(
-        build_transition(fallback or "fade", include_duration=False)
-    )
+    fallback_node.append(build_transition(fallback or "fade", include_duration=False))
     carrier.extend((choice, fallback_node))
     return carrier
 
@@ -1581,31 +1550,19 @@ def _sound_identity(
     if transition is None:
         return None, None
     sound_action = next(
-        (
-            child
-            for child in list(transition)
-            if child.tag == _qn(PML_NS, "sndAc")
-        ),
+        (child for child in list(transition) if child.tag == _qn(PML_NS, "sndAc")),
         None,
     )
     if sound_action is None:
         return None, None
     start_sound = next(
-        (
-            child
-            for child in list(sound_action)
-            if child.tag == _qn(PML_NS, "stSnd")
-        ),
+        (child for child in list(sound_action) if child.tag == _qn(PML_NS, "stSnd")),
         None,
     )
     if start_sound is None:
         return None, None
     sound = next(
-        (
-            child
-            for child in list(start_sound)
-            if child.tag == _qn(PML_NS, "snd")
-        ),
+        (child for child in list(start_sound) if child.tag == _qn(PML_NS, "snd")),
         None,
     )
     if sound is None:
@@ -1651,10 +1608,8 @@ def _identify_native_transition(
             if (
                 namespace == expected_namespace
                 and element == expected_element
-                and dict(attributes) == {
-                    str(name): str(value)
-                    for name, value in expected_attrs.items()
-                }
+                and dict(attributes)
+                == {str(name): str(value) for name, value in expected_attrs.items()}
             ):
                 return effect, options
     return None, {}
@@ -1694,9 +1649,7 @@ def read_slide_transition(slide_root: Any) -> TransitionSummary:
         fallback
     )
     sound_relationship_id, sound_name = _sound_identity(primary)
-    fallback_sound_relationship_id, fallback_sound_name = _sound_identity(
-        fallback
-    )
+    fallback_sound_relationship_id, fallback_sound_name = _sound_identity(fallback)
     canonical_effect, effect_options = _identify_native_transition(
         effect,
         effect_namespace,
@@ -1726,9 +1679,7 @@ def read_slide_transition(slide_root: Any) -> TransitionSummary:
         duration_ms=duration_ms,
         speed=primary.get("spd") if primary is not None else None,
         advance_on_click=(
-            _bool_attribute(primary, "advClick", True)
-            if primary is not None
-            else None
+            _bool_attribute(primary, "advClick", True) if primary is not None else None
         ),
         advance_after_ms=advance_after_ms,
         sound_relationship_id=sound_relationship_id,
@@ -1840,13 +1791,8 @@ def _apply_slide_motion_unchecked(
             f"unknown transition enter policy {enter.policy!r}; "
             f"valid policies: {', '.join(sorted(valid_policies))}"
         )
-    if (
-        enter.policy != "replace"
-        and enter.effect_options not in (None, {})
-    ):
-        raise ValueError(
-            "transition effect_options require enter policy 'replace'"
-        )
+    if enter.policy != "replace" and enter.effect_options not in (None, {}):
+        raise ValueError("transition effect_options require enter policy 'replace'")
 
     carriers = transition_carriers(slide_root)
     if len(carriers) > 1:
@@ -2019,9 +1965,7 @@ def _validate_applied_motion(
             or after.fallback_effect_namespace != expected_fallback_namespace
             or after.duration_ms != expected_duration
         ):
-            errors.append(
-                f"replace policy read-back does not match effect {effect!r}"
-            )
+            errors.append(f"replace policy read-back does not match effect {effect!r}")
         carriers = transition_carriers(slide_root)
         if carriers:
             primary, _fallback = _primary_and_fallback(carriers[0])
@@ -2047,14 +1991,10 @@ def _validate_applied_motion(
             errors.append("none policy retained a transition sound")
 
     preserved_click = (
-        before.advance_on_click
-        if before.advance_on_click is not None
-        else True
+        before.advance_on_click if before.advance_on_click is not None else True
     )
     preserved_after = (
-        before.advance_after_ms / 1000
-        if before.advance_after_ms is not None
-        else None
+        before.advance_after_ms / 1000 if before.advance_after_ms is not None else None
     )
     expected_click, expected_after = _resolve_advance(
         advance,
@@ -2062,9 +2002,7 @@ def _validate_applied_motion(
         preserved_after=preserved_after,
     )
     actual_click = (
-        after.advance_on_click
-        if after.advance_on_click is not None
-        else True
+        after.advance_on_click if after.advance_on_click is not None else True
     )
     actual_after_ms = after.advance_after_ms
     expected_after_ms = (
@@ -2223,15 +2161,9 @@ def validate_mce_prefixes(xml_data: str | bytes) -> list[str]:
 def serialize_source_xml(root: ET.Element, source_xml: str | bytes) -> bytes:
     """Serialize stdlib XML while retaining MCE prefix bindings."""
     expected_transition = (
-        read_slide_transition(root)
-        if root.tag == _qn(PML_NS, "sld")
-        else None
+        read_slide_transition(root) if root.tag == _qn(PML_NS, "sld") else None
     )
-    source = (
-        source_xml.encode("utf-8")
-        if isinstance(source_xml, str)
-        else source_xml
-    )
+    source = source_xml.encode("utf-8") if isinstance(source_xml, str) else source_xml
     bindings = register_source_namespaces(source)
     prefixes = _required_mce_prefixes(root)
     for prefix in prefixes:
@@ -2298,11 +2230,7 @@ def apply_slide_motion_xml(
 
 def read_slide_transition_xml(slide_xml: str | bytes) -> TransitionSummary:
     """Read a transition summary from raw slide XML."""
-    data = (
-        slide_xml.encode("utf-8")
-        if isinstance(slide_xml, str)
-        else slide_xml
-    )
+    data = slide_xml.encode("utf-8") if isinstance(slide_xml, str) else slide_xml
     if LET is not None:
         root = LET.fromstring(data)
     else:
@@ -2374,9 +2302,7 @@ def validate_generated_transition_xml(
             else None
         )
         expected_sound_name = (
-            normalized_sound["name"]
-            if normalized_sound is not None
-            else None
+            normalized_sound["name"] if normalized_sound is not None else None
         )
         expected_fallback_sound_relationship_id = None
         expected_fallback_sound_name = None
@@ -2397,9 +2323,7 @@ def validate_generated_transition_xml(
                 normalized_options,
             )
             if expected_carrier == "alternate-content":
-                expected_fallback_sound_relationship_id = (
-                    expected_sound_relationship_id
-                )
+                expected_fallback_sound_relationship_id = expected_sound_relationship_id
                 expected_fallback_sound_name = expected_sound_name
         else:
             expected_effect_options = {}
@@ -2523,9 +2447,7 @@ def _validate_transition_sound_package_parts(
     """Validate transition-sound relationships and embedded WAV targets."""
     errors: list[str] = []
     slide_root = (
-        LET.fromstring(slide_xml)
-        if LET is not None
-        else parse_source_xml(slide_xml)
+        LET.fromstring(slide_xml) if LET is not None else parse_source_xml(slide_xml)
     )
     sounds = _transition_sound_elements(slide_root)
     if not sounds:
@@ -2537,8 +2459,7 @@ def _validate_transition_sound_package_parts(
     relationships_part = _slide_relationships_part(slide_part)
     if relationships_part not in package_names:
         return [
-            f"transition sound is missing slide relationships: "
-            f"{relationships_part}"
+            f"transition sound is missing slide relationships: {relationships_part}"
         ]
     try:
         relationships_root = ET.fromstring(package.read(relationships_part))
@@ -2568,8 +2489,7 @@ def _validate_transition_sound_package_parts(
         relationship = relationships.get(relationship_id)
         if relationship is None:
             errors.append(
-                f"p:snd references missing slide relationship: "
-                f"{relationship_id}"
+                f"p:snd references missing slide relationship: {relationship_id}"
             )
             continue
         if relationship.get("Type") != AUDIO_REL_TYPE:
@@ -2643,16 +2563,13 @@ def validate_pptx_transition_package(
                 name for name, count in part_counts.items() if count > 1
             )
             if duplicate_names:
-                errors.append(
-                    "duplicate package parts: " + ", ".join(duplicate_names)
-                )
+                errors.append("duplicate package parts: " + ", ".join(duplicate_names))
 
             package_names = set(names)
             slide_names = sorted(
                 name
                 for name in names
-                if name.startswith("ppt/slides/slide")
-                and name.endswith(".xml")
+                if name.startswith("ppt/slides/slide") and name.endswith(".xml")
             )
             for slide_name in slide_names:
                 slide_xml = package.read(slide_name)
@@ -2781,7 +2698,7 @@ def validate_pptx_morph_pairs(
             errors.append(
                 f'Morph pair "{pair.key}" expected exactly one destination '
                 f'object named "{shape_name}" on slide '
-                f'{pair.destination_slide_number}'
+                f"{pair.destination_slide_number}"
             )
         if (
             len(source_types) == 1
@@ -2790,20 +2707,17 @@ def validate_pptx_morph_pairs(
         ):
             errors.append(
                 f'Morph pair "{pair.key}" changes OOXML object type from '
-                f'{source_types[0]} to {destination_types[0]}'
+                f"{source_types[0]} to {destination_types[0]}"
             )
 
         transition = slide_transitions.get(pair.destination_slide_number)
-        if (
-            transition is not None
-            and (
-                transition.canonical_effect != "morph"
-                or transition.effect_options.get("morph_by") != "object"
-            )
+        if transition is not None and (
+            transition.canonical_effect != "morph"
+            or transition.effect_options.get("morph_by") != "object"
         ):
             errors.append(
                 f'Morph pair "{pair.key}" destination slide '
-                f'{pair.destination_slide_number} does not use Morph by object'
+                f"{pair.destination_slide_number} does not use Morph by object"
             )
 
     declared_names_by_edge: dict[tuple[int, int], set[str]] = {}
@@ -2820,15 +2734,10 @@ def validate_pptx_morph_pairs(
         if destination_slide_number not in slide_shapes:
             continue
         transition = slide_transitions.get(destination_slide_number)
-        if (
-            transition is None
-            or transition.canonical_effect != "morph"
-        ):
+        if transition is None or transition.canonical_effect != "morph":
             continue
         source_names = {
-            name
-            for name in slide_shapes[source_slide_number]
-            if name.startswith("!!")
+            name for name in slide_shapes[source_slide_number] if name.startswith("!!")
         }
         destination_names = {
             name
@@ -2839,14 +2748,11 @@ def validate_pptx_morph_pairs(
             (source_slide_number, destination_slide_number),
             set(),
         )
-        unexpected_names = sorted(
-            (source_names & destination_names) - declared_names
-        )
+        unexpected_names = sorted((source_names & destination_names) - declared_names)
         if unexpected_names:
             errors.append(
                 f"Morph edge {source_slide_number}->{destination_slide_number} "
-                "contains undeclared forced name(s): "
-                + ", ".join(unexpected_names)
+                "contains undeclared forced name(s): " + ", ".join(unexpected_names)
             )
 
     if errors:
@@ -2875,10 +2781,11 @@ def _validate_package_use_timings(
 
     props_root = ET.fromstring(package.read(props_part))
     show_properties = props_root.find(_qn(PML_NS, "showPr"))
-    if (
-        show_properties is None
-        or show_properties.get("useTimings") not in {"1", "true", "on"}
-    ):
+    if show_properties is None or show_properties.get("useTimings") not in {
+        "1",
+        "true",
+        "on",
+    }:
         errors.append(f"{props_part} must set p:showPr@useTimings=1")
 
     content_root = ET.fromstring(package.read(CONTENT_TYPES_PART))
@@ -2904,11 +2811,7 @@ def validate_slide_transition_structure(slide_root: Any) -> list[str]:
     if carriers:
         carrier_index = children.index(carriers[0])
         common_slide = next(
-            (
-                child
-                for child in children
-                if child.tag == _qn(PML_NS, "cSld")
-            ),
+            (child for child in children if child.tag == _qn(PML_NS, "cSld")),
             None,
         )
         if common_slide is None:
@@ -2916,22 +2819,14 @@ def validate_slide_transition_structure(slide_root: Any) -> list[str]:
         elif carrier_index < children.index(common_slide):
             errors.append("transition carrier must follow p:cSld")
         color_map = next(
-            (
-                child
-                for child in children
-                if child.tag == _qn(PML_NS, "clrMapOvr")
-            ),
+            (child for child in children if child.tag == _qn(PML_NS, "clrMapOvr")),
             None,
         )
         if color_map is not None and carrier_index < children.index(color_map):
             errors.append("transition carrier must follow p:clrMapOvr")
         for tag in ("timing", "extLst"):
             element = next(
-                (
-                    child
-                    for child in children
-                    if child.tag == _qn(PML_NS, tag)
-                ),
+                (child for child in children if child.tag == _qn(PML_NS, tag)),
                 None,
             )
             if element is not None and carrier_index > children.index(element):
@@ -2940,9 +2835,7 @@ def validate_slide_transition_structure(slide_root: Any) -> list[str]:
     for carrier in carriers:
         for transition in _transition_elements(carrier):
             sound_actions = [
-                child
-                for child in list(transition)
-                if child.tag == _qn(PML_NS, "sndAc")
+                child for child in list(transition) if child.tag == _qn(PML_NS, "sndAc")
             ]
             if len(sound_actions) > 1:
                 errors.append(
@@ -2974,17 +2867,13 @@ def validate_slide_transition_structure(slide_root: Any) -> list[str]:
         if carrier.tag != _qn(MC_NS, "AlternateContent"):
             continue
         choices = [
-            child
-            for child in list(carrier)
-            if child.tag == _qn(MC_NS, "Choice")
+            child for child in list(carrier) if child.tag == _qn(MC_NS, "Choice")
         ]
         if not choices:
             errors.append("mc:AlternateContent transition must contain mc:Choice")
         for branch_name in ("Choice", "Fallback"):
             branches = [
-                child
-                for child in list(carrier)
-                if child.tag == _qn(MC_NS, branch_name)
+                child for child in list(carrier) if child.tag == _qn(MC_NS, branch_name)
             ]
             for branch in branches:
                 count = len(_transition_elements(branch))
@@ -3109,9 +2998,7 @@ def set_package_use_timings(
         root = parse_source_xml(source)
     else:
         if existing_props_part is not None:
-            raise ValueError(
-                f"presentation properties part is missing: {props_part}"
-            )
+            raise ValueError(f"presentation properties part is missing: {props_part}")
         source = (
             f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             f'<p:presentationPr xmlns:p="{PML_NS}"/>'
@@ -3142,10 +3029,7 @@ def set_directory_use_timings(
     props_part = _presentation_props_part(rels_root) or PRESENTATION_PROPS_PART
     if (extract_dir / props_part).is_file():
         part_names.add(props_part)
-    parts = {
-        name: (extract_dir / name).read_bytes()
-        for name in part_names
-    }
+    parts = {name: (extract_dir / name).read_bytes() for name in part_names}
     set_package_use_timings(parts, enabled=enabled)
     for name, payload in parts.items():
         path = extract_dir / name

@@ -304,11 +304,7 @@ def resolve_visualization_reference(
     if _KEY_RE.fullmatch(normalized) is None:
         raise VisualizationCatalogError(f"invalid legacy visualization key {value!r}")
 
-    matches = [
-        entry
-        for entry in catalog.entries.values()
-        if entry.key == normalized
-    ]
+    matches = [entry for entry in catalog.entries.values() if entry.key == normalized]
     for alias_reference, target_reference in catalog.aliases.items():
         _, alias = alias_reference.split("/", 1)
         if alias == normalized:
@@ -326,18 +322,14 @@ def resolve_visualization_reference(
                 kind=LEGACY_STRUCTURE_INTENT_KIND,
             )
         )
-    unique_matches = {
-        (entry.kind, entry.family, entry.key): entry
-        for entry in matches
-    }
+    unique_matches = {(entry.kind, entry.family, entry.key): entry for entry in matches}
     if not unique_matches:
         raise VisualizationCatalogError(
             f"legacy visualization key {value!r} is not registered"
         )
     if len(unique_matches) > 1:
         candidates = ", ".join(
-            f"{family}/{key} ({kind})"
-            for kind, family, key in sorted(unique_matches)
+            f"{family}/{key} ({kind})" for kind, family, key in sorted(unique_matches)
         )
         raise VisualizationCatalogError(
             f"legacy visualization key {value!r} is ambiguous across {candidates}"

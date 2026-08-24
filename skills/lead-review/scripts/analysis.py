@@ -181,9 +181,7 @@ class _UnionFind:
 def _tokenize(text: str) -> set[str]:
     identifiers = {token.lower() for token in _IDENTIFIER_RE.findall(text)}
     proper_names = {
-        token.lower()
-        for token in _PROPER_NAME_RE.findall(text)
-        if token.lower() not in _STOPWORDS
+        token.lower() for token in _PROPER_NAME_RE.findall(text) if token.lower() not in _STOPWORDS
     }
     domain_terms = set(_TOKEN_RE.findall(text.lower())) & _DOMAIN_ENTITY_TERMS
     return (identifiers | proper_names | domain_terms) - _STOPWORDS
@@ -191,8 +189,7 @@ def _tokenize(text: str) -> set[str]:
 
 def _entity_tokens(findings: list[Finding], min_count: int = 2) -> dict[str, set[str]]:
     per_finding = {
-        finding.finding_id: _tokenize(f"{finding.title} {finding.claim}")
-        for finding in findings
+        finding.finding_id: _tokenize(f"{finding.title} {finding.claim}") for finding in findings
     }
     counts: Counter[str] = Counter()
     for tokens in per_finding.values():
@@ -227,9 +224,7 @@ def _date_buckets(findings: list[Finding]) -> dict[date, list[str]]:
     return buckets
 
 
-def _relationship_types(
-    findings: list[Finding], dates: set[date], tokens: set[str]
-) -> list[str]:
+def _relationship_types(findings: list[Finding], dates: set[date], tokens: set[str]) -> list[str]:
     kinds: list[str] = []
     if dates:
         kinds.append("same_date")
@@ -273,9 +268,7 @@ def _build_clusters(findings: list[Finding]) -> list[CrossSourceCluster]:
     groups = sorted(grouped.values(), key=lambda group: sorted(f.finding_id for f in group))
     for index, members in enumerate(groups, start=1):
         dates = {day for finding in members for day in _finding_dates(finding)}
-        tokens = set().union(
-            *(shared_tokens.get(finding.finding_id, set()) for finding in members)
-        )
+        tokens = set().union(*(shared_tokens.get(finding.finding_id, set()) for finding in members))
         evidence: list[EvidenceReference] = [
             reference for finding in members for reference in finding.evidence
         ]
@@ -308,11 +301,7 @@ def _find_contradictions(findings: list[Finding]) -> list[ContradictionCandidate
     shared_tokens = _entity_tokens(findings)
     contradictions: list[ContradictionCandidate] = []
     for left, right in combinations(findings, 2):
-        if (
-            left.period is None
-            or right.period is None
-            or not left.period.overlaps(right.period)
-        ):
+        if left.period is None or right.period is None or not left.period.overlaps(right.period):
             continue
         common = shared_tokens.get(left.finding_id, set()) & shared_tokens.get(
             right.finding_id, set()

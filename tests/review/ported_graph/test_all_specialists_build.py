@@ -44,14 +44,10 @@ class _FakeProvider:
         name = schema.__name__ if schema else "plain"
         self.calls.append((name, tier))
         if schema is AnalystOutput:
-            return RunnableLambda(
-                lambda _m: AnalystOutput(findings=[_fake_finding("F-1")])
-            )
+            return RunnableLambda(lambda _m: AnalystOutput(findings=[_fake_finding("F-1")]))
         if schema is VerifierOutput:
             return RunnableLambda(
-                lambda _m: VerifierOutput(
-                    finding_id="F-1", decision=VerifierDecision.PASS
-                )
+                lambda _m: VerifierOutput(finding_id="F-1", decision=VerifierDecision.PASS)
             )
         raise AssertionError(f"unexpected schema {schema}")
 
@@ -76,9 +72,7 @@ def test_specialist_graph_completes(tool_ctx: ToolContext, domain: SpecialistDom
         ).model_dump(mode="json"),
         "review_period": {"start": "2025-01-01", "end": "2026-06-30"},
     }
-    result = graph.invoke(
-        state, config={"configurable": {"tool_ctx": tool_ctx}}
-    )
+    result = graph.invoke(state, config={"configurable": {"tool_ctx": tool_ctx}})
 
     assert result.get("loop_status") == "complete"
     assert result["report"]

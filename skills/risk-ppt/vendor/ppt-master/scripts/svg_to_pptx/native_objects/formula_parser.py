@@ -232,7 +232,7 @@ def _read_optional_integer(source: str, position: int) -> tuple[int | None, int]
     closing = source.find("]", position + 1)
     if closing < 0:
         raise FormulaCompileError("Unclosed optional macro parameter count")
-    raw = source[position + 1:closing].strip()
+    raw = source[position + 1 : closing].strip()
     if not raw.isdigit() or not 0 <= int(raw) <= 9:
         raise FormulaCompileError("Macro parameter count must be between 0 and 9")
     return int(raw), closing + 1
@@ -285,7 +285,9 @@ def _collect_macros(source: str) -> tuple[str, dict[str, _Macro]]:
                 cursor = _skip_whitespace(source, cursor + 2)
             expected = list(range(1, len(parameters) + 1))
             if parameters != expected:
-                raise FormulaCompileError("\\def parameters must be consecutive from #1")
+                raise FormulaCompileError(
+                    "\\def parameters must be consecutive from #1"
+                )
             body, cursor = _read_raw_group(source, cursor)
             macros[name] = _Macro(len(parameters), body)
         position = cursor
@@ -304,7 +306,7 @@ def _read_macro_argument(source: str, position: int) -> tuple[str, int]:
         if _is_command_letter(source[position + 1]):
             _, end = _read_control_word(source, position)
             return source[position:end], end
-        return source[position:position + 2], position + 2
+        return source[position : position + 2], position + 2
     return source[position], position + 1
 
 
@@ -322,7 +324,7 @@ def _expand_macros(source: str, macros: dict[str, _Macro]) -> str:
                 position += 1
                 continue
             if not _is_command_letter(source[position + 1]):
-                output.append(source[position:position + 2])
+                output.append(source[position : position + 2])
                 position += 2
                 continue
             command, cursor = _read_control_word(source, position)
@@ -361,7 +363,7 @@ def _strip_outer_delimiters(source: str) -> str:
         if source.startswith(opener):
             if not source.endswith(closer) or len(source) <= len(opener) + len(closer):
                 raise FormulaCompileError(f"Unclosed outer LaTeX delimiter {opener!r}")
-            return source[len(opener):-len(closer)].strip()
+            return source[len(opener) : -len(closer)].strip()
     return source
 
 
@@ -377,12 +379,31 @@ def _normalize_big_delimiters(source: str) -> str:
             }[direction]
             return f"\\{command}{delimiter}"
         openers = {
-            "(", "[", "{", ".", r"\{", r"\lbrace", r"\langle", r"\lfloor",
-            r"\lceil", r"\lvert", r"\lVert", r"\lbrack",
+            "(",
+            "[",
+            "{",
+            ".",
+            r"\{",
+            r"\lbrace",
+            r"\langle",
+            r"\lfloor",
+            r"\lceil",
+            r"\lvert",
+            r"\lVert",
+            r"\lbrack",
         }
         closers = {
-            ")", "]", "}", r"\}", r"\rbrace", r"\rangle", r"\rfloor",
-            r"\rceil", r"\rvert", r"\rVert", r"\rbrack",
+            ")",
+            "]",
+            "}",
+            r"\}",
+            r"\rbrace",
+            r"\rangle",
+            r"\rfloor",
+            r"\rceil",
+            r"\rvert",
+            r"\rVert",
+            r"\rbrack",
         }
         symmetric = {"|", r"\|", r"\vert", r"\Vert"}
         if delimiter in openers:
@@ -406,8 +427,12 @@ def _prepare_source(source: str) -> str:
     if "%" in source:
         position = 0
         while position < len(source):
-            if source[position] == "%" and (position == 0 or source[position - 1] != "\\"):
-                raise FormulaCompileError("Unescaped % comments are outside the Office profile")
+            if source[position] == "%" and (
+                position == 0 or source[position - 1] != "\\"
+            ):
+                raise FormulaCompileError(
+                    "Unescaped % comments are outside the Office profile"
+                )
             position += 1
     without_definitions, macros = _collect_macros(source)
     expanded = _expand_macros(without_definitions, macros)
@@ -531,7 +556,10 @@ class _LatexParser:
     def _parse_atom(self) -> Node:
         char = self.source[self.position]
         if char.isspace():
-            while self.position < len(self.source) and self.source[self.position].isspace():
+            while (
+                self.position < len(self.source)
+                and self.source[self.position].isspace()
+            ):
                 self.position += 1
             return self._styled_text(" ") if self.text_mode_depth else Sequence(())
         if char == "{":
@@ -542,7 +570,9 @@ class _LatexParser:
             return self._parse_or_literal_character_delimiter(char)
         if char == "$":
             if not self.text_mode_depth:
-                self._fail("Math delimiters are only allowed around the complete marker source")
+                self._fail(
+                    "Math delimiters are only allowed around the complete marker source"
+                )
             return self._parse_text_embedded_math("$", "$")
         if char in "#%":
             self._fail(f"Unsupported TeX syntax character {char!r}")
@@ -652,8 +682,12 @@ class _LatexParser:
             fraction = Fraction(numerator, denominator, kind="noBar")
             return Delimiter("(", ")", (Sequence((fraction,)),))
         if command == "genfrac":
-            left = self._delimiter_from_raw(self._parse_raw_required_group("left delimiter"))
-            right = self._delimiter_from_raw(self._parse_raw_required_group("right delimiter"))
+            left = self._delimiter_from_raw(
+                self._parse_raw_required_group("left delimiter")
+            )
+            right = self._delimiter_from_raw(
+                self._parse_raw_required_group("right delimiter")
+            )
             thickness = self._parse_raw_required_group("fraction thickness").strip()
             self._parse_raw_required_group("fraction style")
             numerator = self._parse_required_argument("fraction numerator")
@@ -665,14 +699,8 @@ class _LatexParser:
             else:
                 thickness_match = _LENGTH_RE.fullmatch(thickness)
                 if thickness_match is None:
-                    self._fail(
-                        f"Invalid generalized-fraction thickness {thickness!r}"
-                    )
-                kind = (
-                    "noBar"
-                    if float(thickness_match.group(1)) == 0.0
-                    else "bar"
-                )
+                    self._fail(f"Invalid generalized-fraction thickness {thickness!r}")
+                kind = "noBar" if float(thickness_match.group(1)) == 0.0 else "bar"
             fraction = Fraction(numerator, denominator, kind=kind)
             if left or right:
                 return Delimiter(left, right, (Sequence((fraction,)),))
@@ -699,17 +727,32 @@ class _LatexParser:
         if command == _BIG_SYMMETRIC_COMMAND:
             return self._parse_big_symmetric_delimiter()
         if command in {"right", "middle"}:
-            self._fail(f"Unexpected \\{command} without matching \\left", position=command_start)
+            self._fail(
+                f"Unexpected \\{command} without matching \\left",
+                position=command_start,
+            )
         if command == "begin":
             return self._parse_environment()
         if command == "end":
-            self._fail("Unexpected \\end without matching \\begin", position=command_start)
+            self._fail(
+                "Unexpected \\end without matching \\begin", position=command_start
+            )
         if command in _STYLE_WRAPPERS:
             text_mode = command in {
-                "text", "textrm", "textnormal", "textbf", "textit", "emph",
-                "textsf", "texttt", "mbox", "hbox",
+                "text",
+                "textrm",
+                "textnormal",
+                "textbf",
+                "textit",
+                "emph",
+                "textsf",
+                "texttt",
+                "mbox",
+                "hbox",
             }
-            body = self._parse_required_argument(f"\\{command} body", text_mode=text_mode)
+            body = self._parse_required_argument(
+                f"\\{command} body", text_mode=text_mode
+            )
             return Styled(body=body, style=_STYLE_WRAPPERS[command])
         if command in _DECLARATION_STYLES:
             self.current_style = merge_run_styles(
@@ -765,11 +808,13 @@ class _LatexParser:
             return Function(name=self._roman_name("mod"))
         if command in {"pmod", "mod"}:
             body = self._parse_required_argument(f"\\{command} body")
-            content = Sequence((
-                Text("mod", _ROMAN_STYLE),
-                Text(" ", _SPACING_STYLE),
-                *body.children,
-            ))
+            content = Sequence(
+                (
+                    Text("mod", _ROMAN_STYLE),
+                    Text(" ", _SPACING_STYLE),
+                    *body.children,
+                )
+            )
             if command == "pmod":
                 return Delimiter("(", ")", (content,))
             return content
@@ -798,7 +843,9 @@ class _LatexParser:
             return Accent("̸", target)
         if command == "eqalign":
             raw = self._parse_raw_required_group("eqalign body")
-            return self._parse_synthetic_environment("aligned", raw.replace("\\cr", "\\\\"))
+            return self._parse_synthetic_environment(
+                "aligned", raw.replace("\\cr", "\\\\")
+            )
         if command == "ce":
             raw = self._parse_raw_required_group("chemical expression")
             return _ChemParser(raw, display=self.display).parse()
@@ -809,7 +856,9 @@ class _LatexParser:
         if command in SPACING_COMMANDS:
             return self._styled_text(SPACING_COMMANDS[command], _SPACING_STYLE)
         if command in {"mkern", "mskip"}:
-            return self._styled_text(self._parse_spacing_length(command), _SPACING_STYLE)
+            return self._styled_text(
+                self._parse_spacing_length(command), _SPACING_STYLE
+            )
         if command == "hspace":
             return self._styled_text(
                 _space_from_length(self._parse_raw_required_group("horizontal space")),
@@ -821,9 +870,7 @@ class _LatexParser:
             self._parse_required_argument(f"\\{command} body", allow_empty=True)
             return Sequence(())
         if command == "mathrel":
-            return OperatorEmulator(
-                self._parse_required_argument("math relation body")
-            )
+            return OperatorEmulator(self._parse_required_argument("math relation body"))
         if command == "mathop":
             return Function(
                 name=self._parse_required_argument("math operator body"),
@@ -894,7 +941,7 @@ class _LatexParser:
         closing = self.source.find("]", self.position + 1)
         if closing < 0:
             self._fail(f"Unclosed {description}")
-        raw = self.source[self.position + 1:closing]
+        raw = self.source[self.position + 1 : closing]
         self.position = closing + 1
         self._skip_whitespace()
         return raw
@@ -942,7 +989,10 @@ class _LatexParser:
         while True:
             saved_position = self.position
             self._skip_whitespace()
-            if self.position >= len(self.source) or self.source[self.position] not in "^_":
+            if (
+                self.position >= len(self.source)
+                or self.source[self.position] not in "^_"
+            ):
                 self.position = saved_position
                 break
             marker = self.source[self.position]
@@ -1140,8 +1190,7 @@ class _LatexParser:
         if self.position >= len(self.source) or self._at_environment_boundary():
             return False
         if any(
-            self._at_control_word(command)
-            for command in {"right", "middle", "end"}
+            self._at_control_word(command) for command in {"right", "middle", "end"}
         ):
             return False
         char = self.source[self.position]
@@ -1149,9 +1198,8 @@ class _LatexParser:
             return False
         if char != "\\":
             return True
-        if (
-            self.position + 1 < len(self.source)
-            and not _is_command_letter(self.source[self.position + 1])
+        if self.position + 1 < len(self.source) and not _is_command_letter(
+            self.source[self.position + 1]
         ):
             return self.source[self.position + 1] not in {"\\", ",", ";", ":", "!", " "}
         command, _ = _read_control_word(self.source, self.position)
@@ -1161,14 +1209,14 @@ class _LatexParser:
         left = self._parse_delimiter_token(f"\\{command}")
         segments: list[Sequence] = []
         separator = ""
-        stop_commands = frozenset({
-            *_MIDDLE_DELIMITER_COMMANDS,
-            *_RIGHT_DELIMITER_COMMANDS,
-        })
+        stop_commands = frozenset(
+            {
+                *_MIDDLE_DELIMITER_COMMANDS,
+                *_RIGHT_DELIMITER_COMMANDS,
+            }
+        )
         while True:
-            segments.append(
-                self._parse_nested_sequence(stop_commands=stop_commands)
-            )
+            segments.append(self._parse_nested_sequence(stop_commands=stop_commands))
             middle_command = next(
                 (
                     candidate
@@ -1269,11 +1317,15 @@ class _LatexParser:
             self.position += 1
             if delimiter in "{}|":
                 return "‖" if delimiter == "|" else delimiter
-            self._fail(f"Unsupported delimiter command \\{delimiter}", position=command_start)
+            self._fail(
+                f"Unsupported delimiter command \\{delimiter}", position=command_start
+            )
         command = self._read_control_word_body()
         self._skip_whitespace()
         if command not in DELIMITER_COMMANDS:
-            self._fail(f"Unsupported delimiter command \\{command}", position=command_start)
+            self._fail(
+                f"Unsupported delimiter command \\{command}", position=command_start
+            )
         return DELIMITER_COMMANDS[command]
 
     def _parse_or_literal_character_delimiter(self, opener: str) -> Node:
@@ -1286,7 +1338,7 @@ class _LatexParser:
         if closing is None:
             self.position += 1
             return self._styled_text(opener, _ROMAN_STYLE)
-        body_source = self.source[start + 1:closing]
+        body_source = self.source[start + 1 : closing]
         body = self._parse_fragment(body_source)
         self.position = closing + 1
         return Delimiter(opener, closer, (body,))
@@ -1312,7 +1364,7 @@ class _LatexParser:
         closing = self._find_matching_control_symbol("{", "}", self.position)
         if closing is None:
             return None
-        body = self._parse_fragment(self.source[self.position:closing])
+        body = self._parse_fragment(self.source[self.position : closing])
         self.position = closing + 2
         return Delimiter("{", "}", (body,))
 
@@ -1321,10 +1373,12 @@ class _LatexParser:
         if pair is None:
             return None
         closing_command, left, right = pair
-        closing = self._find_matching_control_word(command, closing_command, self.position)
+        closing = self._find_matching_control_word(
+            command, closing_command, self.position
+        )
         if closing is None:
             return None
-        body = self._parse_fragment(self.source[self.position:closing])
+        body = self._parse_fragment(self.source[self.position : closing])
         _, after = _read_control_word(self.source, closing)
         self.position = _skip_whitespace(self.source, after)
         return Delimiter(left, right, (body,))
@@ -1333,7 +1387,7 @@ class _LatexParser:
         closing = self.source.find("\\|", self.position)
         if closing < 0:
             return None
-        body = self._parse_fragment(self.source[self.position:closing])
+        body = self._parse_fragment(self.source[self.position : closing])
         self.position = closing + 2
         return Delimiter("‖", "‖", (body,))
 
@@ -1341,13 +1395,15 @@ class _LatexParser:
         closing = self._find_symmetric_control_word(command, self.position)
         if closing is None:
             return None
-        body = self._parse_fragment(self.source[self.position:closing])
+        body = self._parse_fragment(self.source[self.position : closing])
         _, after = _read_control_word(self.source, closing)
         self.position = _skip_whitespace(self.source, after)
         delimiter = "‖" if command == "Vert" else "|"
         return Delimiter(delimiter, delimiter, (body,))
 
-    def _find_matching_character(self, start: int, opener: str, closer: str) -> int | None:
+    def _find_matching_character(
+        self, start: int, opener: str, closer: str
+    ) -> int | None:
         expected_closers = [closer]
         group_depth = 0
         cursor = start + 1
@@ -1504,7 +1560,9 @@ class _LatexParser:
         elif environment in {"alignat", "alignat*", "alignedat"}:
             raw = self._parse_raw_required_group(f"{environment} column count").strip()
             if not raw.isdigit() or int(raw) <= 0:
-                self._fail(f"Environment {environment!r} requires a positive column count")
+                self._fail(
+                    f"Environment {environment!r} requires a positive column count"
+                )
 
         self.environment_stack.append(environment)
         try:
@@ -1541,7 +1599,7 @@ class _LatexParser:
         closing = self.source.find(ending, self.position)
         if closing < 0:
             self._fail("Unclosed formula environment 'CD'")
-        raw = self.source[self.position:closing]
+        raw = self.source[self.position : closing]
         self.position = closing + len(ending)
         raw_rows = re.split(r"\\\\|\\cr(?![A-Za-z])", raw)
         if raw_rows and not raw_rows[-1].strip():
@@ -1556,10 +1614,16 @@ class _LatexParser:
                 cells: list[Sequence] = []
                 for index, part in enumerate(horizontal_parts):
                     if index % 2:
-                        cells.append(Sequence((Text(
-                            "→" if part == ">>>" else "←",
-                            _ROMAN_STYLE,
-                        ),)))
+                        cells.append(
+                            Sequence(
+                                (
+                                    Text(
+                                        "→" if part == ">>>" else "←",
+                                        _ROMAN_STYLE,
+                                    ),
+                                )
+                            )
+                        )
                     else:
                         if "@" in part:
                             self._fail(
@@ -1575,15 +1639,23 @@ class _LatexParser:
                 for index, token in enumerate(vertical_tokens):
                     if index:
                         cells.append(Sequence(()))
-                    cells.append(Sequence((Text(
-                        "↓" if token == "VVV" else "↑",
-                        _ROMAN_STYLE,
-                    ),)))
+                    cells.append(
+                        Sequence(
+                            (
+                                Text(
+                                    "↓" if token == "VVV" else "↑",
+                                    _ROMAN_STYLE,
+                                ),
+                            )
+                        )
+                    )
                 rows.append(tuple(cells))
                 continue
             if "@" in row:
                 self._fail("Environment 'CD' supports only @>>>, @<<<, @VVV, and @AAA")
-            rows.append(tuple(self._parse_fragment(cell.strip()) for cell in row.split("&")))
+            rows.append(
+                tuple(self._parse_fragment(cell.strip()) for cell in row.split("&"))
+            )
         if not rows:
             self._fail("Environment 'CD' cannot be empty")
         column_count = max(len(row) for row in rows)
@@ -1636,7 +1708,9 @@ class _LatexParser:
         if environment in MATRIX_ENVIRONMENTS:
             column_count = len(rows[0])
             if any(len(current) != column_count for current in rows):
-                self._fail(f"Environment {environment!r} has inconsistent column counts")
+                self._fail(
+                    f"Environment {environment!r} has inconsistent column counts"
+                )
         return tuple(rows)
 
     def _parse_synthetic_environment(self, environment: str, raw: str) -> Node:
@@ -1683,7 +1757,7 @@ class _LatexParser:
         closing = self.source.find(closer, self.position)
         if closing < 0:
             self._fail(f"Unclosed embedded math delimiter {opener!r}", position=start)
-        raw = self.source[self.position:closing]
+        raw = self.source[self.position : closing]
         self.position = closing + len(closer)
         embedded = _LatexParser(
             raw,
@@ -1767,7 +1841,9 @@ class _LatexParser:
         if not self.source.startswith(prefix, self.position):
             return False
         following = self.position + len(prefix)
-        return following >= len(self.source) or not _is_command_letter(self.source[following])
+        return following >= len(self.source) or not _is_command_letter(
+            self.source[following]
+        )
 
     def _consume_control_word(self, expected: str) -> None:
         if not self._at_control_word(expected):
@@ -1777,9 +1853,11 @@ class _LatexParser:
 
     def _read_control_word_body(self) -> str:
         start = self.position
-        while self.position < len(self.source) and _is_command_letter(self.source[self.position]):
+        while self.position < len(self.source) and _is_command_letter(
+            self.source[self.position]
+        ):
             self.position += 1
-        return self.source[start:self.position]
+        return self.source[start : self.position]
 
     def _skip_whitespace(self) -> None:
         self.position = _skip_whitespace(self.source, self.position)
@@ -1826,12 +1904,17 @@ class _ChemParser:
                 continue
             char = self.source[self.position]
             if char.isspace():
-                while self.position < len(self.source) and self.source[self.position].isspace():
+                while (
+                    self.position < len(self.source)
+                    and self.source[self.position].isspace()
+                ):
                     self.position += 1
                 append_child(children, Text(" ", _TEXT_STYLE))
                 continue
             if char == "\\":
-                parser = _LatexParser(self.source[self.position:], display=self.display)
+                parser = _LatexParser(
+                    self.source[self.position :], display=self.display
+                )
                 node = parser._parse_complete_atom()
                 self.position += parser.position
                 append_child(children, node)
@@ -1876,7 +1959,9 @@ class _ChemParser:
                     self._attach_charge(children)
                 else:
                     self.position += 1
-                    append_child(children, Text("+" if char == "+" else "−", _ROMAN_STYLE))
+                    append_child(
+                        children, Text("+" if char == "+" else "−", _ROMAN_STYLE)
+                    )
                 continue
             if char == "*":
                 self.position += 1
@@ -1892,9 +1977,12 @@ class _ChemParser:
                 continue
             if char.islower():
                 start = self.position
-                while self.position < len(self.source) and self.source[self.position].islower():
+                while (
+                    self.position < len(self.source)
+                    and self.source[self.position].islower()
+                ):
                     self.position += 1
-                word = self.source[start:self.position]
+                word = self.source[start : self.position]
                 following = self.position
                 while following < len(self.source) and self.source[following].isspace():
                     following += 1
@@ -1915,7 +2003,7 @@ class _ChemParser:
         self.position += 1
         while self.position < len(self.source) and self.source[self.position].islower():
             self.position += 1
-        base: Node = Text(self.source[start:self.position], _ROMAN_STYLE)
+        base: Node = Text(self.source[start : self.position], _ROMAN_STYLE)
         if self.position < len(self.source) and self.source[self.position].isdigit():
             digits = self._read_digits()
             base = Script(base, subscript=Sequence((Text(digits, _ROMAN_STYLE),)))
@@ -1940,7 +2028,10 @@ class _ChemParser:
         if self.position < len(self.source) and self.source[self.position] == "/":
             saved = self.position
             self.position += 1
-            if self.position < len(self.source) and self.source[self.position].isdigit():
+            if (
+                self.position < len(self.source)
+                and self.source[self.position].isdigit()
+            ):
                 denominator = self._read_digits()
                 number = Fraction(
                     Sequence((Text(numerator, _ROMAN_STYLE),)),
@@ -1974,11 +2065,13 @@ class _ChemParser:
             raise FormulaCompileError(f"Unclosed chemical delimiter {opener!r}")
         body = _ChemParser(self.source[start:cursor], display=self.display).parse()
         self.position = cursor + 1
-        base: Node = Sequence((
-            Text(opener, _ROMAN_STYLE),
-            *body.children,
-            Text(closer, _ROMAN_STYLE),
-        ))
+        base: Node = Sequence(
+            (
+                Text(opener, _ROMAN_STYLE),
+                *body.children,
+                Text(closer, _ROMAN_STYLE),
+            )
+        )
         if self.position < len(self.source) and self.source[self.position].isdigit():
             digits = self._read_digits()
             if self.position < len(self.source) and self.source[self.position] in "+-":
@@ -2009,7 +2102,10 @@ class _ChemParser:
                 subscript = value
             else:
                 superscript = value
-        if self.position >= len(self.source) or not self.source[self.position].isupper():
+        if (
+            self.position >= len(self.source)
+            or not self.source[self.position].isupper()
+        ):
             raise FormulaCompileError("Chemical pre-script requires an element base")
         base = self._parse_element()
         return Prescript(base, subscript=subscript, superscript=superscript)
@@ -2051,10 +2147,12 @@ class _ChemParser:
     def _attach_charge(self, children: list[Node]) -> None:
         charge = self._read_charge()
         base = children.pop()
-        children.append(self._merge_script(
-            base,
-            superscript=Sequence((Text(charge, _ROMAN_STYLE),)),
-        ))
+        children.append(
+            self._merge_script(
+                base,
+                superscript=Sequence((Text(charge, _ROMAN_STYLE),)),
+            )
+        )
 
     def _merge_script(
         self,
@@ -2104,13 +2202,13 @@ class _ChemParser:
         start = self.position
         while self.position < len(self.source) and self.source[self.position] in "+-":
             self.position += 1
-        return self.source[start:self.position].replace("-", "−")
+        return self.source[start : self.position].replace("-", "−")
 
     def _read_digits(self) -> str:
         start = self.position
         while self.position < len(self.source) and self.source[self.position].isdigit():
             self.position += 1
-        return self.source[start:self.position]
+        return self.source[start : self.position]
 
     def _match_arrow(self) -> Node | None:
         for token, symbol in self._ARROWS.items():

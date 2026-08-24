@@ -134,9 +134,7 @@ def render_preset_shape_fragment(
     if not rendered.paths:
         raise ValueError(f"Preset {preset!r} produced no visible SVG paths")
 
-    frame_text = " ".join(
-        fmt_num(value, 8) for value in (x, y, width, height)
-    )
+    frame_text = " ".join(fmt_num(value, 8) for value in (x, y, width, height))
     semantic_attrs = {
         AUTHORING_ATTR: AUTHORING_VALUE,
         "data-pptx-object": object_kind,
@@ -172,7 +170,7 @@ def render_preset_shape_fragment(
     if filter_ref is not None:
         group_attrs["filter"] = filter_ref
     return (
-        f'<g{attrs_to_xml(group_attrs)}>\n'
+        f"<g{attrs_to_xml(group_attrs)}>\n"
         f"{serialize_compact_preset_layers(rendered.paths, style_attrs)}\n"
         "</g>"
     )
@@ -180,10 +178,7 @@ def render_preset_shape_fragment(
 
 def authored_preset_encoding(group: ET.Element) -> str | None:
     """Return ``compact`` / ``expanded`` for an authored preset group."""
-    if (
-        _local_name(group.tag) != "g"
-        or group.get(AUTHORING_ATTR) != AUTHORING_VALUE
-    ):
+    if _local_name(group.tag) != "g" or group.get(AUTHORING_ATTR) != AUTHORING_VALUE:
         return None
     parts = {
         child.get("data-pptx-part")
@@ -217,8 +212,7 @@ def _validate_compact_authored_preset_group(group: ET.Element) -> list[str]:
         errors.append(f"Authored preset logical group has invalid id {element_id!r}")
 
     unexpected_group_attrs = sorted(
-        name for name in group.attrib
-        if _is_unexpected_group_attr(name, compact=True)
+        name for name in group.attrib if _is_unexpected_group_attr(name, compact=True)
     )
     if unexpected_group_attrs:
         errors.append(
@@ -242,10 +236,7 @@ def _validate_compact_authored_preset_group(group: ET.Element) -> list[str]:
             "Compact authored preset cannot mix transport carrier/preview markers"
         )
         return errors
-    if any(
-        not _is_svg_element(child, "path")
-        for child in direct_children
-    ):
+    if any(not _is_svg_element(child, "path") for child in direct_children):
         errors.append(
             "Compact authored preset is atomic and may contain only direct SVG paths"
         )
@@ -263,17 +254,13 @@ def _validate_compact_authored_preset_group(group: ET.Element) -> list[str]:
     preset = group.get("data-pptx-prst") or ""
     object_kind = group.get("data-pptx-object") or ""
     if object_kind not in {"shape", "connector"}:
-        errors.append(
-            "Authored preset data-pptx-object must be 'shape' or 'connector'"
-        )
+        errors.append("Authored preset data-pptx-object must be 'shape' or 'connector'")
     if preset in CONNECTOR_PRESET_TYPES and object_kind != "connector":
         errors.append(
             f"Connector preset {preset!r} requires data-pptx-object='connector'"
         )
     if object_kind == "connector" and preset not in CONNECTOR_PRESET_TYPES:
-        errors.append(
-            f"Authored connector requires a connector preset, got {preset!r}"
-        )
+        errors.append(f"Authored connector requires a connector preset, got {preset!r}")
 
     try:
         frame = _parse_frame(group.get("data-pptx-frame"), object_kind)
@@ -284,7 +271,7 @@ def _validate_compact_authored_preset_group(group: ET.Element) -> list[str]:
                 f"canonical spelling {canonical_frame!r}"
             )
         adjustments = {
-            name[len(_ADJUSTMENT_PREFIX):]: value
+            name[len(_ADJUSTMENT_PREFIX) :]: value
             for name, value in group.attrib.items()
             if name.startswith(_ADJUSTMENT_PREFIX)
         }
@@ -295,9 +282,7 @@ def _validate_compact_authored_preset_group(group: ET.Element) -> list[str]:
             adjustments,
         )
         raw_style = {
-            name: group.attrib[name]
-            for name in _STYLE_ATTRS
-            if name in group.attrib
+            name: group.attrib[name] for name in _STYLE_ATTRS if name in group.attrib
         }
         if "fill" not in raw_style or "stroke" not in raw_style:
             raise ValueError(
@@ -306,8 +291,7 @@ def _validate_compact_authored_preset_group(group: ET.Element) -> list[str]:
         style_attrs = _validate_style(raw_style)
         _validate_filter_reference(group.get("filter"), object_kind)
         noncanonical_style = sorted(
-            name for name, value in style_attrs.items()
-            if raw_style.get(name) != value
+            name for name, value in style_attrs.items() if raw_style.get(name) != value
         )
         if noncanonical_style:
             raise ValueError(
@@ -368,8 +352,7 @@ def _validate_expanded_authored_preset_group(group: ET.Element) -> list[str]:
         errors.append(f"Authored preset logical group has invalid id {element_id!r}")
 
     unexpected_group_attrs = sorted(
-        name for name in group.attrib
-        if _is_unexpected_group_attr(name, compact=False)
+        name for name in group.attrib if _is_unexpected_group_attr(name, compact=False)
     )
     if unexpected_group_attrs:
         errors.append(
@@ -379,9 +362,7 @@ def _validate_expanded_authored_preset_group(group: ET.Element) -> list[str]:
 
     direct_children = list(group)
     carriers = [
-        child
-        for child in direct_children
-        if child.get("data-pptx-part") == "geometry"
+        child for child in direct_children if child.get("data-pptx-part") == "geometry"
     ]
     previews = [
         child
@@ -400,8 +381,7 @@ def _validate_expanded_authored_preset_group(group: ET.Element) -> list[str]:
         )
     allowed_children = set(carriers + previews)
     foreign_children = [
-        child for child in direct_children
-        if child not in allowed_children
+        child for child in direct_children if child not in allowed_children
     ]
     if foreign_children:
         errors.append(
@@ -424,9 +404,7 @@ def _validate_expanded_authored_preset_group(group: ET.Element) -> list[str]:
 
     for attr_name in _SEMANTIC_ATTRS:
         if group.get(attr_name) != carrier.get(attr_name):
-            errors.append(
-                f"Authored preset group/carrier {attr_name} values differ"
-            )
+            errors.append(f"Authored preset group/carrier {attr_name} values differ")
     adjustment_names = {
         name
         for element in (group, carrier)
@@ -435,14 +413,10 @@ def _validate_expanded_authored_preset_group(group: ET.Element) -> list[str]:
     }
     for attr_name in sorted(adjustment_names):
         if group.get(attr_name) != carrier.get(attr_name):
-            errors.append(
-                f"Authored preset group/carrier {attr_name} values differ"
-            )
+            errors.append(f"Authored preset group/carrier {attr_name} values differ")
 
     unexpected_carrier_attrs = [
-        name
-        for name in carrier.attrib
-        if _is_unexpected_carrier_attr(name)
+        name for name in carrier.attrib if _is_unexpected_carrier_attr(name)
     ]
     if unexpected_carrier_attrs:
         errors.append(
@@ -453,21 +427,17 @@ def _validate_expanded_authored_preset_group(group: ET.Element) -> list[str]:
     preset = carrier.get("data-pptx-prst") or ""
     object_kind = carrier.get("data-pptx-object") or ""
     if object_kind not in {"shape", "connector"}:
-        errors.append(
-            "Authored preset data-pptx-object must be 'shape' or 'connector'"
-        )
+        errors.append("Authored preset data-pptx-object must be 'shape' or 'connector'")
     if preset in CONNECTOR_PRESET_TYPES and object_kind != "connector":
         errors.append(
             f"Connector preset {preset!r} requires data-pptx-object='connector'"
         )
     if object_kind == "connector" and preset not in CONNECTOR_PRESET_TYPES:
-        errors.append(
-            f"Authored connector requires a connector preset, got {preset!r}"
-        )
+        errors.append(f"Authored connector requires a connector preset, got {preset!r}")
     try:
         frame = _parse_frame(carrier.get("data-pptx-frame"), object_kind)
         adjustments = {
-            name[len(_ADJUSTMENT_PREFIX):]: value
+            name[len(_ADJUSTMENT_PREFIX) :]: value
             for name, value in carrier.attrib.items()
             if name.startswith(_ADJUSTMENT_PREFIX)
         }
@@ -477,11 +447,13 @@ def _validate_expanded_authored_preset_group(group: ET.Element) -> list[str]:
             Xfrm(x=frame[0], y=frame[1], w=frame[2], h=frame[3]),
             adjustments,
         )
-        style_attrs = _validate_style({
-            name: carrier.attrib[name]
-            for name in _STYLE_ATTRS
-            if name in carrier.attrib
-        })
+        style_attrs = _validate_style(
+            {
+                name: carrier.attrib[name]
+                for name in _STYLE_ATTRS
+                if name in carrier.attrib
+            }
+        )
         filter_ref = _validate_filter_reference(
             carrier.get("filter"),
             object_kind,
@@ -533,11 +505,7 @@ def validate_authored_preset_tree(root: ET.Element) -> list[str]:
         element_id = element.get("id")
         if element_id:
             id_counts[element_id] = id_counts.get(element_id, 0) + 1
-    parents = {
-        child: parent
-        for parent in root.iter()
-        for child in parent
-    }
+    parents = {child: parent for parent in root.iter() for child in parent}
     for element in root.iter():
         authoring = element.get(AUTHORING_ATTR)
         if authoring is None:
@@ -545,20 +513,16 @@ def validate_authored_preset_tree(root: ET.Element) -> list[str]:
         tag = _local_name(element.tag)
         label = _element_label(element)
         if authoring != AUTHORING_VALUE:
-            errors.append(
-                f"{label}: unsupported {AUTHORING_ATTR} value {authoring!r}"
-            )
+            errors.append(f"{label}: unsupported {AUTHORING_ATTR} value {authoring!r}")
             continue
         if tag == "g":
             errors.extend(
-                f"{label}: {error}"
-                for error in validate_authored_preset_group(element)
+                f"{label}: {error}" for error in validate_authored_preset_group(element)
             )
             element_id = element.get("id")
             if element_id and id_counts.get(element_id, 0) > 1:
                 errors.append(
-                    f"{label}: authored preset logical group id must be "
-                    "globally unique"
+                    f"{label}: authored preset logical group id must be globally unique"
                 )
             continue
         if element.get("data-pptx-part") != "geometry":
@@ -599,7 +563,7 @@ def materialize_compact_authored_preset_tree(root: ET.Element) -> int:
         object_kind = group.get("data-pptx-object") or ""
         frame = _parse_frame(group.get("data-pptx-frame"), object_kind)
         adjustments = {
-            name[len(_ADJUSTMENT_PREFIX):]: value
+            name[len(_ADJUSTMENT_PREFIX) :]: value
             for name, value in group.attrib.items()
             if name.startswith(_ADJUSTMENT_PREFIX)
         }
@@ -608,11 +572,9 @@ def materialize_compact_authored_preset_tree(root: ET.Element) -> int:
             Xfrm(x=frame[0], y=frame[1], w=frame[2], h=frame[3]),
             adjustments,
         )
-        style_attrs = _validate_style({
-            name: group.attrib[name]
-            for name in _STYLE_ATTRS
-            if name in group.attrib
-        })
+        style_attrs = _validate_style(
+            {name: group.attrib[name] for name in _STYLE_ATTRS if name in group.attrib}
+        )
         filter_ref = _validate_filter_reference(
             group.get("filter"),
             object_kind,
@@ -638,9 +600,7 @@ def materialize_compact_authored_preset_tree(root: ET.Element) -> int:
         for child in list(group):
             group.remove(child)
         wrapper = ET.fromstring(
-            '<svg xmlns="http://www.w3.org/2000/svg">'
-            f"{markup.markup}"
-            "</svg>"
+            f'<svg xmlns="http://www.w3.org/2000/svg">{markup.markup}</svg>'
         )
         for child in list(wrapper):
             wrapper.remove(child)
@@ -694,9 +654,10 @@ def _validate_style(style: Mapping[str, str]) -> dict[str, str]:
     normalized = {name: str(value).strip() for name, value in style.items()}
     if not normalized:
         raise ValueError("Authored preset requires explicit fill and/or stroke")
-    if normalized.get("fill", "none") == "none" and normalized.get(
-        "stroke", "none"
-    ) == "none":
+    if (
+        normalized.get("fill", "none") == "none"
+        and normalized.get("stroke", "none") == "none"
+    ):
         raise ValueError("Authored preset cannot have both fill and stroke set to none")
     for name in ("fill", "stroke"):
         value = normalized.get(name, "none")
@@ -705,8 +666,7 @@ def _validate_style(style: Mapping[str, str]) -> dict[str, str]:
         normalized[name] = value.upper() if value != "none" else value
     if normalized.get("stroke", "none") == "none":
         unused_stroke_attrs = sorted(
-            name for name in normalized
-            if name.startswith("stroke-")
+            name for name in normalized if name.startswith("stroke-")
         )
         if unused_stroke_attrs:
             raise ValueError(
@@ -801,8 +761,7 @@ def _validate_adjustments(
             else:
                 if _INTEGER_RE.fullmatch(parts[1]) is None:
                     raise ValueError(
-                        f"Adjustment {name!r} val operand must be an integer "
-                        "coordinate"
+                        f"Adjustment {name!r} val operand must be an integer coordinate"
                     )
     if not adjustments:
         return

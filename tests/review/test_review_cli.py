@@ -31,9 +31,7 @@ def test_chat_passes_one_joined_message_to_agent(monkeypatch) -> None:
         return FakeBundle()
 
     monkeypatch.setattr("data_agent.cli.build_agent", fake_build_agent)
-    monkeypatch.setattr(
-        "data_agent.cli.get_settings", lambda: SimpleNamespace(log_level="WARNING")
-    )
+    monkeypatch.setattr("data_agent.cli.get_settings", lambda: SimpleNamespace(log_level="WARNING"))
 
     result = runner.invoke(app, ["chat", "hello", "world"])
 

@@ -23,10 +23,7 @@ def _compact(value: object, *, depth: int = 0) -> object:
             compacted.append(f"[{len(value) - 20} item(s) omitted]")
         return compacted
     if isinstance(value, dict):
-        return {
-            str(key): _compact(item, depth=depth + 1)
-            for key, item in list(value.items())[:50]
-        }
+        return {str(key): _compact(item, depth=depth + 1) for key, item in list(value.items())[:50]}
     return value
 
 
@@ -158,9 +155,7 @@ def revision_candidates_json(candidates: list[dict[str, Any]]) -> str:
             "claim": str(candidate.get("claim", ""))[:1_200],
             "period": candidate.get("period"),
             "evidence": _compact(candidate.get("evidence", [])),
-            "alternative_explanations": _compact(
-                candidate.get("alternative_explanations", [])
-            ),
+            "alternative_explanations": _compact(candidate.get("alternative_explanations", [])),
             "counter_evidence": _compact(candidate.get("counter_evidence", [])),
             "recommendation": str(candidate.get("recommendation") or "")[:500],
         }

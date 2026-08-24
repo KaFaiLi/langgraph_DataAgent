@@ -19,4 +19,3 @@ __all__ = [
     "lint_tool",
     "lint_tools",
 ]
-

@@ -7,10 +7,18 @@ from pathlib import Path
 
 from langchain_core.runnables.config import RunnableConfig
 
-from data_agent.review.domain.desk_context import DeskContext, DeskFact, FactProvenance, RiskLimit
+from data_agent.review.domain.desk_context import (
+    DeskContext,
+    DeskFact,
+    FactProvenance,
+    RiskLimit,
+)
 from data_agent.review.domain.evidence import EvidenceReference, Locator, format_locator
 from data_agent.review.domain.source import Source, SourceManifest
-from data_agent.review.ingestion.evidence_validator import EvidenceDisposition, EvidenceValidator
+from data_agent.review.ingestion.evidence_validator import (
+    EvidenceDisposition,
+    EvidenceValidator,
+)
 from data_agent.review.orchestration.state import ParentState
 from data_agent.tools.analysis_helpers import tabular_row_offset
 from data_agent.tools.review_context import ToolContext, source_file
@@ -64,9 +72,7 @@ def _desk_text_facts(ctx: ToolContext, source: Source) -> list[DeskFact]:
         statement = stripped[2:].strip()
         if not statement:
             continue
-        locator = format_locator(
-            Locator(path=source.path, lines=(line_number, line_number))
-        )
+        locator = format_locator(Locator(path=source.path, lines=(line_number, line_number)))
         facts.append(
             DeskFact(
                 fact_id=f"FACT-{source.source_id}-line-{line_number}",
@@ -176,4 +182,3 @@ def build_desk_context(state: ParentState, config: RunnableConfig) -> dict:
         encoding="utf-8",
     )
     return {"desk_context": desk.model_dump(mode="json")}
-

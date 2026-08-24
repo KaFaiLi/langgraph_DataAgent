@@ -36,11 +36,19 @@ from .marker_attributes import (
 TABLE_URI = "http://schemas.openxmlformats.org/drawingml/2006/table"
 CHART_URI = "http://schemas.openxmlformats.org/drawingml/2006/chart"
 CHARTEX_URI = "http://schemas.microsoft.com/office/drawing/2014/chartex"
-CHART_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"
+CHART_REL_TYPE = (
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"
+)
 CHARTEX_REL_TYPE = "http://schemas.microsoft.com/office/2014/relationships/chartEx"
-CHART_COLOR_STYLE_REL_TYPE = "http://schemas.microsoft.com/office/2011/relationships/chartColorStyle"
-CHART_STYLE_REL_TYPE = "http://schemas.microsoft.com/office/2011/relationships/chartStyle"
-PACKAGE_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package"
+CHART_COLOR_STYLE_REL_TYPE = (
+    "http://schemas.microsoft.com/office/2011/relationships/chartColorStyle"
+)
+CHART_STYLE_REL_TYPE = (
+    "http://schemas.microsoft.com/office/2011/relationships/chartStyle"
+)
+PACKAGE_REL_TYPE = (
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/package"
+)
 CHART_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.drawingml.chart+xml"
 CHARTEX_CONTENT_TYPE = "application/vnd.ms-office.chartex+xml"
 CHART_COLOR_STYLE_CONTENT_TYPE = "application/vnd.ms-office.chartcolorstyle+xml"
@@ -154,7 +162,9 @@ def _normalized_fallback_text(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
-def _visible_fallback_texts(elem: ET.Element, *, include_metadata: bool = False) -> list[str]:
+def _visible_fallback_texts(
+    elem: ET.Element, *, include_metadata: bool = False
+) -> list[str]:
     texts: list[str] = []
 
     def visit(node: ET.Element, hidden: bool) -> None:
@@ -244,7 +254,9 @@ def _powerpoint_emu(value: Any, field_name: str, *, positive: bool = False) -> i
     number = _number(value, field_name)
     scaled = number * EMU_PER_PX
     if not math.isfinite(scaled):
-        raise RuntimeError(f"Native PPTX object {field_name} exceeds PowerPoint coordinates")
+        raise RuntimeError(
+            f"Native PPTX object {field_name} exceeds PowerPoint coordinates"
+        )
     return _powerpoint_emu_value(round(scaled), field_name, positive=positive)
 
 
@@ -319,7 +331,9 @@ def _bbox_union(
     )
 
 
-def _bbox_from_points(points: list[tuple[float, float]]) -> tuple[float, float, float, float] | None:
+def _bbox_from_points(
+    points: list[tuple[float, float]],
+) -> tuple[float, float, float, float] | None:
     if not points:
         return None
     xs = [point[0] for point in points]
@@ -375,13 +389,11 @@ def _path_bbox(value: str | None) -> tuple[float, float, float, float] | None:
             points.append((values[0], values[1]))
         elif command.cmd == "C":
             points.extend(
-                (values[index], values[index + 1])
-                for index in range(0, 6, 2)
+                (values[index], values[index + 1]) for index in range(0, 6, 2)
             )
         elif command.cmd in {"S", "Q"}:
             points.extend(
-                (values[index], values[index + 1])
-                for index in range(0, 4, 2)
+                (values[index], values[index + 1]) for index in range(0, 4, 2)
             )
         elif command.cmd == "A":
             points.append((values[5], values[6]))
@@ -597,7 +609,10 @@ def _fallback_stroke_colors(
     stroke = _style_attr(elem, "stroke")
     next_stroke = stroke if stroke is not None else inherited_stroke
     colors: list[str] = []
-    if tag in {"circle", "ellipse", "line", "path", "polygon", "polyline", "rect"} and next_stroke:
+    if (
+        tag in {"circle", "ellipse", "line", "path", "polygon", "polyline", "rect"}
+        and next_stroke
+    ):
         color = _hex_or_none(next_stroke)
         if color:
             colors.append(color)
@@ -616,7 +631,7 @@ def _most_common_color(colors: list[str]) -> str | None:
 
 
 def _relative_luminance(color: str) -> float:
-    channels = [int(color[idx:idx + 2], 16) / 255.0 for idx in (0, 2, 4)]
+    channels = [int(color[idx : idx + 2], 16) / 255.0 for idx in (0, 2, 4)]
     linear = [
         channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
         for channel in channels
@@ -631,13 +646,17 @@ def _resolved_bounds(
 ) -> tuple[float, float, float, float, bool]:
     """Resolve object bounds in SVG px plus whether all bounds were explicit."""
     if ctx.use_transform_matrix:
-        raise RuntimeError("Native PPTX replacement markers support translate/scale only")
+        raise RuntimeError(
+            "Native PPTX replacement markers support translate/scale only"
+        )
 
     raw_x = payload.get("x", elem.get("data-pptx-x"))
     raw_y = payload.get("y", elem.get("data-pptx-y"))
     raw_width = payload.get("width", elem.get("data-pptx-width"))
     raw_height = payload.get("height", elem.get("data-pptx-height"))
-    explicit_bounds = all(value is not None for value in (raw_x, raw_y, raw_width, raw_height))
+    explicit_bounds = all(
+        value is not None for value in (raw_x, raw_y, raw_width, raw_height)
+    )
     inferred = None
     if not explicit_bounds:
         inferred = _inferred_bounds(elem)
@@ -650,11 +669,13 @@ def _resolved_bounds(
     y = _number(raw_y, "y") if raw_y is not None else inferred[1]  # type: ignore[index]
     width = (
         _number(raw_width, "width")
-        if raw_width is not None else inferred[2] - inferred[0]  # type: ignore[index]
+        if raw_width is not None
+        else inferred[2] - inferred[0]  # type: ignore[index]
     )
     height = (
         _number(raw_height, "height")
-        if raw_height is not None else inferred[3] - inferred[1]  # type: ignore[index]
+        if raw_height is not None
+        else inferred[3] - inferred[1]  # type: ignore[index]
     )
     if width <= 0 or height <= 0:
         raise RuntimeError("Native PPTX object width/height must be positive")
@@ -672,7 +693,9 @@ def _resolved_bounds(
     return resolved_x, resolved_y, resolved_w, resolved_h, explicit_bounds
 
 
-def _bounds(elem: ET.Element, payload: dict[str, Any], ctx: ConvertContext) -> tuple[int, int, int, int]:
+def _bounds(
+    elem: ET.Element, payload: dict[str, Any], ctx: ConvertContext
+) -> tuple[int, int, int, int]:
     """Return object bounds as DrawingML EMU tuple."""
     x, y, width, height, _ = _resolved_bounds(elem, payload, ctx)
     return (
@@ -747,7 +770,9 @@ def _load_payload(elem: ET.Element, kind: str) -> dict[str, Any]:
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Native PPTX {kind} metadata is not valid JSON: {exc.msg}") from exc
+        raise RuntimeError(
+            f"Native PPTX {kind} metadata is not valid JSON: {exc.msg}"
+        ) from exc
     except (ValueError, RecursionError) as exc:
         raise RuntimeError(f"Native PPTX {kind} metadata cannot be decoded") from exc
     if not isinstance(payload, dict):

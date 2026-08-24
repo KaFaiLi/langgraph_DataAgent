@@ -25,5 +25,3 @@ SEVERITY_ORDER: dict[Severity, int] = {
 def at_least(severity: Severity, threshold: Severity) -> bool:
     """True when ``severity`` is at least as severe as ``threshold``."""
     return SEVERITY_ORDER[severity] >= SEVERITY_ORDER[threshold]
-
-

@@ -32,56 +32,63 @@ MATH_NS = "http://schemas.openxmlformats.org/officeDocument/2006/math"
 _DML_RUN_PROPERTIES = f"{{{DML_NS}}}rPr"
 _MATH_RUN_PROPERTIES = f"{{{MATH_NS}}}rPr"
 _MATH_CONTROL_PROPERTIES = f"{{{MATH_NS}}}ctrlPr"
-_CONTROL_OWNER_TAGS = frozenset({
-    f"{{{MATH_NS}}}{name}"
-    for name in (
-        "accPr",
-        "barPr",
-        "borderBoxPr",
-        "boxPr",
-        "dPr",
-        "fPr",
-        "groupChrPr",
-        "naryPr",
-        "radPr",
-    )
-})
-_FILL_TAGS = frozenset({
-    f"{{{DML_NS}}}blipFill",
-    f"{{{DML_NS}}}gradFill",
-    f"{{{DML_NS}}}grpFill",
-    f"{{{DML_NS}}}noFill",
-    f"{{{DML_NS}}}pattFill",
-    f"{{{DML_NS}}}solidFill",
-})
-_COLOR_TAGS = frozenset({
-    f"{{{DML_NS}}}{name}"
-    for name in ("hslClr", "prstClr", "schemeClr", "scrgbClr", "srgbClr", "sysClr")
-})
-_ALPHA_TRANSFORM_TAGS = frozenset({
-    f"{{{DML_NS}}}{name}"
-    for name in ("alpha", "alphaMod", "alphaOff")
-})
+_CONTROL_OWNER_TAGS = frozenset(
+    {
+        f"{{{MATH_NS}}}{name}"
+        for name in (
+            "accPr",
+            "barPr",
+            "borderBoxPr",
+            "boxPr",
+            "dPr",
+            "fPr",
+            "groupChrPr",
+            "naryPr",
+            "radPr",
+        )
+    }
+)
+_FILL_TAGS = frozenset(
+    {
+        f"{{{DML_NS}}}blipFill",
+        f"{{{DML_NS}}}gradFill",
+        f"{{{DML_NS}}}grpFill",
+        f"{{{DML_NS}}}noFill",
+        f"{{{DML_NS}}}pattFill",
+        f"{{{DML_NS}}}solidFill",
+    }
+)
+_COLOR_TAGS = frozenset(
+    {
+        f"{{{DML_NS}}}{name}"
+        for name in ("hslClr", "prstClr", "schemeClr", "scrgbClr", "srgbClr", "sysClr")
+    }
+)
+_ALPHA_TRANSFORM_TAGS = frozenset(
+    {f"{{{DML_NS}}}{name}" for name in ("alpha", "alphaMod", "alphaOff")}
+)
 _RUN_PROPERTY_ORDER = {
     f"{{{DML_NS}}}{name}": index
-    for index, names in enumerate((
-        ("ln",),
-        ("blipFill", "gradFill", "grpFill", "noFill", "pattFill", "solidFill"),
-        ("effectDag", "effectLst"),
-        ("highlight",),
-        ("uLnTx",),
-        ("uLn",),
-        ("uFillTx",),
-        ("uFill",),
-        ("latin",),
-        ("ea",),
-        ("cs",),
-        ("sym",),
-        ("hlinkClick",),
-        ("hlinkMouseOver",),
-        ("rtl",),
-        ("extLst",),
-    ))
+    for index, names in enumerate(
+        (
+            ("ln",),
+            ("blipFill", "gradFill", "grpFill", "noFill", "pattFill", "solidFill"),
+            ("effectDag", "effectLst"),
+            ("highlight",),
+            ("uLnTx",),
+            ("uLn",),
+            ("uFillTx",),
+            ("uFill",),
+            ("latin",),
+            ("ea",),
+            ("cs",),
+            ("sym",),
+            ("hlinkClick",),
+            ("hlinkMouseOver",),
+            ("rtl",),
+            ("extLst",),
+        )
+    )
     for name in names
 }
 

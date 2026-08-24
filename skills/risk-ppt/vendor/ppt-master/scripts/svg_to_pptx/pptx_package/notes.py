@@ -22,34 +22,35 @@ def markdown_to_plain_text(md_content: str) -> str:
     Returns:
         Plain text content.
     """
+
     def strip_inline_bold(text: str) -> str:
-        text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)
-        text = re.sub(r'__(.+?)__', r'\1', text)
+        text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+        text = re.sub(r"__(.+?)__", r"\1", text)
         return text
 
     lines: list[str] = []
-    for line in md_content.split('\n'):
-        if line.startswith('#'):
-            text = re.sub(r'^#+\s*', '', line).strip()
+    for line in md_content.split("\n"):
+        if line.startswith("#"):
+            text = re.sub(r"^#+\s*", "", line).strip()
             text = strip_inline_bold(text)
             if text:
                 lines.append(text)
-                lines.append('')
-        elif line.strip().startswith('- '):
+                lines.append("")
+        elif line.strip().startswith("- "):
             item_text = line.strip()[2:]
             item_text = strip_inline_bold(item_text)
-            lines.append('• ' + item_text)
+            lines.append("• " + item_text)
         elif line.strip():
             text = strip_inline_bold(line.strip())
             lines.append(text)
         else:
-            lines.append('')
+            lines.append("")
 
     # Merge consecutive empty lines
     result: list[str] = []
     is_prev_empty = False
     for line in lines:
-        if line == '':
+        if line == "":
             if not is_prev_empty:
                 result.append(line)
             is_prev_empty = True
@@ -57,7 +58,7 @@ def markdown_to_plain_text(md_content: str) -> str:
             result.append(line)
             is_prev_empty = False
 
-    return '\n'.join(result).strip()
+    return "\n".join(result).strip()
 
 
 def create_notes_slide_xml(
@@ -80,25 +81,24 @@ def create_notes_slide_xml(
         if primary_language is not None
         else None
     )
-    default_language = primary_language or 'en-US'
-    notes_text = (notes_text
-                  .replace('&', '&amp;')
-                  .replace('<', '&lt;')
-                  .replace('>', '&gt;'))
+    default_language = primary_language or "en-US"
+    notes_text = (
+        notes_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    )
 
     paragraphs: list[str] = []
-    for para in notes_text.split('\n'):
+    for para in notes_text.split("\n"):
         if para.strip():
             lang = detect_text_lang(para, primary_language)
-            paragraph_rtl = ' rtl="1"' if text_uses_rtl(
-                para,
-                primary_language,
-            ) else ''
-            run_rtl = (
-                '<a:rtl val="1"/>'
-                if text_has_rtl_characters(para)
-                else ''
+            paragraph_rtl = (
+                ' rtl="1"'
+                if text_uses_rtl(
+                    para,
+                    primary_language,
+                )
+                else ""
             )
+            run_rtl = '<a:rtl val="1"/>' if text_has_rtl_characters(para) else ""
             paragraphs.append(f'''<a:p>
               <a:pPr{paragraph_rtl}/>
               <a:r>
@@ -109,23 +109,21 @@ def create_notes_slide_xml(
         else:
             paragraph_rtl = (
                 ' rtl="1"'
-                if primary_language and text_uses_rtl('', primary_language)
-                else ''
+                if primary_language and text_uses_rtl("", primary_language)
+                else ""
             )
             paragraphs.append(
-                f'<a:p><a:pPr{paragraph_rtl}/>'
+                f"<a:p><a:pPr{paragraph_rtl}/>"
                 f'<a:endParaRPr lang="{default_language}" dirty="0"/></a:p>'
             )
 
     paragraphs_xml = (
-        '\n            '.join(paragraphs)
+        "\n            ".join(paragraphs)
         if paragraphs
-        else (
-            f'<a:p><a:endParaRPr lang="{default_language}" dirty="0"/></a:p>'
-        )
+        else (f'<a:p><a:endParaRPr lang="{default_language}" dirty="0"/></a:p>')
     )
 
-    return f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    return f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:notes xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
          xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
          xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
@@ -178,7 +176,7 @@ def create_notes_slide_xml(
   <p:clrMapOvr>
     <a:masterClrMapping/>
   </p:clrMapOvr>
-</p:notes>'''
+</p:notes>"""
 
 
 def create_notes_slide_rels_xml(slide_num: int) -> str:
@@ -190,11 +188,11 @@ def create_notes_slide_rels_xml(slide_num: int) -> str:
     Returns:
         Relationship file XML string.
     """
-    return f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    return f"""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesMaster" Target="../notesMasters/notesMaster1.xml"/>
   <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="../slides/slide{slide_num}.xml"/>
-</Relationships>'''
+</Relationships>"""
 
 
 def create_notes_master_xml(primary_language: str | None = None) -> str:
@@ -202,9 +200,9 @@ def create_notes_master_xml(primary_language: str | None = None) -> str:
     language = (
         normalize_language_tag(primary_language)
         if primary_language is not None
-        else 'en-US'
+        else "en-US"
     )
-    paragraph_rtl = ' rtl="1"' if text_uses_rtl('', language) else ''
+    paragraph_rtl = ' rtl="1"' if text_uses_rtl("", language) else ""
     return f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:notesMaster xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
                xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -330,7 +328,7 @@ def create_notes_master_xml(primary_language: str | None = None) -> str:
 
 def create_notes_master_rels_xml() -> str:
     """Create notes master relationships XML."""
-    return '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    return """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="../theme/theme2.xml"/>
-</Relationships>'''
+</Relationships>"""

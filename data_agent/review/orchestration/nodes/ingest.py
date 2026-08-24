@@ -46,5 +46,3 @@ def build_catalog(state: ParentState, config: RunnableConfig) -> dict:
         encoding="utf-8",
     )
     return {"manifest": manifest.model_dump(mode="json")}
-
-

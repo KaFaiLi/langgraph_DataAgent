@@ -66,9 +66,7 @@ def test_same_day_and_entity_link_into_one_cluster() -> None:
 
 def test_unrelated_findings_stay_separate() -> None:
     result = analyze(
-        make_finding(
-            "RISK-001", "VaR increased for rates.", start="2025-01-02", end="2025-01-03"
-        ),
+        make_finding("RISK-001", "VaR increased for rates.", start="2025-01-02", end="2025-01-03"),
         make_finding(
             "CONTROLS-001",
             "Credit mapping breach closed late.",
@@ -83,12 +81,8 @@ def test_unrelated_findings_stay_separate() -> None:
 
 def test_same_category_alone_does_not_merge() -> None:
     result = analyze(
-        make_finding(
-            "RISK-001", "VaR increased for rates.", start="2025-01-02", end="2025-01-03"
-        ),
-        make_finding(
-            "RISK-002", "Exposure up on credit.", start="2025-06-01", end="2025-06-02"
-        ),
+        make_finding("RISK-001", "VaR increased for rates.", start="2025-01-02", end="2025-01-03"),
+        make_finding("RISK-002", "Exposure up on credit.", start="2025-06-01", end="2025-06-02"),
     )
 
     assert len(result.clusters) == 2
@@ -139,12 +133,8 @@ def test_numeric_tokens_are_not_entities() -> None:
 
 def test_one_generic_shared_token_does_not_merge_findings() -> None:
     result = analyze(
-        make_finding(
-            "RISK-001", "Atlas workflow anomaly.", start="2025-01-02", end="2025-01-03"
-        ),
-        make_finding(
-            "PNL-001", "Harbor workflow delay.", start="2025-06-01", end="2025-06-02"
-        ),
+        make_finding("RISK-001", "Atlas workflow anomaly.", start="2025-01-02", end="2025-01-03"),
+        make_finding("PNL-001", "Harbor workflow delay.", start="2025-06-01", end="2025-06-02"),
     )
 
     assert len(result.clusters) == 2

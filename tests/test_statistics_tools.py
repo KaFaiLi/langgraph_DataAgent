@@ -19,9 +19,7 @@ def test_zscore_uses_population_standard_deviation() -> None:
 
 def test_zscore_constant_and_null_values() -> None:
     assert statistics_tools.zscore([7.0, 7.0, 7.0]) == [0.0, 0.0, 0.0]
-    assert statistics_tools.zscore([1.0, None, 3.0]) == pytest.approx(
-        [-1.0, 1.0]
-    )
+    assert statistics_tools.zscore([1.0, None, 3.0]) == pytest.approx([-1.0, 1.0])
 
 
 def test_rolling_mean_returns_warmup_nulls() -> None:
@@ -35,9 +33,7 @@ def test_rolling_std_uses_population_standard_deviation() -> None:
 
 
 def test_quantile_interpolates_and_rolling_quantile() -> None:
-    assert statistics_tools.quantile([4.0, 1.0, 3.0, 2.0], 0.25) == pytest.approx(
-        1.75
-    )
+    assert statistics_tools.quantile([4.0, 1.0, 3.0, 2.0], 0.25) == pytest.approx(1.75)
     assert statistics_tools.rolling_quantile(SERIES, 3, 0.5) == [
         None,
         None,
@@ -66,9 +62,7 @@ def test_outlier_detection_returns_indices_above_strict_threshold() -> None:
 def test_change_point_candidates_find_level_shift() -> None:
     values = [0.0] * 30 + [10.0] * 10
 
-    candidates = statistics_tools.change_point_candidates(
-        values, window=10, z_threshold=2.5
-    )
+    candidates = statistics_tools.change_point_candidates(values, window=10, z_threshold=2.5)
 
     assert candidates
     assert all(29 <= index <= 34 for index in candidates)
@@ -76,12 +70,12 @@ def test_change_point_candidates_find_level_shift() -> None:
 
 
 def test_pearson_correlation_and_null_pair_filtering() -> None:
-    assert statistics_tools.pearson_correlation(
-        [1.0, 2.0, 3.0], [2.0, 4.0, 6.0]
-    ) == pytest.approx(1.0)
-    assert statistics_tools.pearson_correlation(
-        [1.0, 2.0, 3.0], [3.0, 2.0, 1.0]
-    ) == pytest.approx(-1.0)
+    assert statistics_tools.pearson_correlation([1.0, 2.0, 3.0], [2.0, 4.0, 6.0]) == pytest.approx(
+        1.0
+    )
+    assert statistics_tools.pearson_correlation([1.0, 2.0, 3.0], [3.0, 2.0, 1.0]) == pytest.approx(
+        -1.0
+    )
     assert statistics_tools.pearson_correlation(
         [1.0, None, 3.0], [2.0, 100.0, 6.0]
     ) == pytest.approx(1.0)
@@ -97,9 +91,7 @@ def test_trend_analysis_returns_ordinary_least_squares_result() -> None:
 
 
 def test_period_comparison_compares_contiguous_periods() -> None:
-    comparison = statistics_tools.period_comparison(
-        [1.0, 1.0, 1.0, 3.0, 3.0, 3.0], split=3
-    )
+    comparison = statistics_tools.period_comparison([1.0, 1.0, 1.0, 3.0, 3.0, 3.0], split=3)
 
     assert comparison.mean_before == pytest.approx(1.0)
     assert comparison.mean_after == pytest.approx(3.0)
@@ -158,7 +150,11 @@ async def test_register_exposes_exactly_ten_json_friendly_tools() -> None:
     comparison = await tools["period_comparison"].run(
         arguments={"values": [1.0, 1.0, 3.0, 3.0], "split": 2}
     )
-    assert trend.structured_content == {"slope": 1.0, "intercept": 1.0, "r_squared": 1.0}
+    assert trend.structured_content == {
+        "slope": 1.0,
+        "intercept": 1.0,
+        "r_squared": 1.0,
+    }
     assert comparison.structured_content == {
         "mean_before": 1.0,
         "mean_after": 3.0,

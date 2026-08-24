@@ -319,9 +319,7 @@ def _metadata_for(path: Path, root: Path, source_id: str) -> SourceMetadata:
                 first_sheet = workbook[names[0]]
                 values["row_count"] = first_sheet.max_row
                 first = next(first_sheet.iter_rows(min_row=1, max_row=1, values_only=True), ())
-                values["column_names"] = tuple(
-                    str(item) for item in first if item is not None
-                )
+                values["column_names"] = tuple(str(item) for item in first if item is not None)
                 date_text: list[str] = []
                 scanned = 0
                 for sheet in workbook.worksheets:
@@ -436,8 +434,7 @@ def read_lines_data(
         raise ValueError(f"end {end} beyond file length {len(lines)}")
     selected = lines[start - 1 : end]
     rendered = "\n".join(
-        f"line {index}: {line[:MAX_LINE_CHARS]}"
-        for index, line in enumerate(selected, start=start)
+        f"line {index}: {line[:MAX_LINE_CHARS]}" for index, line in enumerate(selected, start=start)
     )
     return _truncate_output(rendered)
 
@@ -530,7 +527,9 @@ def read_document_section_data(root: str | os.PathLike[str] | Path, locator_uri:
 
         with pymupdf.open(full) as document:
             if locator.page > document.page_count:
-                raise ValueError(f"page {locator.page} out of range (document has {document.page_count} pages)")
+                raise ValueError(
+                    f"page {locator.page} out of range (document has {document.page_count} pages)"
+                )
             text = document.load_page(locator.page - 1).get_text()
         return _truncate_output(text)
 
@@ -561,10 +560,19 @@ def read_document_section_data(root: str | os.PathLike[str] | Path, locator_uri:
                 else:
                     raise ValueError("sheet is required for a multi-sheet workbook")
                 if start > sheet.max_row or end > sheet.max_row:
-                    raise ValueError(f"rows {start}:{end} out of range (sheet has {sheet.max_row} rows)")
-                rows = [list(row) for row in sheet.iter_rows(min_row=start, max_row=end, values_only=True)]
+                    raise ValueError(
+                        f"rows {start}:{end} out of range (sheet has {sheet.max_row} rows)"
+                    )
+                rows = [
+                    list(row)
+                    for row in sheet.iter_rows(min_row=start, max_row=end, values_only=True)
+                ]
                 header = next(sheet.iter_rows(min_row=1, max_row=1, values_only=True), ())
-                return _render_rows(rows, start, ["" if value is None else str(value) for value in header])
+                return _render_rows(
+                    rows,
+                    start,
+                    ["" if value is None else str(value) for value in header],
+                )
             finally:
                 workbook.close()
         if source_type == "parquet":
@@ -577,17 +585,25 @@ def read_document_section_data(root: str | os.PathLike[str] | Path, locator_uri:
                     raise ValueError("parquet sections require pyarrow or polars") from exc
                 frame = pl.read_parquet(full)
                 if start > frame.height or end > frame.height:
-                    raise ValueError(f"rows {start}:{end} out of range (file has {frame.height} rows)")
+                    raise ValueError(
+                        f"rows {start}:{end} out of range (file has {frame.height} rows)"
+                    )
                 records = frame.slice(start - 1, end - start + 1).to_dicts()
                 return _render_rows(
-                    [list(record.values()) for record in records], start, list(frame.columns)
+                    [list(record.values()) for record in records],
+                    start,
+                    list(frame.columns),
                 )
             table = parquet.read_table(full)
             if start > table.num_rows or end > table.num_rows:
-                raise ValueError(f"rows {start}:{end} out of range (file has {table.num_rows} rows)")
+                raise ValueError(
+                    f"rows {start}:{end} out of range (file has {table.num_rows} rows)"
+                )
             records = table.slice(start - 1, end - start + 1).to_pylist()
             return _render_rows(
-                [list(record.values()) for record in records], start, list(table.column_names)
+                [list(record.values()) for record in records],
+                start,
+                list(table.column_names),
             )
         raise ValueError(f"row locators are not supported for {source_type} sources")
 
@@ -634,7 +650,9 @@ def search_text_data(
         except (SafePathError, FileNotFoundError) as exc:
             raise SourcePathError(str(exc)) from exc
 
-    candidates = [target] if target.is_file() else [item for item in target.rglob("*") if item.is_file()]
+    candidates = (
+        [target] if target.is_file() else [item for item in target.rglob("*") if item.is_file()]
+    )
     matches: list[dict[str, Any]] = []
     files_scanned = 0
     truncated = False
@@ -727,9 +745,13 @@ def register(mcp: FastMCP, root: Path | None = None, settings: Settings | None =
     @mcp.tool
     def search_text(
         pattern: Annotated[str, Field(description="Regular expression to find in source text.")],
-        case_insensitive: Annotated[bool, Field(description="Ignore text case when matching.")] = False,
+        case_insensitive: Annotated[
+            bool, Field(description="Ignore text case when matching.")
+        ] = False,
         max_results: Annotated[int, Field(ge=1, le=DEFAULT_MAX_RESULTS)] = DEFAULT_MAX_RESULTS,
-        path: Annotated[str, Field(description="Optional source-relative file or directory.")] = ".",
+        path: Annotated[
+            str, Field(description="Optional source-relative file or directory.")
+        ] = ".",
     ) -> dict[str, Any]:
         """Search text-like files under the configured source root (bounded and source-only)."""
         try:

@@ -73,5 +73,3 @@ class ReviewRun(BaseModel):
     tasks: list[ReviewTask] = Field(default_factory=list)
 
     failure_reason: str | None = None
-
-

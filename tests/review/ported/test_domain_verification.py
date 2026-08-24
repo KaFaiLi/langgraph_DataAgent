@@ -43,5 +43,3 @@ def test_inaccessible_evidence_blocks_pass() -> None:
     )
     assert result.evidence_inaccessible
     assert result.decision is not VerifierDecision.PASS
-
-

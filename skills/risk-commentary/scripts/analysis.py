@@ -29,9 +29,7 @@ _EVENT_LINE = re.compile(
     re.IGNORECASE,
 )
 _REVIEW_NOTE = re.compile(r"^\s*-\s*Review note:\s*(.+)$", re.IGNORECASE)
-_MANAGERIAL_VALIDATION = re.compile(
-    r"^\s*-\s*Managerial validation:\s*(.+)$", re.IGNORECASE
-)
+_MANAGERIAL_VALIDATION = re.compile(r"^\s*-\s*Managerial validation:\s*(.+)$", re.IGNORECASE)
 _EVIDENCE_ID = re.compile(r"Evidence ID:\s*([^\s\"]+)", re.IGNORECASE)
 _VALIDATION = re.compile(
     r"Managerial Validation(?: Comment)?:\s*(No data|pending|blank|missing)",
@@ -95,9 +93,7 @@ def _read_extract(ctx: ToolContext, path: str) -> tuple[list[str], list[_Record]
     for line_number, text in enumerate(lines, start=1):
         event = _EVENT_LINE.match(text)
         if event is not None:
-            event_date, desk, perimeter, metric = (
-                value.strip() for value in event.groups()
-            )
+            event_date, desk, perimeter, metric = (value.strip() for value in event.groups())
             claim = ""
             validation = ""
             continue
@@ -152,9 +148,7 @@ def _population_profile(
             }
         )
         evidence.append(
-            EvidenceReference(
-                locator=format_locator(Locator(path=path, lines=(1, len(lines))))
-            )
+            EvidenceReference(locator=format_locator(Locator(path=path, lines=(1, len(lines)))))
         )
     total_records = sum(int(table["quoted_source_records"]) for table in tables)
     total_unique = sum(int(table["unique_evidence_ids"]) for table in tables)
@@ -169,11 +163,7 @@ def _population_profile(
                 "Final commentary extracts are profiled by quoted-record and evidence-ID "
                 "coverage before interpreting validation gaps or repeated explanations."
             ),
-            status=(
-                OverviewStatus.AVAILABLE
-                if total_records
-                else OverviewStatus.PARTIAL
-            ),
+            status=(OverviewStatus.AVAILABLE if total_records else OverviewStatus.PARTIAL),
             primary_for_deck=True,
             metrics=[
                 OverviewMetric(
@@ -512,4 +502,3 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> list[BaseModel]:
         _repeated_explanations(records),
         _normalized_reassurance_claims(records),
     ]
-

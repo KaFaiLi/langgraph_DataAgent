@@ -79,14 +79,10 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
 
     for source in manifest.sources:
         if not source.candidate_domains:
-            domains = _classify_source(
-                provider, source.source_id, source.path, source.column_names
-            )
+            domains = _classify_source(provider, source.source_id, source.path, source.column_names)
             source.candidate_domains = domains or list(REGISTERED_DOMAINS)
         reviewers_by_source[source.source_id] = list(
-            dict.fromkeys(
-                specialist_domain_for(domain) for domain in source.candidate_domains
-            )
+            dict.fromkeys(specialist_domain_for(domain) for domain in source.candidate_domains)
         )
 
     tasks: list[dict] = []
@@ -108,9 +104,7 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
     coverage = [
         SourceCoverage(
             source_id=source.source_id,
-            required_reviewers=[
-                domain.value for domain in reviewers_by_source[source.source_id]
-            ],
+            required_reviewers=[domain.value for domain in reviewers_by_source[source.source_id]],
         ).model_dump(mode="json")
         for source in manifest.sources
     ]

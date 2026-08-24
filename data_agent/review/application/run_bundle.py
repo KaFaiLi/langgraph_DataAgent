@@ -75,7 +75,8 @@ def _artifact_path(run_dir: Path, relative_path: str | Path) -> Path:
         ) from exc
     if not resolved.is_relative_to(run_dir):
         raise RunBundleError(
-            "artifact_path_escape", f"artifact escapes the completed run: {relative_path}"
+            "artifact_path_escape",
+            f"artifact escapes the completed run: {relative_path}",
         )
     return resolved
 
@@ -108,7 +109,9 @@ def _read_nonempty_text(path: Path, artifact: str) -> str:
     return text
 
 
-def _manifest_identity(manifest: SourceManifest) -> list[tuple[str, str, str, int, str]]:
+def _manifest_identity(
+    manifest: SourceManifest,
+) -> list[tuple[str, str, str, int, str]]:
     return [
         (
             source.source_id,
@@ -121,7 +124,9 @@ def _manifest_identity(manifest: SourceManifest) -> list[tuple[str, str, str, in
     ]
 
 
-def _report_locators(reports: dict[SpecialistDomain, SpecialistReport]) -> frozenset[str]:
+def _report_locators(
+    reports: dict[SpecialistDomain, SpecialistReport],
+) -> frozenset[str]:
     locators: set[str] = set()
 
     def add_references(references: list[EvidenceReference]) -> None:
@@ -150,7 +155,8 @@ def _validate_verification_artifact(
 ) -> dict[str, Any]:
     if not isinstance(artifact, dict):
         raise RunBundleError(
-            "artifact_invalid_schema", f"invalid {artifact_name}: expected a JSON object"
+            "artifact_invalid_schema",
+            f"invalid {artifact_name}: expected a JSON object",
         )
     required_lists = (
         "initial_candidates",
@@ -167,7 +173,8 @@ def _validate_verification_artifact(
         )
     if any(not isinstance(artifact[key], list) for key in required_lists):
         raise RunBundleError(
-            "artifact_invalid_schema", f"invalid {artifact_name}: verifier lists are malformed"
+            "artifact_invalid_schema",
+            f"invalid {artifact_name}: verifier lists are malformed",
         )
     try:
         for key in required_lists:
@@ -182,7 +189,8 @@ def _validate_verification_artifact(
     # Requiring this history keeps the artifact tied to the bounded verifier.
     if any(not isinstance(rounds, list) for rounds in report.verification_history.values()):
         raise RunBundleError(
-            "artifact_invalid_schema", f"invalid {artifact_name}: verification history is malformed"
+            "artifact_invalid_schema",
+            f"invalid {artifact_name}: verification history is malformed",
         )
     return artifact
 
@@ -202,7 +210,8 @@ def load_completed_run(run_dir: str | Path) -> CompletedRunBundle:
     pending = [entry.source_id for entry in run.coverage if not entry.is_settled()]
     if pending:
         raise RunBundleError(
-            "coverage_unsettled", f"unsettled coverage for: {', '.join(sorted(pending))}"
+            "coverage_unsettled",
+            f"unsettled coverage for: {', '.join(sorted(pending))}",
         )
 
     catalog = _typed(
@@ -244,7 +253,9 @@ def load_completed_run(run_dir: str | Path) -> CompletedRunBundle:
         report_relative = Path("specialists") / f"{stem}.json"
         report_path = _artifact_path(root, report_relative)
         report = _typed(
-            SpecialistReport, _read_json(report_path, report_path.name), report_path.name
+            SpecialistReport,
+            _read_json(report_path, report_path.name),
+            report_path.name,
         )
         if report.domain is not domain:
             raise RunBundleError(
@@ -369,7 +380,8 @@ def _checkpoint_state(db_path: Path, context: RunContext) -> None:
         actual = state.get(field)
         if actual is None:
             raise RunBundleError(
-                "checkpoint_state_invalid", f"checkpoint state is missing required {field}"
+                "checkpoint_state_invalid",
+                f"checkpoint state is missing required {field}",
             )
         if field in {"source_root", "output_dir"}:
             matches = Path(str(actual)).resolve() == Path(persisted).resolve()
@@ -421,5 +433,3 @@ def load_resume_context(
         )
     _checkpoint_state(db_path, context)
     return context
-
-

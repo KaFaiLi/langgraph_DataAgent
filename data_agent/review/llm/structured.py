@@ -45,4 +45,3 @@ def invoke_structured(
     raise ValueError(
         f"structured output failed after {attempts} attempt(s): {last_error}"
     ) from last_error
-

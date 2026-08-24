@@ -106,8 +106,7 @@ validated entrypoint shape:
 def run_analysis(
     ctx: ToolContext,
     source_paths: list[str],
-) -> Sequence[BaseModel]:
-    ...
+) -> Sequence[BaseModel]: ...
 ```
 
 The script is authoritative for calculations; the LLM interprets its structured output.
@@ -119,8 +118,7 @@ The lead-review entrypoint has a separate cross-specialist contract:
 ```python
 def run_analysis(
     reports: list[SpecialistReport],
-) -> CrossSpecialistAnalysis:
-    ...
+) -> CrossSpecialistAnalysis: ...
 ```
 
 It owns deterministic entity extraction, temporal matching, clustering, and

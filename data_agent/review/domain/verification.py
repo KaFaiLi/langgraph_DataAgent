@@ -57,5 +57,3 @@ class VerificationRound(BaseModel):
     feedback: str = ""
     analyst_response: str | None = None
     """The analyst's revision notes answering the previous round's feedback."""
-
-

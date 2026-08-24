@@ -34,9 +34,7 @@ from .formula_run_properties import (
 
 SVG_NS = "http://www.w3.org/2000/svg"
 DML_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
-OFFICE_REL_NS = (
-    "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-)
+OFFICE_REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 MATH_NS = "http://schemas.openxmlformats.org/officeDocument/2006/math"
 A14_NS = "http://schemas.microsoft.com/office/drawing/2010/main"
 MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -53,21 +51,23 @@ _PARAGRAPH_ATTRIBUTES = (
     "data-paragraph-soft-break",
     "data-paragraph-space-before",
 )
-_NON_OUTPUT_ANCESTORS = frozenset({
-    "clipPath",
-    "desc",
-    "defs",
-    "filter",
-    "linearGradient",
-    "marker",
-    "mask",
-    "metadata",
-    "pattern",
-    "radialGradient",
-    "style",
-    "symbol",
-    "title",
-})
+_NON_OUTPUT_ANCESTORS = frozenset(
+    {
+        "clipPath",
+        "desc",
+        "defs",
+        "filter",
+        "linearGradient",
+        "marker",
+        "mask",
+        "metadata",
+        "pattern",
+        "radialGradient",
+        "style",
+        "symbol",
+        "title",
+    }
+)
 
 for _prefix, _uri in (("a", DML_NS), ("m", MATH_NS)):
     try:
@@ -86,8 +86,7 @@ def inline_formula_marker_errors(root: ET.Element) -> list[str]:
     errors: list[str] = []
     parent_map = {child: parent for parent in root.iter() for child in parent}
     markers = [
-        elem for elem in root.iter()
-        if elem.get(INLINE_FORMULA_ATTR) is not None
+        elem for elem in root.iter() if elem.get(INLINE_FORMULA_ATTR) is not None
     ]
 
     for marker in markers:
@@ -100,9 +99,7 @@ def inline_formula_marker_errors(root: ET.Element) -> list[str]:
             continue
 
         if marker.get("data-pptx-replace-with") is not None:
-            errors.append(
-                f"{label} cannot also declare data-pptx-replace-with"
-            )
+            errors.append(f"{label} cannot also declare data-pptx-replace-with")
 
         source = marker.get(INLINE_FORMULA_ATTR) or ""
         if not source.strip():
@@ -125,14 +122,15 @@ def inline_formula_marker_errors(root: ET.Element) -> list[str]:
                 "place spacing in the surrounding text"
             )
 
-        positioned = [name for name in _POSITION_ATTRIBUTES if marker.get(name) is not None]
+        positioned = [
+            name for name in _POSITION_ATTRIBUTES if marker.get(name) is not None
+        ]
         if positioned:
             errors.append(
                 f"{label} is an inline run and cannot set " + ", ".join(positioned)
             )
         paragraph_attrs = [
-            name for name in _PARAGRAPH_ATTRIBUTES
-            if marker.get(name) is not None
+            name for name in _PARAGRAPH_ATTRIBUTES if marker.get(name) is not None
         ]
         if paragraph_attrs:
             errors.append(
@@ -185,14 +183,10 @@ def inline_formula_marker_errors(root: ET.Element) -> list[str]:
                 nested_marker = True
             if parent.get("baseline-shift") is not None:
                 inside_baseline_shift = True
-            replacement = (
-                parent.get("data-pptx-replace-with") or ""
-            ).strip().lower()
+            replacement = (parent.get("data-pptx-replace-with") or "").strip().lower()
             if replacement:
                 inside_native_replacement = True
-                inside_block_formula = (
-                    inside_block_formula or replacement == "formula"
-                )
+                inside_block_formula = inside_block_formula or replacement == "formula"
             if (parent.get("data-pptx-part") or "").strip() in {
                 "geometry-detail",
                 "geometry-preview",
@@ -223,15 +217,15 @@ def inline_formula_marker_errors(root: ET.Element) -> list[str]:
                 f"<{non_output_ancestor}> content"
             )
         if nested_marker:
-            errors.append(f"{label} cannot be nested inside another inline formula marker")
+            errors.append(
+                f"{label} cannot be nested inside another inline formula marker"
+            )
         if inside_baseline_shift:
             errors.append(
                 f"{label} cannot combine baseline-shift with an inline formula"
             )
         if inside_block_formula:
-            errors.append(
-                f"{label} cannot be placed inside a block formula preview"
-            )
+            errors.append(f"{label} cannot be placed inside a block formula preview")
         elif inside_native_replacement:
             errors.append(
                 f"{label} cannot be placed inside a native replacement subtree"

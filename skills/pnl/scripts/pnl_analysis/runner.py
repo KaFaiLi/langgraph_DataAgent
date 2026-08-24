@@ -39,11 +39,7 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseMode
     validation, validation_issues = _validation_rows(tables)
     income_attribution, income_issues = _income_attribution_rows(tables)
     legacy_income_paths = list(
-        dict.fromkeys(
-            table.path
-            for table in tables
-            if table.role == "income_attribution_legacy"
-        )
+        dict.fromkeys(table.path for table in tables if table.role == "income_attribution_legacy")
     )
     parse_issues = [*pnl_issues, *adjustment_issues, *validation_issues]
     results: list[AnalysisResult] = [
@@ -75,4 +71,3 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseMode
     if legacy_income_paths:
         results.extend(run_income_attribution_analyses(ctx, legacy_income_paths))
     return results
-

@@ -68,5 +68,3 @@ class Finding(BaseModel):
                 f"finding {self.finding_id}: non-observation conclusions "
                 "require at least one evidence reference"
             )
-
-

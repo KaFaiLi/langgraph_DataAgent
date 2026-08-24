@@ -83,10 +83,13 @@ def _metadata_is_valid() -> bool:
     metadata = _frontmatter(skill_text)
     return (
         all(
-            len(re.findall(
-                rf"(?m)^  {re.escape(field)}\s*:\s*{re.escape(value)}\s*$",
-                metadata,
-            )) == 1
+            len(
+                re.findall(
+                    rf"(?m)^  {re.escape(field)}\s*:\s*{re.escape(value)}\s*$",
+                    metadata,
+                )
+            )
+            == 1
             for field, value in _EXACT_METADATA_VALUES.items()
         )
         and all(
@@ -103,7 +106,9 @@ def _protected_files_are_valid() -> bool:
         path = _SKILL_DIR / relative_path
         if not path.is_file():
             return False
-    license_digest = hashlib.sha256(_normalized_bytes(_SKILL_DIR / "LICENSE")).hexdigest()
+    license_digest = hashlib.sha256(
+        _normalized_bytes(_SKILL_DIR / "LICENSE")
+    ).hexdigest()
     return license_digest == _LICENSE_DIGEST
 
 
@@ -135,18 +140,24 @@ def _execution_gate_is_valid(path: Path) -> bool:
     )
     has_entry_call = False
     for node in tree.body:
-        if (
-            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-            and node.name in {"configure_utf8_stdio", "main"}
-        ):
-            body = node.body[1:] if (
-                node.body
-                and isinstance(node.body[0], ast.Expr)
-                and isinstance(node.body[0].value, ast.Constant)
-                and isinstance(node.body[0].value.value, str)
-            ) else node.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in {
+            "configure_utf8_stdio",
+            "main",
+        }:
+            body = (
+                node.body[1:]
+                if (
+                    node.body
+                    and isinstance(node.body[0], ast.Expr)
+                    and isinstance(node.body[0].value, ast.Constant)
+                    and isinstance(node.body[0].value.value, str)
+                )
+                else node.body
+            )
             has_entry_call = bool(body and _is_gate_call(body[0]))
-        elif isinstance(node, ast.If) and any(_is_gate_call(statement) for statement in node.body):
+        elif isinstance(node, ast.If) and any(
+            _is_gate_call(statement) for statement in node.body
+        ):
             has_entry_call = True
     return has_import and has_entry_call
 
@@ -173,12 +184,16 @@ def _secondary_execution_gate_is_valid(path: Path) -> bool:
             and node.name == "configure_utf8_stdio"
         ):
             continue
-        body = node.body[1:] if (
-            node.body
-            and isinstance(node.body[0], ast.Expr)
-            and isinstance(node.body[0].value, ast.Constant)
-            and isinstance(node.body[0].value.value, str)
-        ) else node.body
+        body = (
+            node.body[1:]
+            if (
+                node.body
+                and isinstance(node.body[0], ast.Expr)
+                and isinstance(node.body[0].value, ast.Constant)
+                and isinstance(node.body[0].value.value, str)
+            )
+            else node.body
+        )
         return (
             has_guard
             and len(body) >= 2

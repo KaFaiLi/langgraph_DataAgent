@@ -92,9 +92,7 @@ def quantile(values: Sequence[float], q: float) -> float:
     return ordered[lower] * (1 - fraction) + ordered[lower + 1] * fraction
 
 
-def rolling_quantile(
-    values: Sequence[float], window: int, q: float
-) -> list[float | None]:
+def rolling_quantile(values: Sequence[float], window: int, q: float) -> list[float | None]:
     """Return trailing linearly interpolated quantiles with warm-up nulls."""
     if window < 1:
         raise ValueError("window must be >= 1")
@@ -121,9 +119,7 @@ def percent_change(values: Sequence[float]) -> list[float | None]:
     return out
 
 
-def outlier_detection(
-    values: Sequence[float | None], z_threshold: float = 3.0
-) -> list[int]:
+def outlier_detection(values: Sequence[float | None], z_threshold: float = 3.0) -> list[int]:
     """Return indices whose absolute population z-score exceeds a threshold."""
     if z_threshold <= 0:
         raise ValueError("z_threshold must be positive")
@@ -153,16 +149,12 @@ def change_point_candidates(
     return candidates
 
 
-def pearson_correlation(
-    a: Sequence[float | None], b: Sequence[float | None]
-) -> float:
+def pearson_correlation(a: Sequence[float | None], b: Sequence[float | None]) -> float:
     """Return Pearson correlation, ignoring pairs with either null value."""
     if len(a) != len(b):
         raise ValueError("series must have equal length")
     pairs = [
-        (float(x), float(y))
-        for x, y in zip(a, b, strict=True)
-        if x is not None and y is not None
+        (float(x), float(y)) for x, y in zip(a, b, strict=True) if x is not None and y is not None
     ]
     if len(pairs) < 2:
         raise ValueError("at least two aligned pairs are required")
@@ -192,9 +184,7 @@ def trend_analysis(values: Sequence[float | None]) -> TrendResult:
     return TrendResult(slope=slope, intercept=intercept, r_squared=r_squared)
 
 
-def period_comparison(
-    values: Sequence[float | None], split: int
-) -> PeriodComparison:
+def period_comparison(values: Sequence[float | None], split: int) -> PeriodComparison:
     """Return means and relative change for the two sides of a split."""
     cleaned = _require_values(values)
     if not 0 < split < len(cleaned):
@@ -203,14 +193,8 @@ def period_comparison(
     after = cleaned[split:]
     mean_before = statistics.fmean(before)
     mean_after = statistics.fmean(after)
-    pct_change = (
-        None
-        if mean_before == 0
-        else (mean_after - mean_before) / abs(mean_before)
-    )
-    return PeriodComparison(
-        mean_before=mean_before, mean_after=mean_after, pct_change=pct_change
-    )
+    pct_change = None if mean_before == 0 else (mean_after - mean_before) / abs(mean_before)
+    return PeriodComparison(mean_before=mean_before, mean_after=mean_after, pct_change=pct_change)
 
 
 def register(mcp: FastMCP) -> None:
@@ -218,9 +202,7 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool(name="zscore")
     def zscore_tool(
-        values: Annotated[
-            list[float | None], Field(description="Numeric series to standardize.")
-        ],
+        values: Annotated[list[float | None], Field(description="Numeric series to standardize.")],
     ) -> list[float]:
         """Calculate population z-scores for a numeric series.
 
@@ -262,9 +244,7 @@ def register(mcp: FastMCP) -> None:
 
     @mcp.tool(name="outlier_detection")
     def outlier_detection_tool(
-        values: Annotated[
-            list[float | None], Field(description="Numeric series to inspect.")
-        ],
+        values: Annotated[list[float | None], Field(description="Numeric series to inspect.")],
         z_threshold: Annotated[
             float, Field(gt=0.0, description="Strict positive z-score threshold.")
         ] = 3.0,

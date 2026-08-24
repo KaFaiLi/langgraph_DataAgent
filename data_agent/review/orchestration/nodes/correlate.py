@@ -20,12 +20,8 @@ def correlate(state: ParentState, config: RunnableConfig) -> dict:
     ]
     analysis = CrossSpecialistAnalysis.model_validate(_RUN_ANALYSIS(reports))
     return {
-        "clusters": [
-            cluster.model_dump(mode="json") for cluster in analysis.clusters
-        ],
+        "clusters": [cluster.model_dump(mode="json") for cluster in analysis.clusters],
         "contradictions": [
-            candidate.model_dump(mode="json")
-            for candidate in analysis.contradiction_candidates
+            candidate.model_dump(mode="json") for candidate in analysis.contradiction_candidates
         ],
     }
-

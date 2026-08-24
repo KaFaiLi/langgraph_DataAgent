@@ -49,10 +49,7 @@ def _dispatch_specialists(state: ParentState) -> str | list[Send]:
     tasks = list(state.get("tasks", []))
     if not tasks:
         return "merge_specialists"
-    return [
-        Send("run_specialist", {**state, "active_task": task})
-        for task in tasks
-    ]
+    return [Send("run_specialist", {**state, "active_task": task}) for task in tasks]
 
 
 def build_parent_graph(

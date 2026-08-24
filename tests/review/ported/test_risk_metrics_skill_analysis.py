@@ -15,9 +15,7 @@ from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.review.ingestion.evidence_reader import validate_locator
 from data_agent.tools.review_context import ToolContext
 
-SKILL_SCRIPT = (
-    Path(__file__).parents[3] / "skills" / "risk-metrics" / "scripts" / "analysis.py"
-)
+SKILL_SCRIPT = Path(__file__).parents[3] / "skills" / "risk-metrics" / "scripts" / "analysis.py"
 
 
 def _load_skill_module() -> ModuleType:
@@ -168,15 +166,11 @@ def _colibris_row(
         "lastExcessValidationIsSatisfactory": not still_open,
         "lastExcessValidationTechnicalType": "FOLLOW-UP",
         "lastExcessValidationTechnicalSubType": "RISK-REDUCTION",
-        "lastExcessValidationTechnicalDeadline": (
-            created + timedelta(days=2)
-        ).isoformat(),
+        "lastExcessValidationTechnicalDeadline": (created + timedelta(days=2)).isoformat(),
         "lastExcessValidationTechnicalFollowUp": "monitor",
         "excessValidationTechnicalConsumptionOwners": "RISK-OWNER",
         "lastExcessValidationLod2Fullname": "LOD2-A",
-        "lastExcessValidationLod2CreationDate": _iso_time(
-            created + timedelta(days=1), 15
-        ),
+        "lastExcessValidationLod2CreationDate": _iso_time(created + timedelta(days=1), 15),
         "lastExcessValidationLod2DecisionDetails": "reviewed",
         "lastExcessValidationLod2IsSatisfactory": not still_open,
         "closingConsDate": "" if still_open else close_day.isoformat(),
@@ -220,9 +214,7 @@ def _context(
 
 def _results(ctx: ToolContext) -> dict[str, object]:
     paths = [source.path for source in ctx.manifest.sources]
-    return {
-        result.name: result for result in RISK_METRICS_SKILL.run_analysis(ctx, paths)
-    }
+    return {result.name: result for result in RISK_METRICS_SKILL.run_analysis(ctx, paths)}
 
 
 def test_finalized_two_file_contract_runs_as_one_skill(tmp_path: Path) -> None:
@@ -248,8 +240,7 @@ def test_directional_limit_breach_and_proximity_have_valid_locators(
     start = date(2025, 1, 2)
     values = [8.0, 9.2, 9.5, 10.5, -11.0]
     rows = [
-        _sgmr_row(start + timedelta(days=index), value=value)
-        for index, value in enumerate(values)
+        _sgmr_row(start + timedelta(days=index), value=value) for index, value in enumerate(values)
     ]
     ctx = _context(tmp_path, rows, [_colibris_row(1, start)])
     results = _results(ctx)
@@ -319,7 +310,11 @@ def test_risk_overview_profiles_limit_utilization_trajectory(tmp_path: Path) -> 
         "Warning threshold",
         "Limit",
     ]
-    assert [point.value for point in overview.visual.series[0].points] == [0.8, 0.92, 1.05]
+    assert [point.value for point in overview.visual.series[0].points] == [
+        0.8,
+        0.92,
+        1.05,
+    ]
     assert [(metric.label, metric.value) for metric in overview.metrics] == [
         ("Current utilization", "105.0%"),
         ("Worst utilization", "105.0%"),
@@ -327,4 +322,3 @@ def test_risk_overview_profiles_limit_utilization_trajectory(tmp_path: Path) -> 
         ("Breach observations", "1"),
     ]
     assert overview.evidence[0].locator.endswith("#rows=1:3")
-

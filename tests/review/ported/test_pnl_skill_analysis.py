@@ -205,9 +205,17 @@ def _context(tmp_path: Path, *, bad_wtd: bool = False, bad_fx: bool = False) -> 
     ]
     make_xlsx(
         pnl_dir / "air.xlsx",
-        {"Sheet1": [PNL_HEADERS, *[[row[header] for header in PNL_HEADERS] for row in rows]]},
+        {
+            "Sheet1": [
+                PNL_HEADERS,
+                *[[row[header] for header in PNL_HEADERS] for row in rows],
+            ]
+        },
     )
-    make_csv(pnl_dir / "adjustments.csv", [_adjustment_row(amount_eur=8.0 if bad_fx else 9.0)])
+    make_csv(
+        pnl_dir / "adjustments.csv",
+        [_adjustment_row(amount_eur=8.0 if bad_fx else 9.0)],
+    )
     make_csv(pnl_dir / "validation.csv", [_validation_row()])
     return ToolContext(
         source_root=source,
@@ -273,7 +281,9 @@ def test_schema_specific_calculations_flag_reperforming_errors(tmp_path: Path) -
         assert validation.valid, validation.reason
 
 
-def test_cross_source_gop_population_is_checked_in_both_directions(tmp_path: Path) -> None:
+def test_cross_source_gop_population_is_checked_in_both_directions(
+    tmp_path: Path,
+) -> None:
     ctx = _context(tmp_path)
     validation_path = ctx.source_root / "pnl" / "validation.csv"
     make_csv(validation_path, [_validation_row(gop="GOP-B")])
@@ -298,7 +308,12 @@ def test_pnl_duplicate_key_keeps_currency_dimension(tmp_path: Path) -> None:
     ]
     make_xlsx(
         pnl_path,
-        {"Sheet1": [PNL_HEADERS, *[[row[header] for header in PNL_HEADERS] for row in rows]]},
+        {
+            "Sheet1": [
+                PNL_HEADERS,
+                *[[row[header] for header in PNL_HEADERS] for row in rows],
+            ]
+        },
     )
     ctx = ToolContext(
         source_root=ctx.source_root,
@@ -371,7 +386,12 @@ def test_pnl_overview_resets_cumulative_dtd_each_calendar_year(tmp_path: Path) -
     ]
     make_xlsx(
         pnl_path,
-        {"Sheet1": [PNL_HEADERS, *[[row[header] for header in PNL_HEADERS] for row in rows]]},
+        {
+            "Sheet1": [
+                PNL_HEADERS,
+                *[[row[header] for header in PNL_HEADERS] for row in rows],
+            ]
+        },
     )
     ctx = ToolContext(
         source_root=ctx.source_root,
@@ -410,7 +430,12 @@ def test_pnl_overview_never_aggregates_incompatible_currency_or_ptf_series(
     ]
     make_xlsx(
         pnl_path,
-        {"Sheet1": [PNL_HEADERS, *[[row[header] for header in PNL_HEADERS] for row in rows]]},
+        {
+            "Sheet1": [
+                PNL_HEADERS,
+                *[[row[header] for header in PNL_HEADERS] for row in rows],
+            ]
+        },
     )
     ctx = ToolContext(
         source_root=ctx.source_root,
@@ -451,7 +476,9 @@ def test_pnl_overview_is_explicitly_unavailable_for_malformed_schema(
     assert "recognized" in overview.limitations[0]
 
 
-def test_wide_income_attribution_export_runs_inside_the_pnl_skill(tmp_path: Path) -> None:
+def test_wide_income_attribution_export_runs_inside_the_pnl_skill(
+    tmp_path: Path,
+) -> None:
     source = tmp_path / "source"
     workspace = tmp_path / "workspace"
     income_dir = source / "income_attribution"
@@ -551,11 +578,9 @@ def test_wide_income_attribution_export_runs_inside_the_pnl_skill(tmp_path: Path
     profile = results["income_attribution_driver_profile"]
     assert profile.tables[0]["top3_share"] == pytest.approx(1.0)
     assert profile.overviews[0].source_locators == [
-        "source://income_attribution/"
-        "FSI_myIA_2025-01-01_to_2026-06-30_post_processed.csv#rows=2:3"
+        "source://income_attribution/FSI_myIA_2025-01-01_to_2026-06-30_post_processed.csv#rows=2:3"
     ]
     assert not results["income_attribution_reconciliation"].flag_candidates
     status_flags = results["income_attribution_status"].flag_candidates
     assert status_flags[0]["kind"] == "income_attribution_processing_state"
     assert status_flags[0]["status"] == "IA process is running"
-

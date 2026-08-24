@@ -12,7 +12,12 @@ from data_agent.tools.source_tools import (
     iter_source_files,
 )
 from data_agent.review.domain.domains import SpecialistDomain
-from data_agent.review.domain.source import DateRange, Source, SourceManifest, SourceType
+from data_agent.review.domain.source import (
+    DateRange,
+    Source,
+    SourceManifest,
+    SourceType,
+)
 
 
 def guess_domains_from_path(relative_path: str) -> list[SpecialistDomain]:

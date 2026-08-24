@@ -114,7 +114,9 @@ def native_metadata_payload_matches(
                 "metadata data-pptx-native conflicts with data-pptx-kind"
             )
     declared_raw = native_kind if native_kind is not None else compatible_kind
-    declared_kind = _normalized_token(declared_raw) if declared_raw is not None else None
+    declared_kind = (
+        _normalized_token(declared_raw) if declared_raw is not None else None
+    )
     if declared_kind is not None and declared_kind != parent_kind:
         raise NativeMarkerAttributeError(
             f"metadata kind {declared_kind!r} conflicts with parent "

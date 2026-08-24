@@ -34,4 +34,3 @@ class ParentState(TypedDict, total=False):
 
     status: str  # "running" | "completed" | "failed"
     failure_reason: str | None
-

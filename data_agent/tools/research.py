@@ -91,9 +91,7 @@ def build_research_tools(
             lambda: tabular_tools.inspect_table(ctx.source_root, path, sheet, preview_rows),
         )
 
-    def read_rows(
-        path: str, start: int, end: int, sheet: str | None = None
-    ) -> str:
+    def read_rows(path: str, start: int, end: int, sheet: str | None = None) -> str:
         """Read bounded 1-based inclusive rows from an assigned table."""
         path = checked(path)
         return call(
@@ -156,7 +154,11 @@ def build_research_tools(
             for source in ctx.manifest.sources
             if Path(source.path).suffix.lower() in tabular_tools.SUPPORTED_SUFFIXES
         }
-        forbidden = [name for name, path in all_names.items() if path not in allowed and re.search(rf"\b{re.escape(name)}\b", sql, re.I)]
+        forbidden = [
+            name
+            for name, path in all_names.items()
+            if path not in allowed and re.search(rf"\b{re.escape(name)}\b", sql, re.I)
+        ]
         if forbidden:
             raise ToolException(f"query references tables outside specialist scope: {forbidden}")
         return call(
@@ -167,6 +169,7 @@ def build_research_tools(
 
     def search_text(pattern: str, case_insensitive: bool = False, max_results: int = 50) -> str:
         """Search text only within assigned source files."""
+
         def operation() -> dict[str, Any]:
             matches: list[Any] = []
             for path in sorted(allowed):
@@ -180,7 +183,10 @@ def build_research_tools(
                 matches.extend(result.get("matches", []))
                 if len(matches) >= max_results:
                     break
-            return {"matches": matches[:max_results], "truncated": len(matches) > max_results}
+            return {
+                "matches": matches[:max_results],
+                "truncated": len(matches) > max_results,
+            }
 
         return call(
             "search_text",
@@ -225,7 +231,9 @@ def build_research_tools(
             lambda: statistics_tools.outlier_detection(values, threshold),
         )
 
-    def change_point_candidates(values: list[float], window: int = 5, threshold: float = 2.0) -> str:
+    def change_point_candidates(
+        values: list[float], window: int = 5, threshold: float = 2.0
+    ) -> str:
         """Return deterministic rolling change-point candidates."""
         return call(
             "change_point_candidates",
@@ -258,6 +266,5 @@ def build_research_tools(
         pearson_correlation,
     ]
     return [
-        StructuredTool.from_function(function, handle_tool_errors=True)
-        for function in functions
+        StructuredTool.from_function(function, handle_tool_errors=True) for function in functions
     ]

@@ -23,9 +23,7 @@ def _data_integrity(sgmr: list[SgmrRow], excesses: list[ExcessRow]) -> AnalysisR
     ):
         for duplicate in sorted(duplicate_set):
             item = next(row for row in sgmr if getattr(row, attr) == duplicate)
-            flags.append(
-                _flag(kind, item.path, item.sheet, item.row, duplicated_value=duplicate)
-            )
+            flags.append(_flag(kind, item.path, item.sheet, item.row, duplicated_value=duplicate))
     for rows in duplicate_keys:
         item = rows[0]
         flags.append(
@@ -150,9 +148,7 @@ def _data_integrity(sgmr: list[SgmrRow], excesses: list[ExcessRow]) -> AnalysisR
     portfolio_mappings: dict[str, set[tuple[str, str, str, str]]] = defaultdict(set)
     portfolio_examples: dict[str, SgmrRow] = {}
     for item in sgmr:
-        portfolio_mappings[item.portfolio].add(
-            (item.bu, item.sbu, item.pc, item.risk_currency)
-        )
+        portfolio_mappings[item.portfolio].add((item.bu, item.sbu, item.pc, item.risk_currency))
         portfolio_examples.setdefault(item.portfolio, item)
     for portfolio, mappings in sorted(portfolio_mappings.items()):
         if len(mappings) <= 1:
@@ -185,9 +181,7 @@ def _data_integrity(sgmr: list[SgmrRow], excesses: list[ExcessRow]) -> AnalysisR
             ),
             "creation_lag_days_mean": (
                 round(
-                    statistics.fmean(
-                        (item.created.date() - item.day).days for item in sgmr
-                    ),
+                    statistics.fmean((item.created.date() - item.day).days for item in sgmr),
                     4,
                 )
                 if sgmr

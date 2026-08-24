@@ -30,15 +30,11 @@ def get_deepseek_chat_model(
 
     model_kwargs: dict[str, Any] = {
         "model": model or settings.deepseek_model,
-        "temperature": (
-            settings.deepseek_temperature if temperature is None else temperature
-        ),
+        "temperature": (settings.deepseek_temperature if temperature is None else temperature),
         **kwargs,
     }
     configured_api_key = api_key or (
-        settings.deepseek_api_key.get_secret_value()
-        if settings.deepseek_api_key
-        else None
+        settings.deepseek_api_key.get_secret_value() if settings.deepseek_api_key else None
     )
     if configured_api_key:
         model_kwargs["api_key"] = configured_api_key

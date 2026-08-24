@@ -109,7 +109,9 @@ def load_preset_shape_definitions(
     try:
         root = ET.fromstring(raw)
     except ET.ParseError as exc:
-        raise PresetShapeDataError(f"Invalid preset geometry XML {source}: {exc}") from exc
+        raise PresetShapeDataError(
+            f"Invalid preset geometry XML {source}: {exc}"
+        ) from exc
     if _local_name(root.tag) != _EXPECTED_ROOT_TAG:
         raise PresetShapeDataError(
             f"Unexpected preset geometry root {_local_name(root.tag)!r} in {source}"
@@ -138,7 +140,9 @@ def _read_verified_bytes(path: Path, expected_sha256: str | None) -> bytes:
     try:
         raw = path.read_bytes()
     except OSError as exc:
-        raise PresetShapeDataError(f"Cannot read preset geometry data {path}: {exc}") from exc
+        raise PresetShapeDataError(
+            f"Cannot read preset geometry data {path}: {exc}"
+        ) from exc
     if expected_sha256:
         actual = hashlib.sha256(_normalized_lf_bytes(raw)).hexdigest()
         if actual != expected_sha256:
@@ -299,9 +303,7 @@ def _parse_path_command(element: ET.Element) -> PathCommandDefinition:
             for attribute in ("wR", "hR", "stAng", "swAng")
         )
         return PathCommandDefinition(name=name, parameters=parameters)
-    points = tuple(
-        child for child in element if _local_name(child.tag) == "pt"
-    )
+    points = tuple(child for child in element if _local_name(child.tag) == "pt")
     if len(points) != expected_points:
         raise PresetShapeDataError(
             f"Path command {name!r} expects {expected_points} points, "
@@ -319,9 +321,7 @@ def _parse_path_command(element: ET.Element) -> PathCommandDefinition:
 
 
 def _parse_position(parent: ET.Element) -> PointExpression:
-    positions = [
-        child for child in parent if _local_name(child.tag) == "pos"
-    ]
+    positions = [child for child in parent if _local_name(child.tag) == "pos"]
     if len(positions) != 1:
         raise PresetShapeDataError(
             f"{_local_name(parent.tag)!r} must contain exactly one position"
@@ -335,9 +335,7 @@ def _parse_position(parent: ET.Element) -> PointExpression:
 def _find_child(parent: ET.Element, local_name: str) -> ET.Element | None:
     matches = [child for child in parent if _local_name(child.tag) == local_name]
     if len(matches) > 1:
-        raise PresetShapeDataError(
-            f"Preset contains duplicate {local_name!r} elements"
-        )
+        raise PresetShapeDataError(f"Preset contains duplicate {local_name!r} elements")
     return matches[0] if matches else None
 
 

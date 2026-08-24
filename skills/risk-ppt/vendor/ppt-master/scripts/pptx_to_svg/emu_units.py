@@ -47,6 +47,7 @@ for prefix, uri in NS.items():
 # Length conversions
 # ---------------------------------------------------------------------------
 
+
 def emu_to_px(emu: float | int | None, default: float = 0.0) -> float:
     """Convert EMU to SVG px (96 dpi). None / unparsable -> default."""
     if emu is None:
@@ -110,6 +111,7 @@ def ooxml_bool(value: str | None, default: bool = False) -> bool:
 # xfrm / transform parsing
 # ---------------------------------------------------------------------------
 
+
 class Xfrm:
     """Resolved <a:xfrm> in pixel space.
 
@@ -124,8 +126,19 @@ class Xfrm:
             None on leaf shapes.
     """
 
-    __slots__ = ("x", "y", "w", "h", "rot", "flip_h", "flip_v",
-                 "ch_x", "ch_y", "ch_w", "ch_h")
+    __slots__ = (
+        "x",
+        "y",
+        "w",
+        "h",
+        "rot",
+        "flip_h",
+        "flip_v",
+        "ch_x",
+        "ch_y",
+        "ch_w",
+        "ch_h",
+    )
 
     def __init__(
         self,
@@ -154,8 +167,12 @@ class Xfrm:
         self.ch_h = ch_h
 
     def __repr__(self) -> str:
-        parts = [f"x={self.x:.1f}", f"y={self.y:.1f}",
-                 f"w={self.w:.1f}", f"h={self.h:.1f}"]
+        parts = [
+            f"x={self.x:.1f}",
+            f"y={self.y:.1f}",
+            f"w={self.w:.1f}",
+            f"h={self.h:.1f}",
+        ]
         if self.rot:
             parts.append(f"rot={self.rot:.2f}")
         if self.flip_h:
@@ -175,9 +192,7 @@ class Xfrm:
         cy = self.y + self.h / 2.0
         parts: list[str] = []
         if self.rot:
-            parts.append(
-                f"rotate({_fmt(self.rot, 8)} {_fmt(cx, 8)} {_fmt(cy, 8)})"
-            )
+            parts.append(f"rotate({_fmt(self.rot, 8)} {_fmt(cx, 8)} {_fmt(cy, 8)})")
         if self.flip_h or self.flip_v:
             sx = -1 if self.flip_h else 1
             sy = -1 if self.flip_v else 1
@@ -212,14 +227,25 @@ def parse_xfrm(xfrm_elem: ET.Element | None) -> Xfrm:
     ch_w = emu_attr_to_px(ch_ext, "cx") if ch_ext is not None else None
     ch_h = emu_attr_to_px(ch_ext, "cy") if ch_ext is not None else None
 
-    return Xfrm(x=x, y=y, w=w, h=h, rot=rot,
-                flip_h=flip_h, flip_v=flip_v,
-                ch_x=ch_x, ch_y=ch_y, ch_w=ch_w, ch_h=ch_h)
+    return Xfrm(
+        x=x,
+        y=y,
+        w=w,
+        h=h,
+        rot=rot,
+        flip_h=flip_h,
+        flip_v=flip_v,
+        ch_x=ch_x,
+        ch_y=ch_y,
+        ch_w=ch_w,
+        ch_h=ch_h,
+    )
 
 
 # ---------------------------------------------------------------------------
 # Number formatting for SVG output
 # ---------------------------------------------------------------------------
+
 
 def _fmt(val: float, ndigits: int = 2) -> str:
     """Format a number for SVG attributes: trim trailing zeros, keep ints clean."""

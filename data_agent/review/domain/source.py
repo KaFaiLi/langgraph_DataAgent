@@ -94,5 +94,3 @@ class SourceManifest(BaseModel):
     @property
     def source_ids(self) -> list[str]:
         return [source.source_id for source in self.sources]
-
-

@@ -15,8 +15,12 @@ from workflow_transcript import install_auto_transcript
 
 _SKILL_DIR = Path(__file__).resolve().parent.parent
 _SECONDARY_METADATA_FIELDS = ("copyright", "license", "official_repository")
-_SECONDARY_METADATA_DIGEST = "efb48651eb07614e564d54ab28623b8561ad57c8300c123a6893cd1fada56337"
-_SECONDARY_LICENSE_DIGEST = "80cefc234c1ec12a8cece4344f16300c634fa03df7891686fcf979e3828f0921"
+_SECONDARY_METADATA_DIGEST = (
+    "efb48651eb07614e564d54ab28623b8561ad57c8300c123a6893cd1fada56337"
+)
+_SECONDARY_LICENSE_DIGEST = (
+    "80cefc234c1ec12a8cece4344f16300c634fa03df7891686fcf979e3828f0921"
+)
 
 
 def _secondary_normalized_text(path: Path) -> str:
@@ -40,14 +44,15 @@ def _secondary_identity_is_valid() -> bool:
     identity_lines = []
     for field in _SECONDARY_METADATA_FIELDS:
         matches = [
-            line for line in metadata.splitlines()
-            if line.startswith(f"  {field}:")
+            line for line in metadata.splitlines() if line.startswith(f"  {field}:")
         ]
         if len(matches) != 1:
             return False
         identity_lines.append(matches[0])
 
-    metadata_digest = hashlib.sha256("\n".join(identity_lines).encode("utf-8")).hexdigest()
+    metadata_digest = hashlib.sha256(
+        "\n".join(identity_lines).encode("utf-8")
+    ).hexdigest()
     license_text = _secondary_normalized_text(_SKILL_DIR / "LICENSE")
     license_digest = hashlib.sha256(license_text.encode("utf-8")).hexdigest()
     return (

@@ -21,8 +21,18 @@ from data_agent.review.application.run_bundle import (
 from data_agent.review.domain.desk_context import DeskContext
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.reports import FinalReport, SpecialistReport
-from data_agent.review.domain.review import ReviewRun, ReviewTask, RunStatus, SourceCoverage
-from data_agent.review.domain.source import DateRange, Source, SourceManifest, SourceType
+from data_agent.review.domain.review import (
+    ReviewRun,
+    ReviewTask,
+    RunStatus,
+    SourceCoverage,
+)
+from data_agent.review.domain.source import (
+    DateRange,
+    Source,
+    SourceManifest,
+    SourceType,
+)
 
 
 def _write_completed_run(run_dir: Path) -> None:
@@ -66,7 +76,9 @@ def _write_completed_run(run_dir: Path) -> None:
         coverage=[SourceCoverage(source_id="SRC-1", status="reviewed")],
         tasks=[
             ReviewTask(
-                task_id="risk", domain=SpecialistDomain.RISK_METRICS, source_ids=["SRC-1"]
+                task_id="risk",
+                domain=SpecialistDomain.RISK_METRICS,
+                source_ids=["SRC-1"],
             )
         ],
     )
@@ -99,7 +111,9 @@ def _write_completed_run(run_dir: Path) -> None:
     )
 
 
-def test_completed_bundle_is_relocatable_and_ignores_stale_specialist_files(tmp_path: Path) -> None:
+def test_completed_bundle_is_relocatable_and_ignores_stale_specialist_files(
+    tmp_path: Path,
+) -> None:
     run_dir = tmp_path / "renamed-archive"
     _write_completed_run(run_dir)
     (run_dir / "specialists" / "pnl.json").write_text("not json", encoding="utf-8")
@@ -124,7 +138,9 @@ def test_completed_bundle_rejects_unsettled_coverage_before_reading_presentation
         load_completed_run(run_dir)
 
 
-def test_completed_bundle_rejects_missing_corrupt_and_mismatched_artifacts(tmp_path: Path) -> None:
+def test_completed_bundle_rejects_missing_corrupt_and_mismatched_artifacts(
+    tmp_path: Path,
+) -> None:
     run_dir = tmp_path / "run"
     _write_completed_run(run_dir)
     (run_dir / "final_findings.md").unlink()
@@ -209,7 +225,9 @@ def test_run_context_round_trip_is_atomic_and_versioned(tmp_path: Path) -> None:
         load_run_context(run_dir)
 
 
-def test_interrupted_resume_requires_context_and_matching_checkpoint_thread(tmp_path: Path) -> None:
+def test_interrupted_resume_requires_context_and_matching_checkpoint_thread(
+    tmp_path: Path,
+) -> None:
     run_dir = tmp_path / "run"
     run_dir.mkdir()
     with pytest.raises(RunBundleError, match="run_context_missing"):
@@ -290,4 +308,3 @@ def test_completed_resume_uses_validated_bundle_without_a_checkpoint_or_model_ca
 
     assert result.status is ReviewStatus.COMPLETED
     assert result.run_id == "ARCHIVED-RUN"
-

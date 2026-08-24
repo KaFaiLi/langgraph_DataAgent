@@ -26,13 +26,15 @@ from pptx_transitions import (
 
 DRAWINGML_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
-MARKUP_COMPATIBILITY_NS = (
-    "http://schemas.openxmlformats.org/markup-compatibility/2006"
-)
+MARKUP_COMPATIBILITY_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
 
 MEDIA_REL_TYPE = "http://schemas.microsoft.com/office/2007/relationships/media"
-AUDIO_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio"
-IMAGE_REL_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+AUDIO_REL_TYPE = (
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio"
+)
+IMAGE_REL_TYPE = (
+    "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"
+)
 
 AUDIO_CONTENT_TYPES = {
     ".m4a": "audio/mp4",
@@ -91,7 +93,8 @@ def find_narration_files(audio_dir: Path, svg_files: list[Path]) -> dict[str, Pa
         return {}
 
     audio_files = [
-        path for path in sorted(audio_dir.iterdir())
+        path
+        for path in sorted(audio_dir.iterdir())
         if path.is_file() and path.suffix.lower() in NARRATION_EXTENSIONS
     ]
     exact: dict[str, list[Path]] = {}
@@ -139,9 +142,13 @@ def probe_audio_duration(audio_path: Path) -> float | None:
     try:
         result = subprocess.run(
             [
-                "ffprobe", "-v", "error",
-                "-show_entries", "format=duration",
-                "-of", "json",
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "json",
                 str(audio_path),
             ],
             check=True,
@@ -286,7 +293,9 @@ def _numeric_ids(
         try:
             numeric_id = int(raw_id)
         except (TypeError, ValueError) as exc:
-            raise ValueError(f"narration source has invalid {label} id: {raw_id!r}") from exc
+            raise ValueError(
+                f"narration source has invalid {label} id: {raw_id!r}"
+            ) from exc
         if numeric_id < minimum:
             raise ValueError(
                 f"narration source has {label} id below {minimum}: {numeric_id}"
@@ -409,9 +418,7 @@ def _new_timing(audio_timing: ET.Element, root_id: int) -> ET.Element:
 
 def _root_extension_index(slide: ET.Element) -> int | None:
     extension_lists = [
-        index
-        for index, child in enumerate(slide)
-        if child.tag == _qn(PML_NS, "extLst")
+        index for index, child in enumerate(slide) if child.tag == _qn(PML_NS, "extLst")
     ]
     if len(extension_lists) > 1:
         raise ValueError("narration source has multiple root p:extLst elements")
@@ -447,10 +454,7 @@ def _animation_timing_branches(
     slide: ET.Element,
 ) -> tuple[ET.Element | None, list[ET.Element]]:
     """Return the root timing anchor and every active/fallback timing branch."""
-    direct = [
-        child for child in slide
-        if child.tag == _qn(PML_NS, "timing")
-    ]
+    direct = [child for child in slide if child.tag == _qn(PML_NS, "timing")]
     alternates: list[tuple[ET.Element, list[ET.Element]]] = []
     for child in slide:
         if child.tag != _qn(MARKUP_COMPATIBILITY_NS, "AlternateContent"):
@@ -481,9 +485,7 @@ def _animation_timing_branches(
         return anchor, timings
     nested = list(slide.iter(_qn(PML_NS, "timing")))
     if nested:
-        raise ValueError(
-            "narration source contains unsupported non-root p:timing"
-        )
+        raise ValueError("narration source contains unsupported non-root p:timing")
     return None, []
 
 
@@ -502,8 +504,7 @@ def inject_narration(
         raise ValueError("narration shape_id must be a positive integer")
     if shape_id > MAX_OOXML_UNSIGNED_INT:
         raise ValueError(
-            "narration shape_id exceeds the OOXML unsigned-integer limit: "
-            f"{shape_id}"
+            f"narration shape_id exceeds the OOXML unsigned-integer limit: {shape_id}"
         )
     start_delay_seconds = validate_seconds(
         start_delay,
@@ -540,9 +541,7 @@ def inject_narration(
         for timing in timing_branches
     ]
     timing_ids = [
-        timing_id
-        for timing_set in timing_id_sets
-        for timing_id in timing_set
+        timing_id for timing_set in timing_id_sets for timing_id in timing_set
     ]
     next_timing_id = max(timing_ids, default=0) + 1
     if next_timing_id > MAX_OOXML_UNSIGNED_INT:
@@ -600,15 +599,12 @@ def read_narration_start_delay_xml(slide_xml: str) -> int:
     audio_shape_properties: list[ET.Element] = []
     for picture in root.iter(_qn(PML_NS, "pic")):
         if not any(
-            element.tag == _qn(DRAWINGML_NS, "audioFile")
-            for element in picture.iter()
+            element.tag == _qn(DRAWINGML_NS, "audioFile") for element in picture.iter()
         ):
             continue
         properties = list(picture.iter(_qn(PML_NS, "cNvPr")))
         if len(properties) != 1:
-            raise ValueError(
-                "narration audio picture must contain exactly one p:cNvPr"
-            )
+            raise ValueError("narration audio picture must contain exactly one p:cNvPr")
         audio_shape_properties.extend(properties)
     if not audio_shape_properties:
         raise ValueError("narration source has no embedded audio picture")
@@ -625,9 +621,7 @@ def read_narration_start_delay_xml(slide_xml: str) -> int:
         media_node = audio.find(_qn(PML_NS, "cMediaNode"))
         if media_node is None:
             continue
-        target = media_node.find(
-            f"{_qn(PML_NS, 'tgtEl')}/{_qn(PML_NS, 'spTgt')}"
-        )
+        target = media_node.find(f"{_qn(PML_NS, 'tgtEl')}/{_qn(PML_NS, 'spTgt')}")
         if target is None or target.get("spid") != str(narration_shape_id):
             continue
         time_node = _direct_child(
@@ -660,7 +654,9 @@ def read_narration_start_delay_xml(slide_xml: str) -> int:
         delays.append(delay)
 
     if not delays:
-        raise ValueError("narration source has no autoplay timing for its audio picture")
+        raise ValueError(
+            "narration source has no autoplay timing for its audio picture"
+        )
     if len(set(delays)) != 1:
         raise ValueError(
             "narration source timing branches disagree on autoplay delay: "

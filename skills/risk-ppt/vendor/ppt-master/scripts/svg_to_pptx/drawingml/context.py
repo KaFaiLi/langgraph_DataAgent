@@ -14,14 +14,16 @@ if TYPE_CHECKING:
 AffineMatrix = tuple[float, float, float, float, float, float]
 IDENTITY_MATRIX: AffineMatrix = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
 
-TEXT_FLOW_PRESERVE = 'preserve'
-TEXT_FLOW_REFLOW = 'reflow'
-TEXT_FLOW_SPLIT = 'split'
-TEXT_FLOW_MODES = frozenset({
-    TEXT_FLOW_PRESERVE,
-    TEXT_FLOW_REFLOW,
-    TEXT_FLOW_SPLIT,
-})
+TEXT_FLOW_PRESERVE = "preserve"
+TEXT_FLOW_REFLOW = "reflow"
+TEXT_FLOW_SPLIT = "split"
+TEXT_FLOW_MODES = frozenset(
+    {
+        TEXT_FLOW_PRESERVE,
+        TEXT_FLOW_REFLOW,
+        TEXT_FLOW_SPLIT,
+    }
+)
 
 
 def resolve_text_flow(
@@ -31,15 +33,15 @@ def resolve_text_flow(
     """Resolve the public text-layout options to one internal mode."""
     if text_flow is not None and merge_paragraphs is not None:
         raise ValueError(
-            'text_flow and legacy merge_paragraphs cannot be used together'
+            "text_flow and legacy merge_paragraphs cannot be used together"
         )
     if merge_paragraphs is not None:
         return TEXT_FLOW_REFLOW if merge_paragraphs else TEXT_FLOW_SPLIT
     resolved = TEXT_FLOW_PRESERVE if text_flow is None else text_flow
     if resolved not in TEXT_FLOW_MODES:
-        choices = ', '.join(sorted(TEXT_FLOW_MODES))
+        choices = ", ".join(sorted(TEXT_FLOW_MODES))
         raise ValueError(
-            f'unsupported text_flow {resolved!r}; expected one of: {choices}'
+            f"unsupported text_flow {resolved!r}; expected one of: {choices}"
         )
     return resolved
 
@@ -114,7 +116,7 @@ class ConvertContext:
     # downsampling oversized raster assets to their rendered size.
     image_optimize: bool = True
     image_max_dimension: int | None = 2560
-    image_sizing: str = 'cap'
+    image_sizing: str = "cap"
     image_scale: float = 2.0
     image_quality: int = 85
     # Optional per-element conversion diagnostics. Shared by child contexts so
@@ -149,16 +151,16 @@ class ConvertContext:
         """Claim a pre-reserved imported shape id, or allocate a fresh one."""
         if source_id is None:
             return self.next_id()
-        scope = source_scope or 'slide'
+        scope = source_scope or "slide"
         key = (scope, source_id)
         shape_id = self.source_shape_id_map.get(key)
         if shape_id is None:
             raise ValueError(
-                f'Unreserved data-pptx-shape-id {source_id!r} in scope {scope!r}'
+                f"Unreserved data-pptx-shape-id {source_id!r} in scope {scope!r}"
             )
         if shape_id in self.claimed_shape_ids:
             raise ValueError(
-                f'Duplicate data-pptx-shape-id {source_id!r} in scope {scope!r}'
+                f"Duplicate data-pptx-shape-id {source_id!r} in scope {scope!r}"
             )
         self.claimed_shape_ids.add(shape_id)
         return shape_id
@@ -169,18 +171,18 @@ class ConvertContext:
         source_scope: str | None = None,
     ) -> int:
         """Resolve and record a connector target in the imported id space."""
-        scope = source_scope or 'slide'
+        scope = source_scope or "slide"
         shape_id = self.source_shape_id_map.get((scope, source_id))
         if shape_id is None:
             raise ValueError(
-                f'Unknown connector shape reference {source_id!r} in scope {scope!r}'
+                f"Unknown connector shape reference {source_id!r} in scope {scope!r}"
             )
         self.referenced_shape_ids.add(shape_id)
         return shape_id
 
     def next_rel_id(self) -> str:
         """Allocate the next relationship ID (rIdN)."""
-        rid = f'rId{self.rel_id_counter}'
+        rid = f"rId{self.rel_id_counter}"
         self.rel_id_counter += 1
         return rid
 
@@ -216,9 +218,12 @@ class ConvertContext:
         # lands at raw SVG coordinates (typically near (0,0)).
         if transform_matrix is not None and not self.use_transform_matrix:
             base_matrix: AffineMatrix = (
-                self.scale_x, 0.0,
-                0.0, self.scale_y,
-                self.translate_x, self.translate_y,
+                self.scale_x,
+                0.0,
+                0.0,
+                self.scale_y,
+                self.translate_x,
+                self.translate_y,
             )
         else:
             base_matrix = self.transform_matrix
@@ -255,7 +260,8 @@ class ConvertContext:
             viewport_width=self.viewport_width,
             viewport_height=self.viewport_height,
             transform_matrix=combined_matrix,
-            use_transform_matrix=self.use_transform_matrix or transform_matrix is not None,
+            use_transform_matrix=self.use_transform_matrix
+            or transform_matrix is not None,
             filter_id=filter_id or self.filter_id,
             media_files=self.media_files,
             rel_entries=self.rel_entries,

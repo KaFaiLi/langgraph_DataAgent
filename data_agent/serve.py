@@ -103,8 +103,7 @@ def spawn_http_server(
     if not wait_for_port(settings.mcp_host, settings.mcp_port):
         proc.terminate()
         raise RuntimeError(
-            f"MCP HTTP server failed to start on {settings.mcp_http_url}. "
-            f"See logs: {log_file}"
+            f"MCP HTTP server failed to start on {settings.mcp_http_url}. See logs: {log_file}"
         )
     logger.info("MCP HTTP server ready at %s (pid=%s)", settings.mcp_http_url, proc.pid)
     return proc
@@ -135,4 +134,3 @@ class http_server:  # noqa: N801 - context-manager style name
                 self.proc.wait(timeout=10)
             except subprocess.TimeoutExpired:  # pragma: no cover - defensive
                 self.proc.kill()
-

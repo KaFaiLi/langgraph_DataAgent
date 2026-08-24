@@ -181,9 +181,7 @@ def load_skill(skill_file: Path, *, skills_root: Path | None = None) -> SkillDef
     if not instructions:
         raise SkillLoadError(f"{skill_file}: specialist instructions are required")
 
-    source_domains = front_matter.metadata.source_domains or (
-        front_matter.metadata.domain,
-    )
+    source_domains = front_matter.metadata.source_domains or (front_matter.metadata.domain,)
     if front_matter.metadata.domain not in source_domains:
         raise SkillLoadError(
             f"{skill_file}: source_domains must include primary domain "
@@ -195,12 +193,9 @@ def load_skill(skill_file: Path, *, skills_root: Path | None = None) -> SkillDef
     skill_root = resolved_skill.parent
     if front_matter.name != skill_root.name:
         raise SkillLoadError(
-            f"{skill_file}: skill name {front_matter.name!r} must match folder "
-            f"{skill_root.name!r}"
+            f"{skill_file}: skill name {front_matter.name!r} must match folder {skill_root.name!r}"
         )
-    entrypoint = _ENTRYPOINT_PATTERN.fullmatch(
-        front_matter.metadata.analysis_entrypoint
-    )
+    entrypoint = _ENTRYPOINT_PATTERN.fullmatch(front_matter.metadata.analysis_entrypoint)
     if entrypoint is None:
         raise SkillLoadError(
             f"{skill_file}: invalid analysis_entrypoint "
@@ -266,9 +261,7 @@ def load_lead_review_skill(
         )
     if not instructions:
         raise SkillLoadError(f"{resolved_skill}: lead-review instructions are required")
-    entrypoint = _ENTRYPOINT_PATTERN.fullmatch(
-        front_matter.metadata.analysis_entrypoint
-    )
+    entrypoint = _ENTRYPOINT_PATTERN.fullmatch(front_matter.metadata.analysis_entrypoint)
     if entrypoint is None:
         raise SkillLoadError(
             f"{resolved_skill}: invalid analysis_entrypoint "
@@ -433,7 +426,6 @@ def load_lead_analysis_runner(
     runner = getattr(module, selected.analysis_function, None)
     if not callable(runner):
         raise SkillLoadError(
-            f"{selected.analysis_file}: entrypoint {selected.analysis_function!r} "
-            "is not callable"
+            f"{selected.analysis_file}: entrypoint {selected.analysis_function!r} is not callable"
         )
     return cast(LeadAnalysisRunner, runner)

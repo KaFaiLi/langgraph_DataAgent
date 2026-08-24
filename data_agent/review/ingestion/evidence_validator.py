@@ -182,7 +182,9 @@ class EvidenceValidator:
         return failure
 
     @staticmethod
-    def _classify_failure(exc: Exception) -> tuple[EvidenceFailureCode, EvidenceDisposition]:
+    def _classify_failure(
+        exc: Exception,
+    ) -> tuple[EvidenceFailureCode, EvidenceDisposition]:
         text = str(exc).lower()
         if "changed since manifest" in text:
             return EvidenceFailureCode.SOURCE_CHANGED, EvidenceDisposition.FATAL

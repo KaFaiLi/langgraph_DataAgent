@@ -111,7 +111,9 @@ def run_review(
 
 
 @review_app.command("resume")
-def resume_review(run_dir: Path = typer.Argument(..., exists=True, file_okay=False)) -> None:
+def resume_review(
+    run_dir: Path = typer.Argument(..., exists=True, file_okay=False),
+) -> None:
     """Resume an incomplete checkpoint or reopen a completed run."""
     result = ReviewService().resume(run_dir)
     _json(result)
@@ -120,7 +122,9 @@ def resume_review(run_dir: Path = typer.Argument(..., exists=True, file_okay=Fal
 
 
 @review_app.command("status")
-def review_status(run_dir: Path = typer.Argument(..., exists=False, file_okay=False)) -> None:
+def review_status(
+    run_dir: Path = typer.Argument(..., exists=False, file_okay=False),
+) -> None:
     """Read persisted status without running the graph."""
     _json(ReviewService().status(run_dir))
 

@@ -109,7 +109,9 @@ def merge_styles(parent_style: str | None, child_style: str | None) -> str:
     return style_to_string(p)
 
 
-def get_attr(elem: ET.Element | None, name: str, default: str | None = None) -> str | None:
+def get_attr(
+    elem: ET.Element | None, name: str, default: str | None = None
+) -> str | None:
     """Read an attribute from an element with a default fallback."""
     return elem.get(name) if elem is not None and name in elem.attrib else default
 
@@ -176,7 +178,10 @@ def copy_text_attrs(
             dst_el.set(k, v)
     # xml:space preservation
     xml_space = src_el.get("{http://www.w3.org/XML/1998/namespace}space")
-    if xml_space is not None and "{http://www.w3.org/XML/1998/namespace}space" not in exclude:
+    if (
+        xml_space is not None
+        and "{http://www.w3.org/XML/1998/namespace}space" not in exclude
+    ):
         dst_el.set("{http://www.w3.org/XML/1998/namespace}space", xml_space)
 
 
@@ -225,9 +230,7 @@ def nested_positional_tspan_errors(root: ET.Element) -> list[str]:
     errors: list[str] = []
     for text_el in root.iter(f"{{{SVG_NS}}}text"):
         text_label = (
-            f"<text id={text_el.get('id')!r}>"
-            if text_el.get("id")
-            else "<text>"
+            f"<text id={text_el.get('id')!r}>" if text_el.get("id") else "<text>"
         )
         for direct_child in list(text_el):
             if direct_child.tag != f"{{{SVG_NS}}}tspan":
@@ -303,7 +306,10 @@ def _classify_paragraph_block(
     is_svg_tag,
     is_new_line_tspan,
     preserve_line_breaks: bool,
-) -> tuple[float, list[float], list[str], list[list[ET.Element]], ET.Element | None] | None:
+) -> (
+    tuple[float, list[float], list[str], list[list[ET.Element]], ET.Element | None]
+    | None
+):
     """Detect a mergeable paragraph block.
 
     Returns ``(base_line_height_px, extra_space_before_px_per_line,
@@ -399,8 +405,7 @@ def _classify_paragraph_block(
     extras: list[float] = [0.0]  # first line never has space-before
     break_kinds = ["paragraph"]
     line_font_sizes = [
-        _effective_line_font_size_px(text_el, group)
-        for group in line_groups
+        _effective_line_font_size_px(text_el, group) for group in line_groups
     ]
     for idx, d in enumerate(dy_values[1:], start=1):
         if d + DY_TOLERANCE_PX < base:
@@ -419,9 +424,7 @@ def _classify_paragraph_block(
             and not _starts_with_list_marker(line_groups[idx])
             and abs(line_font_sizes[idx] - line_font_sizes[idx - 1]) <= 1e-6
         )
-        explicit_soft_break = line_groups[idx][0].get(
-            PARAGRAPH_SOFT_BREAK_ATTR
-        )
+        explicit_soft_break = line_groups[idx][0].get(PARAGRAPH_SOFT_BREAK_ATTR)
         if explicit_soft_break == "0":
             break_kind = "paragraph"
         elif explicit_soft_break == "1":
@@ -579,7 +582,7 @@ def flatten_text_with_tspans(
             if is_new_line_tspan(child):
                 needs_flatten = True
                 break
-        
+
         # If no tspan needs a line break, skip the entire text element
         if not needs_flatten:
             continue
@@ -612,17 +615,17 @@ def flatten_text_with_tspans(
         cur_x, cur_y = base_x, base_y
 
         new_texts = []
-        
+
         # Collect tspan elements belonging to the same line
         current_line_tspans = []
         current_line_lead_text = text_el.text or None
-        
+
         for idx, child in enumerate(list(text_el)):
             if not is_svg_tag(child, "tspan"):
                 continue
 
             content = collect_text_content(child)
-            
+
             # Check whether this tspan starts a new line
             if is_new_line_tspan(child):
                 # Save previously accumulated same-line tspans first
@@ -630,26 +633,28 @@ def flatten_text_with_tspans(
                     current_line_lead_text
                 ):
                     ne = _create_text_element_from_line(
-                        text_el, current_line_lead_text, current_line_tspans, cur_x, cur_y
+                        text_el,
+                        current_line_lead_text,
+                        current_line_tspans,
+                        cur_x,
+                        cur_y,
                     )
                     new_texts.append(ne)
                     current_line_tspans = []
                     current_line_lead_text = None
-                
+
                 # Update position
                 nx, ny = compute_line_positions(text_el, child, cur_x, cur_y)
                 cur_x, cur_y = nx, ny
-            
+
             # Keep raw XML whitespace and tails until the shared downstream
             # text normalizer sees the whole line. A whitespace-only run can
             # still be the visible boundary between two formatted runs.
             if content or child.tail:
                 current_line_tspans.append(child)
-        
+
         # Process the last line
-        if current_line_tspans or _has_non_xml_whitespace(
-            current_line_lead_text
-        ):
+        if current_line_tspans or _has_non_xml_whitespace(current_line_lead_text):
             ne = _create_text_element_from_line(
                 text_el, current_line_lead_text, current_line_tspans, cur_x, cur_y
             )
@@ -679,7 +684,8 @@ def flatten_text_with_tspans(
 def _has_tspan_children(elem: ET.Element) -> bool:
     """Return True when one inline subtree has nested runs or hyperlinks."""
     return any(
-        c.tag in {
+        c.tag
+        in {
             f"{{{SVG_NS}}}a",
             f"{{{SVG_NS}}}tspan",
         }
@@ -689,9 +695,8 @@ def _has_tspan_children(elem: ET.Element) -> bool:
 
 def _declares_baseline_shift(elem: ET.Element) -> bool:
     """Keep tspan ownership for the project-only baseline-shift contract."""
-    return (
-        elem.get("baseline-shift") is not None
-        or "baseline-shift" in parse_style(elem.get("style"))
+    return elem.get("baseline-shift") is not None or "baseline-shift" in parse_style(
+        elem.get("style")
     )
 
 
@@ -907,7 +912,9 @@ def main() -> None:
     if args.interactive or not args.input:
         inp, out_base = _interactive_get_paths()
         if not inp:
-            print("Cancelled. Usage: python3 scripts/svg_finalize/flatten_tspan.py <input_dir_or_svg> [output_dir]")
+            print(
+                "Cancelled. Usage: python3 scripts/svg_finalize/flatten_tspan.py <input_dir_or_svg> [output_dir]"
+            )
             sys.exit(0)
     else:
         inp = args.input
@@ -923,15 +930,25 @@ def main() -> None:
         out_base_abs = os.path.abspath(out_base)
         for root, dirs, files in os.walk(inp):
             # Avoid recursing into the output directory when it lives under input
-            dirs[:] = [d for d in dirs if os.path.abspath(os.path.join(root, d)) != out_base_abs]
+            dirs[:] = [
+                d
+                for d in dirs
+                if os.path.abspath(os.path.join(root, d)) != out_base_abs
+            ]
             rel_root = os.path.relpath(root, inp)
             for f in files:
                 if not f.lower().endswith(".svg"):
                     continue
                 src = os.path.join(root, f)
-                dst = os.path.join(out_base, rel_root, f) if rel_root != "." else os.path.join(out_base, f)
+                dst = (
+                    os.path.join(out_base, rel_root, f)
+                    if rel_root != "."
+                    else os.path.join(out_base, f)
+                )
                 total += 1
-                changed = process_svg_file(src, dst, merge_paragraphs=args.merge_paragraphs)
+                changed = process_svg_file(
+                    src, dst, merge_paragraphs=args.merge_paragraphs
+                )
                 if changed:
                     changed_count += 1
         print(f"Processed {total} SVG(s). With <tspan> flattened: {changed_count}.")
@@ -940,7 +957,9 @@ def main() -> None:
         src = inp
         if out_base is None:
             out_base = _compute_default_out_base(src)
-        changed = process_svg_file(src, out_base, merge_paragraphs=args.merge_paragraphs)
+        changed = process_svg_file(
+            src, out_base, merge_paragraphs=args.merge_paragraphs
+        )
         print(f"Written: {out_base} (flattened: {changed})")
 
 

@@ -40,4 +40,3 @@ def test_linter_passes_good_tool():
     report = lint_tool(good)
     assert report.ok
     assert report.score == 100
-

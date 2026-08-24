@@ -27,5 +27,3 @@ SPECIALIST_DOMAINS: tuple[SpecialistDomain, ...] = (
 )
 
 SOURCE_DOMAINS: tuple[SpecialistDomain, ...] = tuple(SpecialistDomain)
-
-
