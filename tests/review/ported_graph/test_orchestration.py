@@ -16,10 +16,7 @@ from data_agent.review.llm.models import ModelTier
 from data_agent.review.orchestration.graph import build_parent_graph
 from data_agent.review.orchestration.nodes.context import build_desk_context
 from data_agent.review.orchestration.nodes.coverage import coverage_gate
-from data_agent.review.orchestration.specialist_schemas import (
-    AnalystOutput,
-    VerifierOutput,
-)
+from data_agent.review.orchestration.specialist.schemas import AnalystOutput
 from tests.review.fixtures.builder import make_risky_tree, make_text
 
 DESK_TEMPLATE = DeskContext(
@@ -57,10 +54,6 @@ class FakeParentProvider:
             return RunnableLambda(lambda messages: self._classify(messages))
         if schema is AnalystOutput:
             return RunnableLambda(lambda _m: AnalystOutput(findings=[]))
-        if schema is VerifierOutput:
-            return RunnableLambda(
-                lambda _m: VerifierOutput(finding_id="NONE", decision=VerifierDecision.PASS)
-            )
         if schema is LeadDraft:
             return RunnableLambda(
                 lambda _m: LeadDraft(

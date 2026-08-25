@@ -6,7 +6,7 @@ The star of the show is :func:`build_agent`, an async factory that:
    tools via ``langchain-mcp-adapters``;
 2. discovers skills from the skills folder and exposes them as tools;
 3. builds the native SocGenAI chat model;
-4. assembles a ``create_react_agent`` graph with a skills-aware system prompt.
+4. assembles a LangChain ``create_agent`` graph with a skills-aware system prompt.
 
 It's async because loading MCP tools requires a live client session.
 """
@@ -18,11 +18,10 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any
 
+from langchain.agents import create_agent
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, SystemMessage
 from langchain_core.tools import BaseTool
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from langgraph.prebuilt import create_react_agent
 
 from data_agent.agent.prompts import build_system_prompt
 from data_agent.config import Settings, get_settings
@@ -35,47 +34,6 @@ logger = get_logger(__name__)
 
 # Logical name for our server inside MultiServerMCPClient.
 SERVER_KEY = "template"
-
-
-def _make_skill_planner_hook(skills: list[Skill]):
-    """Return a ``pre_model_hook`` that injects a skill-evaluation directive.
-
-    On the **first** LLM call of each run (no AI messages in history yet), the
-    hook prepends a ``SystemMessage`` that tells the model to check whether any
-    available skill matches the user request before doing anything else.  On
-    every subsequent call the messages are passed through unchanged.
-
-    Using ``llm_input_messages`` means the injection is ephemeral — it never
-    touches the persisted conversation state.
-    """
-    if not skills:
-        # No skills → pass messages straight through on every call.
-        def noop_hook(state: dict) -> dict:
-            return {"llm_input_messages": state.get("messages", [])}
-
-        return noop_hook
-
-    skill_lines = "\n".join(f"  • {s.name}: {s.description}" for s in skills)
-    directive = SystemMessage(
-        content=(
-            "SKILL PLANNING — do this once, before any other action:\n"
-            f"Available skills:\n{skill_lines}\n\n"
-            "Rule: if a skill description matches the user's request, your "
-            "FIRST tool call MUST be load_skill(name=...). "
-            "Follow the returned instructions before using any other tool. "
-            "If no skill applies, skip this step and proceed with the available tools."
-        )
-    )
-
-    def hook(state: dict) -> dict:
-        messages = state.get("messages", [])
-        # First call: no AI message in history yet → inject directive.
-        if not any(isinstance(m, AIMessage) for m in messages):
-            return {"llm_input_messages": [directive, *messages]}
-        # Subsequent calls: pass messages through unchanged.
-        return {"llm_input_messages": messages}
-
-    return hook
 
 
 def build_mcp_client(settings: Settings | None = None) -> MultiServerMCPClient:
@@ -146,8 +104,8 @@ class AgentBundle:
     def _run_config(self, extra: dict | None = None) -> dict:
         """Build a LangGraph run config that enforces ``max_iterations``.
 
-        Each ReAct round (hook + model + tool) costs ~3 graph steps, so we set
-        ``recursion_limit = max_iterations * 3 + 2`` to give exact headroom.
+        The limit remains conservative across model/tool graph steps and keeps
+        the public ``agent_max_iterations`` setting as the controlling budget.
         """
         cfg: dict = {"recursion_limit": self.max_iterations * 3 + 2}
         if extra:
@@ -198,14 +156,20 @@ async def build_agent(
     # 3. Model.
     model = model or get_chat_model(settings=settings)
 
-    # 4. Skill planner hook: injects an ephemeral skill-evaluation directive
-    #    into the LLM context on the first call of every run.
-    skill_hook = _make_skill_planner_hook(skills)
-
-    # 5. Assemble the graph.
+    # 4. Assemble the graph. The skills-first directive is part of the stable
+    #    system prompt because LangChain create_agent supersedes the deprecated
+    #    pre-model-hook ReAct helper.
     tools: list[BaseTool] = [*mcp_tools, *skill_tools, *(extra_tools or [])]
     system_prompt = build_system_prompt(overview)
-    agent = create_react_agent(model, tools, prompt=system_prompt, pre_model_hook=skill_hook)
+    if skills:
+        skill_lines = "\n".join(f"  - {skill.name}: {skill.description}" for skill in skills)
+        system_prompt += (
+            "\n\nSKILL PLANNING — before any other action:\n"
+            f"Available skills:\n{skill_lines}\n\n"
+            "If a skill description matches the request, the first tool call must be "
+            "load_skill(name=...). Follow its instructions before using another tool."
+        )
+    agent = create_agent(model, tools, system_prompt=system_prompt)
 
     return AgentBundle(
         agent=agent,

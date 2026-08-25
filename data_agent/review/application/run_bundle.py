@@ -6,6 +6,7 @@ import json
 import os
 import sqlite3
 from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from pathlib import Path
 from typing import Any
 
@@ -19,12 +20,14 @@ from data_agent.review.domain.finding import Finding
 from data_agent.review.domain.reports import FinalReport, SpecialistReport
 from data_agent.review.domain.review import ReviewRun, RunContext, RunStatus
 from data_agent.review.domain.source import DateRange, SourceManifest
+from data_agent.review.domain.verification import OmissionAuditResult
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 
 RUN_CONTEXT_FILE = "run_context.json"
 RUN_MANIFEST_FILE = "run_manifest.json"
 CATALOG_FILE = "catalog.json"
 CHECKPOINT_DB_FILE = "checkpoints.sqlite"
+LEAD_VERIFICATION_FILE = "lead_verification.json"
 
 
 class RunBundleError(RuntimeError):
@@ -49,6 +52,13 @@ class CompletedRunBundle:
     specialist_markdown: dict[SpecialistDomain, str]
     verification_artifacts: dict[SpecialistDomain, dict[str, Any]]
     approved_evidence_index: frozenset[str]
+    lead_verification_history: list[dict[str, Any]] = dataclass_field(default_factory=list)
+    research_trace_artifacts: dict[SpecialistDomain, list[Any]] = dataclass_field(
+        default_factory=dict
+    )
+    adversarial_trace_artifacts: dict[SpecialistDomain, dict[str, list[Any]]] = dataclass_field(
+        default_factory=dict
+    )
 
 
 def _run_directory(run_dir: str | Path) -> Path:
@@ -107,6 +117,25 @@ def _read_nonempty_text(path: Path, artifact: str) -> str:
     if not text.strip():
         raise RunBundleError("artifact_empty", f"required artifact is empty: {artifact}")
     return text
+
+
+def _validate_lead_verification_artifact(payload: object) -> list[dict[str, Any]]:
+    if not isinstance(payload, dict):
+        raise RunBundleError(
+            "lead_verification_invalid", "lead_verification.json must contain an object"
+        )
+    history = payload.get("history")
+    if not isinstance(history, list) or any(not isinstance(item, dict) for item in history):
+        raise RunBundleError(
+            "lead_verification_invalid", "lead verification history must be a list of objects"
+        )
+    lead_round = payload.get("lead_round")
+    if not isinstance(lead_round, int) or lead_round != len(history) or not 0 <= lead_round <= 2:
+        raise RunBundleError(
+            "lead_verification_invalid",
+            "lead_round must equal the bounded lead verification history length",
+        )
+    return [dict(item) for item in history]
 
 
 def _manifest_identity(
@@ -192,7 +221,53 @@ def _validate_verification_artifact(
             "artifact_invalid_schema",
             f"invalid {artifact_name}: verification history is malformed",
         )
+    omission = artifact.get("omission_audit")
+    if omission is not None:
+        try:
+            OmissionAuditResult.model_validate(omission)
+        except ValidationError as exc:
+            raise RunBundleError(
+                "artifact_invalid_schema",
+                f"invalid {artifact_name}: omission audit is malformed",
+            ) from exc
     return artifact
+
+
+def _load_trace_artifacts(
+    root: Path,
+    *,
+    stem: str,
+    verification: dict[str, Any],
+) -> tuple[list[Any], dict[str, list[Any]]]:
+    """Load separate raw analyst/challenger traces for modern specialist artifacts.
+
+    Older hand-authored archives contain only the original verifier lists.  They
+    remain readable; once the modern evidence/adversarial fields are present,
+    both trace files are required and shape-checked together.
+    """
+
+    modern = any(
+        key in verification for key in ("evidence_gates", "adversarial_cases", "adjudications")
+    )
+    if not modern:
+        return [], {}
+    research_path = _artifact_path(root, Path("specialists") / f"{stem}.research_trace.json")
+    adversarial_path = _artifact_path(root, Path("specialists") / f"{stem}.adversarial_trace.json")
+    raw_research = _read_json(research_path, research_path.name)
+    raw_adversarial = _read_json(adversarial_path, adversarial_path.name)
+    if not isinstance(raw_research, list):
+        raise RunBundleError(
+            "artifact_invalid_schema",
+            f"invalid {research_path.name}: expected a JSON list",
+        )
+    if not isinstance(raw_adversarial, dict) or any(
+        not isinstance(trace, list) for trace in raw_adversarial.values()
+    ):
+        raise RunBundleError(
+            "artifact_invalid_schema",
+            f"invalid {adversarial_path.name}: expected finding-id to list mapping",
+        )
+    return raw_research, {str(key): list(value) for key, value in raw_adversarial.items()}
 
 
 def load_completed_run(run_dir: str | Path) -> CompletedRunBundle:
@@ -239,10 +314,18 @@ def load_completed_run(run_dir: str | Path) -> CompletedRunBundle:
     final_markdown = _read_nonempty_text(
         _artifact_path(root, "final_findings.md"), "final_findings.md"
     )
+    lead_verification_history = _validate_lead_verification_artifact(
+        _read_json(
+            _artifact_path(root, LEAD_VERIFICATION_FILE),
+            LEAD_VERIFICATION_FILE,
+        )
+    )
 
     reports: dict[SpecialistDomain, SpecialistReport] = {}
     markdown: dict[SpecialistDomain, str] = {}
     verification: dict[SpecialistDomain, dict[str, Any]] = {}
+    research_traces: dict[SpecialistDomain, list[Any]] = {}
+    adversarial_traces: dict[SpecialistDomain, dict[str, list[Any]]] = {}
     task_sources: dict[SpecialistDomain, set[str]] = {}
     task_periods: dict[SpecialistDomain, DateRange | None] = {}
     for task in run.tasks:
@@ -287,6 +370,13 @@ def load_completed_run(run_dir: str | Path) -> CompletedRunBundle:
         verification[domain] = _validate_verification_artifact(
             raw_verification, artifact_name=verification_path.name, report=report
         )
+        research_trace, adversarial_trace = _load_trace_artifacts(
+            root,
+            stem=stem,
+            verification=verification[domain],
+        )
+        research_traces[domain] = research_trace
+        adversarial_traces[domain] = adversarial_trace
 
     approved_locators = _report_locators(reports)
     validation = EvidenceValidator.validate_approved_references(
@@ -309,6 +399,9 @@ def load_completed_run(run_dir: str | Path) -> CompletedRunBundle:
         specialist_markdown=markdown,
         verification_artifacts=verification,
         approved_evidence_index=approved_locators,
+        lead_verification_history=lead_verification_history,
+        research_trace_artifacts=research_traces,
+        adversarial_trace_artifacts=adversarial_traces,
     )
 
 

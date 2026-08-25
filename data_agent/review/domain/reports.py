@@ -12,7 +12,7 @@ from data_agent.review.domain.finding import Finding, VerificationStatus
 from data_agent.review.domain.overview import DataOverview
 from data_agent.review.domain.severity import Severity
 from data_agent.review.domain.source import DateRange
-from data_agent.review.domain.verification import VerificationRound
+from data_agent.review.domain.verification import OmissionAuditResult, VerificationRound
 
 
 class SpecialistReport(BaseModel):
@@ -35,6 +35,9 @@ class SpecialistReport(BaseModel):
 
     verification_history: dict[str, list[VerificationRound]] = Field(default_factory=dict)
     """Per-finding analyst/verifier rounds (rendered in the report template)."""
+
+    omission_audit: OmissionAuditResult | None = None
+    """Deterministic candidate coverage and bounded rescue outcome."""
 
     @model_validator(mode="after")
     def _unique_finding_ids(self) -> SpecialistReport:

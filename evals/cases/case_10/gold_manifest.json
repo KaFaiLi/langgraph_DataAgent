@@ -1,0 +1,1 @@
+{"schema_version":1,"case_id":"case_10","scenario":"commentary_quantitative_contradiction","expected":{"required_findings":[{"finding_id":"C10-QUANTITATIVE-BREACH","severity":"medium"}],"forbidden_findings":[{"finding_id":"C10-COMMENTARY-CLEAR"}],"contradictions":[{"id":"C10-COMMENTARY-CONFLICT","finding_id":"C10-COMMENTARY-CLEAR","challenge_type":"counter_evidence"}]}}

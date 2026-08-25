@@ -17,7 +17,12 @@ from data_agent.review.domain.reports import (
 )
 from data_agent.review.domain.severity import Severity
 from data_agent.review.domain.source import DateRange
-from data_agent.review.domain.verification import VerifierDecision
+from data_agent.review.domain.verification import (
+    LeadChallenge,
+    LeadChallengeType,
+    ObjectionMateriality,
+    VerifierDecision,
+)
 from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.review.synthesis.lead_review import (
     MAX_LEAD_UNRESOLVED_ITEMS,
@@ -539,3 +544,134 @@ def test_evidence_index_must_include_cluster_support(tmp_path) -> None:
     assert cluster_locator in result["lead_feedback"]
     assert "evidence_index" in result["lead_feedback"]
     assert calls == []
+
+
+def test_lead_semantic_revision_is_bounded_and_history_is_json_safe(tmp_path) -> None:
+    challenge = LeadChallenge(
+        challenge_type=LeadChallengeType.CONTRADICTION_OMISSION,
+        materiality=ObjectionMateriality.HIGH,
+        explanation="The broader population contains a contradictory row.",
+        affected_finding_ids=["KF-001"],
+    )
+    responses = iter(
+        [
+            LeadVerifierOutput(decision=VerifierDecision.REVISE, challenges=[challenge]),
+            LeadVerifierOutput(decision=VerifierDecision.PASS),
+        ]
+    )
+
+    def provider(_tier, schema=None):
+        assert schema is LeadVerifierOutput
+        return RunnableLambda(lambda _messages: next(responses))
+
+    state = _state(tmp_path, _report())
+    first = lead_verifier(state, {"configurable": {"llm_provider": provider}})
+    state.update(first)
+    assert first["lead_status"] == "running"
+    assert first["lead_verification_history"][0]["challenges"][0]["challenge_type"] == (
+        "contradiction_omission"
+    )
+
+    second = lead_verifier(state, {"configurable": {"llm_provider": provider}})
+    assert second["lead_status"] == "complete"
+    assert len(second["lead_verification_history"]) == 2
+    assert second["lead_verification_history"][1]["decision"] == "pass"
+
+
+def test_final_medium_objection_suppresses_target_and_rebuilds_index(tmp_path) -> None:
+    challenge = LeadChallenge(
+        challenge_type=LeadChallengeType.SEVERITY_INFLATION,
+        materiality=ObjectionMateriality.MEDIUM,
+        explanation="The conclusion is not supported at the stated severity.",
+        affected_finding_ids=["KF-001"],
+    )
+
+    def provider(_tier, schema=None):
+        assert schema is LeadVerifierOutput
+        return RunnableLambda(
+            lambda _messages: LeadVerifierOutput(
+                decision=VerifierDecision.PASS,
+                challenges=[challenge],
+            )
+        )
+
+    state = _state(tmp_path, _report())
+    state["lead_round"] = 1
+    result = lead_verifier(state, {"configurable": {"llm_provider": provider}})
+
+    assert result["lead_status"] == "complete"
+    report = FinalReport.model_validate(result["final_report"])
+    assert report.key_findings == []
+    assert report.evidence_index == []
+    assert "suppressed" in report.unresolved_questions[0]
+
+
+def test_second_revise_with_targeted_medium_objection_suppresses_once(tmp_path) -> None:
+    challenge = LeadChallenge(
+        challenge_type=LeadChallengeType.HIDDEN_UNCERTAINTY,
+        materiality=ObjectionMateriality.MEDIUM,
+        explanation="The final claim hides a material uncertainty after revision.",
+        affected_finding_ids=["KF-001"],
+    )
+
+    def provider(_tier, schema=None):
+        assert schema is LeadVerifierOutput
+        return RunnableLambda(
+            lambda _messages: LeadVerifierOutput(
+                decision=VerifierDecision.REVISE,
+                challenges=[challenge],
+            )
+        )
+
+    state = _state(tmp_path, _report())
+    state["lead_round"] = 1
+    result = lead_verifier(state, {"configurable": {"llm_provider": provider}})
+
+    assert result["lead_status"] == "complete"
+    assert result.get("status") != "failed"
+    assert FinalReport.model_validate(result["final_report"]).key_findings == []
+
+
+def test_final_high_report_wide_objection_fails_closed(tmp_path) -> None:
+    challenge = LeadChallenge(
+        challenge_type=LeadChallengeType.UNSUPPORTED_MISCONDUCT,
+        materiality=ObjectionMateriality.HIGH,
+        explanation="The report-wide misconduct language is unsupported.",
+    )
+
+    def provider(_tier, schema=None):
+        assert schema is LeadVerifierOutput
+        return RunnableLambda(
+            lambda _messages: LeadVerifierOutput(
+                decision=VerifierDecision.PASS,
+                challenges=[challenge],
+            )
+        )
+
+    state = _state(tmp_path, _report())
+    state["lead_round"] = 1
+    result = lead_verifier(state, {"configurable": {"llm_provider": provider}})
+
+    assert result["status"] == "failed"
+    assert "ambiguously targeted" in result["failure_reason"]
+
+
+def test_lead_reject_and_unresolved_do_not_complete_as_accepted(tmp_path) -> None:
+    for decision in (VerifierDecision.REJECT, VerifierDecision.UNRESOLVED):
+
+        def provider(_tier, schema=None, *, decision=decision):
+            assert schema is LeadVerifierOutput
+            return RunnableLambda(
+                lambda _messages: LeadVerifierOutput(
+                    decision=decision,
+                    feedback="semantic concern remains",
+                )
+            )
+
+        result = lead_verifier(
+            _state(tmp_path / decision.value, _report()),
+            {"configurable": {"llm_provider": provider}},
+        )
+        assert result["status"] == "failed"
+        assert result["lead_status"] == "complete"
+        assert "did not pass" in result["failure_reason"]

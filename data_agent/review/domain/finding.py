@@ -43,6 +43,9 @@ class Finding(BaseModel):
 
     counter_evidence: list[EvidenceReference] = Field(default_factory=list)
 
+    deterministic_candidate_ids: list[str] = Field(default_factory=list)
+    """Stable deterministic signals explicitly considered by this finding."""
+
     verifier_status: VerificationStatus = VerificationStatus.PENDING
 
     recommendation: str | None = None
@@ -55,6 +58,15 @@ class Finding(BaseModel):
     def _check_confidence(cls, value: float) -> float:
         if not 0.0 <= value <= 1.0:
             raise ValueError("confidence must be between 0.0 and 1.0")
+        return value
+
+    @field_validator("deterministic_candidate_ids")
+    @classmethod
+    def _check_candidate_ids(cls, value: list[str]) -> list[str]:
+        if any(not candidate_id.strip() for candidate_id in value):
+            raise ValueError("deterministic candidate ids must not be blank")
+        if len(value) != len(set(value)):
+            raise ValueError("deterministic candidate ids must be unique")
         return value
 
     def assert_evidence_policy(self) -> None:

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date
 from pathlib import Path
 
+import pytest
 from langchain_core.runnables import RunnableLambda
 
 from data_agent.review.domain.desk_context import DeskContext
@@ -14,14 +16,47 @@ from data_agent.review.domain.finding import Finding
 from data_agent.review.domain.reports import SpecialistReport
 from data_agent.review.domain.severity import Severity
 from data_agent.review.domain.source import DateRange
-from data_agent.review.domain.verification import VerifierDecision
+from data_agent.review.domain.verification import ChallengeStatus, VerifierDecision
 from data_agent.review.llm.models import ModelTier
-from data_agent.review.orchestration.specialist_schemas import (
+from data_agent.review.orchestration.specialist.schemas import (
+    AdjudicatorOutput,
     AnalystOutput,
-    VerifierOutput,
+    ChallengerChallenge,
+    ChallengerOutput,
 )
+from data_agent.review.verification.rules import required_challenge_types
 from data_agent.skills.registry import build_specialist
 from data_agent.tools.review_context import ToolContext
+
+
+@pytest.fixture(autouse=True)
+def _complete_challenger(monkeypatch: pytest.MonkeyPatch) -> None:
+    from data_agent.review.domain.verification import ChallengeType
+    from data_agent.review.verification import challenger
+
+    def run_challenger(_model, **kwargs):
+        payload = json.loads(kwargs["user_prompt"])
+        required = required_challenge_types(
+            cross_source_required=len(set(payload["assigned_source_paths"])) > 1
+        )
+        return ChallengerOutput(
+            finding_id=payload["finding"]["finding_id"],
+            challenges=[
+                ChallengerChallenge(
+                    challenge_type=challenge_type,
+                    status=ChallengeStatus.PASS,
+                    explanation="Checked independently against assigned sources.",
+                    evidence=(
+                        [{"locator": payload["reopened_evidence"][0]["locator"]}]
+                        if challenge_type is ChallengeType.EVIDENCE_SUPPORT
+                        else []
+                    ),
+                )
+                for challenge_type in required
+            ],
+        )
+
+    monkeypatch.setattr(challenger, "run_bounded_structured_agent", run_challenger)
 
 
 def _provider():
@@ -38,13 +73,16 @@ def _provider():
 
     class Provider:
         def __call__(self, tier, schema=None):
+            if schema is None:
+                assert tier is ModelTier.LOW_COST
+                return object()
             if schema is AnalystOutput:
                 assert tier is ModelTier.LOW_COST
                 return RunnableLambda(lambda _m: AnalystOutput(findings=[finding]))
-            if schema is VerifierOutput:
+            if schema is AdjudicatorOutput:
                 assert tier is ModelTier.HIGH_COST
                 return RunnableLambda(
-                    lambda _m: VerifierOutput(
+                    lambda _m: AdjudicatorOutput(
                         finding_id="RISK-001",
                         decision=VerifierDecision.PASS,
                         checks=["locators reopened"],

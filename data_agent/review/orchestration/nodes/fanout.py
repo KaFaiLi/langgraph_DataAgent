@@ -53,6 +53,7 @@ class _SpecialistOutcome:
     markdown: str = ""
     verification: dict[str, Any] | None = None
     research_trace: list[dict[str, Any]] | None = None
+    adversarial_trace: dict[str, list[dict[str, Any]]] | None = None
     failure_reason: str | None = None
 
 
@@ -138,6 +139,17 @@ def _run_specialist(
         report = SpecialistReport.model_validate(report_data)
         validator = EvidenceValidator.source_backed(ctx.source_root, ctx.manifest)
         verification: dict[str, Any] = {"verifier_round": result.get("verifier_round", 0)}
+        for artifact_key in (
+            "evidence_gates",
+            "adversarial_cases",
+            "adjudications",
+            "adversarial_errors",
+            "omission_audit",
+            "candidate_dispositions",
+            "omission_rescue_used",
+            "research_mode",
+        ):
+            verification[artifact_key] = result.get(artifact_key, {})
         citation_failures: list[dict[str, Any]] = []
         for collection in (
             "initial_candidates",
@@ -158,6 +170,10 @@ def _run_specialist(
             markdown=markdown,
             verification=verification,
             research_trace=list(result.get("research_trace", [])),
+            adversarial_trace={
+                str(finding_id): list(trace)
+                for finding_id, trace in result.get("adversarial_trace", {}).items()
+            },
         )
     except Exception as exc:  # noqa: BLE001 - explicit run failure
         return _SpecialistOutcome(
@@ -195,6 +211,7 @@ def run_specialist_task(state: ParentState, config: RunnableConfig) -> dict:
                 "markdown": outcome.markdown,
                 "verification": outcome.verification,
                 "research_trace": outcome.research_trace,
+                "adversarial_trace": outcome.adversarial_trace,
                 "failure_reason": outcome.failure_reason,
             }
         ]
@@ -216,6 +233,7 @@ def merge_specialist_outcomes(state: ParentState, config: RunnableConfig) -> dic
             markdown=item.get("markdown", ""),
             verification=item.get("verification"),
             research_trace=item.get("research_trace"),
+            adversarial_trace=item.get("adversarial_trace"),
             failure_reason=item.get("failure_reason"),
         )
         for item in raw
@@ -237,6 +255,7 @@ def _merge_outcomes(state: ParentState, outcomes: list[_SpecialistOutcome]) -> d
         assert outcome.report is not None
         assert outcome.verification is not None
         assert outcome.research_trace is not None
+        assert outcome.adversarial_trace is not None
         domain = outcome.domain
         reports[domain.value] = outcome.report
         markdowns[domain.value] = outcome.markdown
@@ -255,6 +274,10 @@ def _merge_outcomes(state: ParentState, outcomes: list[_SpecialistOutcome]) -> d
         )
         (specialist_dir / f"{domain.value}.research_trace.json").write_text(
             json.dumps(outcome.research_trace, indent=2, default=str),
+            encoding="utf-8",
+        )
+        (specialist_dir / f"{domain.value}.adversarial_trace.json").write_text(
+            json.dumps(outcome.adversarial_trace, indent=2, default=str),
             encoding="utf-8",
         )
         coverage = _update_coverage(coverage, domain, outcome.source_ids)

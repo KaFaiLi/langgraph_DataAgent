@@ -94,6 +94,15 @@ def _write_completed_run(run_dir: Path) -> None:
     )
     (run_dir / "final_report.json").write_text(final.model_dump_json(), encoding="utf-8")
     (run_dir / "final_findings.md").write_text("# Final\n", encoding="utf-8")
+    (run_dir / "lead_verification.json").write_text(
+        json.dumps(
+            {
+                "lead_round": 1,
+                "history": [{"round_number": 1, "decision": "pass", "challenges": []}],
+            }
+        ),
+        encoding="utf-8",
+    )
     (run_dir / "run_manifest.json").write_text(review.model_dump_json(), encoding="utf-8")
     (specialists / "risk_metrics.json").write_text(report.model_dump_json(), encoding="utf-8")
     (specialists / "risk_metrics.md").write_text("# Risk\n", encoding="utf-8")
@@ -123,6 +132,7 @@ def test_completed_bundle_is_relocatable_and_ignores_stale_specialist_files(
     assert bundle.run.run_id == "ARCHIVED-RUN"
     assert list(bundle.specialist_reports) == [SpecialistDomain.RISK_METRICS]
     assert bundle.final_markdown == "# Final\n"
+    assert bundle.lead_verification_history[0]["decision"] == "pass"
 
 
 def test_completed_bundle_rejects_unsettled_coverage_before_reading_presentation_inputs(

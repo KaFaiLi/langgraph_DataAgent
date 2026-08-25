@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from data_agent.review.ingestion.catalog import build_catalog
+from data_agent.review.orchestration import specialist
 from data_agent.skills.registry import SPECIALISTS
 from data_agent.tools.source_tools import discover_sources
 
@@ -39,3 +40,14 @@ def test_review_catalog_maps_shared_source_metadata(tmp_path: Path) -> None:
 def test_every_specialist_is_skill_backed() -> None:
     assert SPECIALISTS
     assert all(registration.skill.analysis_file.is_file() for registration in SPECIALISTS.values())
+
+
+def test_specialist_orchestration_has_one_public_package() -> None:
+    orchestration = Path("data_agent/review/orchestration")
+    assert specialist.__all__ == [
+        "SpecialistRuntime",
+        "SpecialistSpec",
+        "build_specialist_graph",
+    ]
+    assert not list(orchestration.glob("specialist_*.py"))
+    assert not list(orchestration.glob("*_specialist_graph.py"))

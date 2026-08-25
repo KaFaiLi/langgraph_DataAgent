@@ -30,6 +30,7 @@ class ParentState(TypedDict, total=False):
     final_markdown: str
     lead_round: int
     lead_feedback: str
+    lead_verification_history: list[dict]
     lead_status: str  # "running" | "complete"
 
     status: str  # "running" | "completed" | "failed"

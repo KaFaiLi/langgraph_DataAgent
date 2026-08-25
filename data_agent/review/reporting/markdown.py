@@ -130,13 +130,23 @@ def _render_finding(report: SpecialistReport, finding: Finding) -> str:
         lines.append("- none")
     lines += [
         "",
-        "#### Verifier Questions",
+        "#### Adjudicator Checks",
         "",
     ]
-    if last and last.questions:
+    if last and last.checks:
+        lines.extend(f"- {check}" for check in last.checks)
+    else:
+        lines.append("- none recorded")
+    lines += [
+        "",
+        "#### Adversarial Challenges",
+        "",
+    ]
+    if last and last.challenges:
         lines.extend(
-            f"- **{question.question}** — {question.answer or 'not answered'}"
-            for question in last.questions
+            f"- **{challenge.challenge_type.value}:** {challenge.status.value} — "
+            f"{challenge.explanation or 'no explanation'}"
+            for challenge in last.challenges
         )
     else:
         lines.append("- none recorded")
@@ -208,6 +218,35 @@ def render_specialist_report(report: SpecialistReport) -> str:
         "",
         *_bullets(report.unresolved_items),
         "",
+        "## Omission Audit",
+        "",
+    ]
+    if report.omission_audit is None:
+        lines.append("No deterministic omission audit was retained.")
+    else:
+        audit = report.omission_audit
+        lines.extend(
+            [
+                f"- **Rescue used:** {'yes' if audit.rescue_used else 'no'}",
+                f"- **Covered candidates:** {len(audit.covered_candidate_ids)}",
+                f"- **Uncovered candidates:** {len(audit.uncovered_candidates)}",
+                f"- **Material omissions:** {len(audit.material_candidate_ids)}",
+                "",
+                "### Omission Disclosures",
+                "",
+                *_bullets(audit.unresolved_disclosures),
+                "",
+            ]
+        )
+        if audit.candidate_dispositions:
+            lines.extend(["### Candidate Dispositions", ""])
+            lines.extend(
+                f"- `{record.candidate_id}`: {record.disposition.value}"
+                + (f" — {record.reason}" if record.reason else "")
+                for record in audit.candidate_dispositions
+            )
+            lines.append("")
+    lines += [
         "## Overall Conclusion",
         "",
         report.overall_conclusion,

@@ -14,7 +14,11 @@ from data_agent.review.ingestion.evidence_validator import (
     EvidenceValidationResult,
     EvidenceValidator,
 )
-from data_agent.review.orchestration.specialist_schemas import MAX_ANALYST_FINDINGS
+from data_agent.review.orchestration.specialist.schemas import MAX_ANALYST_FINDINGS
+from data_agent.review.verification.candidates import (
+    assign_candidate_ids,
+    link_finding_to_candidates,
+)
 
 MAX_PERSISTED_FINDING_EVIDENCE = 8
 
@@ -218,6 +222,17 @@ def normalize_findings(
     previous: list[Finding] | None = None,
 ) -> tuple[list[Finding], set[str]]:
     """Apply all deterministic finding policy through one orchestration seam."""
+    normalized_analyses: list[dict[str, object]] = []
+    for raw_analysis in analyses:
+        analysis = dict(raw_analysis)
+        candidates = analysis.get("flag_candidates", [])
+        if isinstance(candidates, list):
+            analysis["flag_candidates"] = assign_candidate_ids(
+                str(analysis.get("name") or "analysis"),
+                [candidate for candidate in candidates if isinstance(candidate, dict)],
+            )
+        normalized_analyses.append(analysis)
+    analyses = normalized_analyses
     normalized = [
         _apply_severity_floor(
             _add_context_evidence(
@@ -229,6 +244,18 @@ def normalize_findings(
         for finding in findings
     ]
     normalized = _dedupe(_namespace(normalized, report_id))[:MAX_ANALYST_FINDINGS]
+    all_candidates = [
+        candidate
+        for analysis in analyses
+        for candidate in analysis.get("flag_candidates", [])
+        if isinstance(candidate, dict)
+    ]
+    analysis_names = {str(analysis.get("name") or "analysis") for analysis in analyses}
+    analysis_name = next(iter(analysis_names), "analysis") if len(analysis_names) == 1 else None
+    normalized = [
+        link_finding_to_candidates(finding, all_candidates, analysis_name=analysis_name)
+        for finding in normalized
+    ]
     revised_ids = {finding.finding_id for finding in normalized}
     if previous is None:
         return normalized, revised_ids

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 from datetime import date
 from pathlib import Path
 
+import pytest
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
@@ -13,20 +15,20 @@ from data_agent.review.domain.evidence import EvidenceReference
 from data_agent.review.domain.finding import Finding
 from data_agent.review.domain.severity import Severity
 from data_agent.review.domain.source import DateRange
-from data_agent.review.domain.verification import VerifierDecision
+from data_agent.review.domain.verification import ChallengeStatus, ChallengeType, VerifierDecision
 from data_agent.review.ingestion.catalog import build_catalog
-from data_agent.review.orchestration.specialist_graph import (
+from data_agent.review.orchestration.specialist import (
+    SpecialistRuntime,
     SpecialistSpec,
     build_specialist_graph,
 )
-from data_agent.review.orchestration.specialist_prompts import (
-    analyst_system_prompt,
-    verifier_system_prompt,
-)
-from data_agent.review.orchestration.specialist_schemas import (
+from data_agent.review.orchestration.specialist.schemas import (
+    AdjudicatorOutput,
     AnalystOutput,
-    VerifierOutput,
+    ChallengerChallenge,
+    ChallengerOutput,
 )
+from data_agent.review.verification.rules import REQUIRED_CHALLENGE_TYPES
 from data_agent.tools.review_context import ToolContext
 
 
@@ -95,16 +97,41 @@ class Provider:
                     ]
                 )
             )
-        if schema is VerifierOutput:
+        if schema is AdjudicatorOutput:
             return RunnableLambda(
-                lambda _messages: VerifierOutput(finding_id="F-1", decision=VerifierDecision.PASS)
+                lambda _messages: AdjudicatorOutput(
+                    finding_id="F-1", decision=VerifierDecision.PASS
+                )
             )
         raise AssertionError(schema)
 
 
 def test_specialist_researches_with_multiple_tools_before_verification(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    from data_agent.review.verification import challenger
+
+    def complete_challenge(_model, **kwargs):
+        payload = json.loads(kwargs["user_prompt"])
+        return ChallengerOutput(
+            finding_id=payload["finding"]["finding_id"],
+            challenges=[
+                ChallengerChallenge(
+                    challenge_type=challenge_type,
+                    status=ChallengeStatus.PASS,
+                    explanation="Checked independently.",
+                    evidence=(
+                        [{"locator": payload["reopened_evidence"][0]["locator"]}]
+                        if challenge_type is ChallengeType.EVIDENCE_SUPPORT
+                        else []
+                    ),
+                )
+                for challenge_type in REQUIRED_CHALLENGE_TYPES
+            ],
+        )
+
+    monkeypatch.setattr(challenger, "run_bounded_structured_agent", complete_challenge)
     source = tmp_path / "source"
     source.mkdir()
     (source / "assigned.csv").write_text(
@@ -122,13 +149,13 @@ def test_specialist_researches_with_multiple_tools_before_verification(
         domain_label="Risk Metrics",
         policy_text="Verify all evidence.",
         analyses_runner=lambda _ctx, _paths: [],
-        analyst_system_prompt=lambda label, desk, material, analyses: analyst_system_prompt(
-            label, desk, material, analyses, "Review assigned records."
-        ),
-        verifier_system_prompt=lambda policy: verifier_system_prompt("Risk Metrics", policy),
         research_guidance="Inspect the assigned table before drafting.",
     )
-    graph = build_specialist_graph(spec, llm_provider=Provider())
+    runtime = SpecialistRuntime(
+        spec=spec,
+        llm_provider=Provider(),
+    )
+    graph = build_specialist_graph(runtime)
 
     result = graph.invoke(
         {

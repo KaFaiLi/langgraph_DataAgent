@@ -1,0 +1,1 @@
+{"schema_version":1,"case_id":"case_06","scenario":"stale_limit_version","expected":{"required_findings":[],"forbidden_findings":[{"finding_id":"C06-STALE-BREACH"}],"contradictions":[{"id":"C06-EFFECTIVE-VERSION","finding_id":"C06-STALE-BREACH","challenge_type":"temporal_validity"}],"expected_disclosures":["C06-STALE-VERSION"]}}

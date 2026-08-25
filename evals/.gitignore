@@ -1,0 +1,3 @@
+# Generated evaluation run bundles and metric reports are local-only.
+cases/*/runs/
+reports/

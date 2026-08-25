@@ -20,7 +20,7 @@ from data_agent.review.domain.finding import Finding, VerificationStatus
 from data_agent.review.domain.overview import DataOverview, OverviewStatus, TableVisual
 from data_agent.review.domain.severity import Severity
 from data_agent.review.domain.source import DateRange
-from data_agent.review.domain.verification import VerifierDecision
+from data_agent.review.domain.verification import ChallengeStatus, VerifierDecision
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 from data_agent.review.llm.models import ModelTier
 from data_agent.review.orchestration.finding_policy import (
@@ -39,21 +39,56 @@ from data_agent.review.orchestration.prompt_projection import (
     finding_analysis_support_json,
     revision_candidates_json,
 )
-from data_agent.review.orchestration.specialist_graph import (
+from data_agent.review.orchestration.specialist import (
+    SpecialistRuntime,
     SpecialistSpec,
     build_specialist_graph,
 )
-from data_agent.review.orchestration.specialist_schemas import (
+from data_agent.review.orchestration.specialist.schemas import (
     MAX_ANALYST_FINDINGS,
+    AdjudicatorOutput,
     AnalystFinding,
     AnalystOutput,
-    VerifierOutput,
+    ChallengerChallenge,
+    ChallengerOutput,
 )
 from data_agent.skills.registry import build_specialist
 from data_agent.tools.review_context import ToolContext
 
 GOOD_EVIDENCE = EvidenceReference(locator="source://risk_metrics/risk.csv#rows=2:2")
 BAD_EVIDENCE = EvidenceReference(locator="source://missing.csv#rows=1:1")
+
+
+@pytest.fixture(autouse=True)
+def _complete_independent_challenger(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep legacy graph scenarios focused on adjudication, with a valid challenge case."""
+
+    from data_agent.review.domain.verification import ChallengeType
+    from data_agent.review.verification import challenger
+    from data_agent.review.verification.rules import REQUIRED_CHALLENGE_TYPES
+
+    def run_challenger(_model, **kwargs):
+        payload = json.loads(kwargs["user_prompt"])
+        finding_id = payload["finding"]["finding_id"]
+        return ChallengerOutput(
+            finding_id=finding_id,
+            challenges=[
+                ChallengerChallenge(
+                    challenge_type=challenge_type,
+                    status=ChallengeStatus.PASS,
+                    explanation="Independently checked against the assigned population.",
+                    evidence=(
+                        [{"locator": payload["reopened_evidence"][0]["locator"]}]
+                        if challenge_type is ChallengeType.EVIDENCE_SUPPORT
+                        and payload["reopened_evidence"]
+                        else []
+                    ),
+                )
+                for challenge_type in REQUIRED_CHALLENGE_TYPES
+            ],
+        )
+
+    monkeypatch.setattr(challenger, "run_bounded_structured_agent", run_challenger)
 
 
 def test_analysis_prompt_projection_is_bounded_and_fair() -> None:
@@ -121,39 +156,43 @@ def test_verifier_prompt_receives_python_support_and_reopened_evidence(
 ) -> None:
     captured: list[str] = []
 
-    def capture_and_pass(text: str) -> VerifierOutput:
+    def capture_and_pass(text: str) -> AdjudicatorOutput:
         captured.append(text)
         return pass_responder(text)
 
+    analyses_runner = lambda _ctx, _paths: [
+        AnalysisResult(
+            name="limit_consumption",
+            summary="Population-level limit calculation",
+            flag_candidates=[
+                {
+                    "kind": "persistent_breach",
+                    "locator": GOOD_EVIDENCE.locator,
+                    "population_breach_count": 12,
+                }
+            ],
+        )
+    ]
     spec = SpecialistSpec(
         domain=SpecialistDomain.RISK_METRICS,
         report_id="risk_metrics",
         domain_label="Risk Metrics",
         policy_text="",
-        analyses_runner=lambda _ctx, _paths: [
-            AnalysisResult(
-                name="limit_consumption",
-                summary="Population-level limit calculation",
-                flag_candidates=[
-                    {
-                        "kind": "persistent_breach",
-                        "locator": GOOD_EVIDENCE.locator,
-                        "population_breach_count": 12,
-                    }
-                ],
-            )
-        ],
-        analyst_system_prompt=lambda *_args: "analyst",
-        verifier_system_prompt=lambda _policy: "verifier",
+        analyses_runner=analyses_runner,
     )
     provider = FakeProvider([AnalystOutput(findings=[make_finding()])], capture_and_pass)
-    graph = build_specialist_graph(spec, llm_provider=provider)
+    runtime = SpecialistRuntime(
+        spec=spec,
+        llm_provider=provider,
+    )
+    graph = build_specialist_graph(runtime)
 
     result = graph.invoke(initial_state(), config={"configurable": {"tool_ctx": tool_ctx}})
 
     assert result["report"]["findings"][0]["verifier_status"] == "passed"
     assert len(captured) == 1
-    assert "REOPENED EVIDENCE:" in captured[0]
+    assert "EVIDENCE GATE:" in captured[0]
+    assert '"reopened_snippets"' in captured[0]
     assert "MATCHED DETERMINISTIC SUPPORT:" in captured[0]
     assert '"population_breach_count": 12' in captured[0]
 
@@ -428,20 +467,22 @@ class FakeProvider:
         self.analyst_system_prompts: list[str] = []
 
     def __call__(self, tier, schema=None):
-        from data_agent.review.orchestration.specialist_schemas import (
+        from data_agent.review.orchestration.specialist.schemas import AdjudicatorOutput as AOJ
+        from data_agent.review.orchestration.specialist.schemas import (
             AnalystOutput as AO,
         )
-        from data_agent.review.orchestration.specialist_schemas import (
-            VerifierOutput as VO,
-        )
 
+        if schema is None:
+            self.calls.append(("research", tier))
+            assert tier is ModelTier.LOW_COST
+            return object()
         if schema is AO:
             self.calls.append(("analyst", tier))
             assert tier is ModelTier.LOW_COST, "analyst must use the low-cost model"
-            assert self.analyst_queue, "fake analyst queue exhausted"
+            assert self.analyst_queue, f"fake analyst queue exhausted after calls {self.calls}"
             output = self.analyst_queue.pop(0)
             return RunnableLambda(lambda messages: self._analyst(messages, output))
-        if schema is VO:
+        if schema is AOJ:
             self.calls.append(("verifier", tier))
             assert tier is ModelTier.HIGH_COST, "verifier must use the high-cost model"
             return RunnableLambda(lambda messages: self.verifier_responder(_user_text(messages)))
@@ -471,18 +512,17 @@ def _round_from(text: str) -> int:
     return int(match.group(1)) if match else 1
 
 
-def pass_responder(text: str) -> VerifierOutput:
-    return VerifierOutput(
+def pass_responder(text: str) -> AdjudicatorOutput:
+    return AdjudicatorOutput(
         finding_id=_finding_id_from(text),
         decision=VerifierDecision.PASS,
-        questions=[],
         checks=["locators reopened by code"],
     )
 
 
-def revise_once_then_pass(text: str) -> VerifierOutput:
+def revise_once_then_pass(text: str) -> AdjudicatorOutput:
     if _round_from(text) == 1:
-        return VerifierOutput(
+        return AdjudicatorOutput(
             finding_id=_finding_id_from(text),
             decision=VerifierDecision.REVISE,
             feedback="Add the missing alternative explanations.",
@@ -490,16 +530,16 @@ def revise_once_then_pass(text: str) -> VerifierOutput:
     return pass_responder(text)
 
 
-def always_revise(text: str) -> VerifierOutput:
-    return VerifierOutput(
+def always_revise(text: str) -> AdjudicatorOutput:
+    return AdjudicatorOutput(
         finding_id=_finding_id_from(text),
         decision=VerifierDecision.REVISE,
         feedback="Still not good enough.",
     )
 
 
-def reject_responder(text: str) -> VerifierOutput:
-    return VerifierOutput(
+def reject_responder(text: str) -> AdjudicatorOutput:
+    return AdjudicatorOutput(
         finding_id=_finding_id_from(text),
         decision=VerifierDecision.REJECT,
         feedback="Claim unsupported by cited evidence.",
@@ -562,7 +602,8 @@ def test_markdown_matches_standard_template(tool_ctx: ToolContext) -> None:
         "#### Analysis",
         "#### Alternative Explanations",
         "#### Counter Evidence",
-        "#### Verifier Questions",
+        "#### Adjudicator Checks",
+        "#### Adversarial Challenges",
         "#### Analyst Response",
         "#### Verifier Conclusion",
         "#### Recommendation",
@@ -594,7 +635,7 @@ def test_revise_then_pass_records_history(tool_ctx: ToolContext) -> None:
     assert history[0]["decision"] == "revise"
     assert history[0]["analyst_response"] == "Added alternative explanations per feedback."
     assert history[1]["decision"] == "pass"
-    assert result["report"]["findings"][0]["verifier_status"] == "passed"
+    assert result["report"]["findings"][0]["verifier_status"] == "revised"
 
 
 def test_exhausted_rounds_become_unresolved(tool_ctx: ToolContext) -> None:
@@ -628,7 +669,7 @@ def test_rejected_finding_removed(tool_ctx: ToolContext) -> None:
 
 
 def test_inaccessible_evidence_never_consults_llm(tool_ctx: ToolContext) -> None:
-    def _explode(_text: str) -> VerifierOutput:
+    def _explode(_text: str) -> AdjudicatorOutput:
         raise AssertionError("verifier LLM must not be called for inaccessible evidence")
 
     provider = FakeProvider(
@@ -641,7 +682,8 @@ def test_inaccessible_evidence_never_consults_llm(tool_ctx: ToolContext) -> None
     assert result["report"]["findings"][0]["evidence"] == []
     history = result["verification_history"]["RISK-001"]
     assert history[0]["decision"] == "unresolved"
-    assert "locator reopened: FAILED" in history[0]["checks"][0]
+    assert history[0]["evidence_gate"]["evidence_inaccessible"] is True
+    assert "inaccessible" in history[0]["feedback"]
     assert sum(1 for kind, _ in provider.calls if kind == "verifier") == 0
 
 
@@ -661,7 +703,7 @@ def test_verification_artifact_separates_bad_citations(tool_ctx: ToolContext) ->
 def test_inaccessible_counter_evidence_never_consults_llm(
     tool_ctx: ToolContext,
 ) -> None:
-    def _explode(_text: str) -> VerifierOutput:
+    def _explode(_text: str) -> AdjudicatorOutput:
         raise AssertionError("verifier LLM must not be called for inaccessible counter evidence")
 
     finding = make_finding()
@@ -687,19 +729,18 @@ def test_changed_overview_evidence_fails_specialist_run(tool_ctx: ToolContext) -
         visual=TableVisual(columns=["value"], rows=[["1"]]),
         evidence=[GOOD_EVIDENCE],
     )
+    analyses_runner = lambda _ctx, _paths: [
+        AnalysisResult(name="overview", summary="summary", overviews=[overview])
+    ]
     spec = SpecialistSpec(
         domain=SpecialistDomain.RISK_METRICS,
         report_id="risk_metrics",
         domain_label="Risk Metrics",
         policy_text="",
-        analyses_runner=lambda _ctx, _paths: [
-            AnalysisResult(name="overview", summary="summary", overviews=[overview])
-        ],
-        analyst_system_prompt=lambda *_args: "analyst",
-        verifier_system_prompt=lambda _policy: "verifier",
+        analyses_runner=analyses_runner,
     )
     provider = FakeProvider([AnalystOutput(findings=[])], pass_responder)
-    graph = build_specialist_graph(spec, llm_provider=provider)
+    graph = build_specialist_graph(SpecialistRuntime(spec=spec, llm_provider=provider))
 
     with pytest.raises(RuntimeError, match="fatal evidence integrity failure"):
         graph.invoke(initial_state(), config={"configurable": {"tool_ctx": tool_ctx}})
@@ -727,7 +768,7 @@ def test_pass_without_evidence_is_forced_to_revise(tool_ctx: ToolContext) -> Non
     assert history[0]["decision"] == "revise"
     assert "evidence" in history[0]["feedback"].lower()
     assert history[1]["decision"] == "pass"
-    assert result["report"]["findings"][0]["verifier_status"] == "passed"
+    assert result["report"]["findings"][0]["verifier_status"] == "revised"
 
 
 def test_model_allocation_flash_analyst_pro_verifier(tool_ctx: ToolContext) -> None:
@@ -746,12 +787,15 @@ def test_no_findings_still_produces_report(tool_ctx: ToolContext) -> None:
     assert "No findings." in result["markdown"]
 
 
-def test_observation_without_evidence_can_pass(tool_ctx: ToolContext) -> None:
+def test_observation_without_evidence_is_unresolved(tool_ctx: ToolContext) -> None:
     observation = make_finding(evidence=[], is_observation=True)
-    provider = FakeProvider([AnalystOutput(findings=[observation])], pass_responder)
+    provider = FakeProvider(
+        [AnalystOutput(findings=[observation]), AnalystOutput(findings=[observation])],
+        pass_responder,
+    )
     result = run_graph(tool_ctx, provider)
-    assert result["verifier_round"] == 1
-    assert result["report"]["findings"][0]["verifier_status"] == "passed"
+    assert result["verifier_round"] == 2
+    assert result["report"]["findings"][0]["verifier_status"] == "unresolved"
 
 
 def test_verifier_status_enum_mapping(tool_ctx: ToolContext) -> None:

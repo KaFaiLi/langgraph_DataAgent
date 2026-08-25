@@ -48,6 +48,17 @@ def finalize(state: ParentState, config: RunnableConfig) -> dict:
         json.dumps(report.model_dump(mode="json"), indent=2, default=str),
         encoding="utf-8",
     )
+    (output_dir / "lead_verification.json").write_text(
+        json.dumps(
+            {
+                "lead_round": int(state.get("lead_round", 0)),
+                "history": list(state.get("lead_verification_history", [])),
+            },
+            indent=2,
+            default=str,
+        ),
+        encoding="utf-8",
+    )
 
     manifest = SourceManifest.model_validate(state["manifest"])
     coverage = [SourceCoverage.model_validate(entry) for entry in state.get("coverage", [])]

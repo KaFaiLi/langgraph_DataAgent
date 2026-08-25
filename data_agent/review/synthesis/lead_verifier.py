@@ -1,17 +1,18 @@
 """Lead verifier: independent check of the final synthesis (high-cost model).
 
-Bounded to 2 rounds; on exhaustion the current report is accepted with the
-verifier's feedback recorded in the unresolved questions (honest disclosure,
-spec section 23).
+The verifier has one semantic revision opportunity.  Deterministic report and
+evidence gates always fail closed; a persistent semantic objection is never
+accepted merely because the round budget was exhausted.
 """
 
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables.config import RunnableConfig
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from data_agent.review.domain.finding import Finding, VerificationStatus
 from data_agent.review.domain.reports import (
@@ -20,7 +21,11 @@ from data_agent.review.domain.reports import (
     SpecialistReport,
 )
 from data_agent.review.domain.severity import SEVERITY_ORDER
-from data_agent.review.domain.verification import VerifierDecision
+from data_agent.review.domain.verification import (
+    LeadChallenge,
+    ObjectionMateriality,
+    VerifierDecision,
+)
 from data_agent.review.ingestion.evidence_validator import (
     EvidenceDisposition,
     EvidenceValidationSummary,
@@ -34,6 +39,18 @@ from data_agent.skills.review import load_lead_review_skill
 from data_agent.tools.review_context import ToolContext
 
 MAX_LEAD_ROUNDS = 2
+MAX_LEAD_CHALLENGES = 32
+MAX_LEAD_CHECKS = 64
+MAX_LEAD_FEEDBACK = 4_000
+
+_MATERIALITY_ORDER = {
+    ObjectionMateriality.INFORMATIONAL: 0,
+    ObjectionMateriality.LOW: 1,
+    ObjectionMateriality.MEDIUM: 2,
+    ObjectionMateriality.HIGH: 3,
+    ObjectionMateriality.CRITICAL: 4,
+}
+_MATERIAL_OBJECTION_LEVEL = _MATERIALITY_ORDER[ObjectionMateriality.MEDIUM]
 
 LEAD_VERIFIER_SYSTEM = load_lead_review_skill().verifier_policy
 
@@ -42,8 +59,29 @@ class LeadVerifierOutput(BaseModel):
     """The lead verifier's structured verdict."""
 
     decision: VerifierDecision
-    feedback: str = ""
-    checks: list[str] = Field(default_factory=list)
+    feedback: str = Field(default="", max_length=MAX_LEAD_FEEDBACK)
+    checks: list[str] = Field(default_factory=list, max_length=MAX_LEAD_CHECKS)
+    challenges: list[LeadChallenge] = Field(
+        default_factory=list,
+        max_length=MAX_LEAD_CHALLENGES,
+    )
+
+    @field_validator("feedback", mode="before")
+    @classmethod
+    def _bound_feedback(cls, value: object) -> object:
+        return value[:MAX_LEAD_FEEDBACK] if isinstance(value, str) else value
+
+    @field_validator("checks", mode="before")
+    @classmethod
+    def _bound_checks(cls, value: object) -> object:
+        if not isinstance(value, list):
+            return value
+        return [item[:500] if isinstance(item, str) else item for item in value[:MAX_LEAD_CHECKS]]
+
+    @field_validator("challenges", mode="before")
+    @classmethod
+    def _bound_challenges(cls, value: object) -> object:
+        return value[:MAX_LEAD_CHALLENGES] if isinstance(value, list) else value
 
 
 class FatalEvidenceIntegrityError(RuntimeError):
@@ -258,7 +296,7 @@ def validate_final_report(state: ParentState, report: FinalReport) -> list[str]:
                 f"{unknown_cluster_evidence}"
             )
 
-    for raw_cluster in state.get("clusters", []):
+    for raw_cluster in state.get("clusters") or []:
         try:
             cluster = CrossSourceCluster.model_validate(raw_cluster)
         except ValueError as exc:
@@ -301,25 +339,258 @@ def validate_final_report(state: ParentState, report: FinalReport) -> list[str]:
     return feedback
 
 
+def _prior_lead_history(state: ParentState) -> list[dict]:
+    """Return prior lead rounds as plain JSON-compatible mappings.
+
+    Parent checkpoints intentionally contain primitives rather than Pydantic
+    instances.  Be defensive when resuming an older checkpoint that did not
+    have a lead history field yet.
+    """
+    history = state.get("lead_verification_history", [])
+    if not isinstance(history, list):
+        return []
+    return [dict(entry) for entry in history if isinstance(entry, dict)]
+
+
+def _history_entry(
+    round_number: int,
+    *,
+    decision: VerifierDecision,
+    feedback: str = "",
+    checks: Iterable[str] = (),
+    challenges: Iterable[LeadChallenge] = (),
+) -> dict:
+    """Serialize one lead-verifier result without leaking Pydantic objects."""
+    return {
+        "round_number": round_number,
+        "decision": decision.value,
+        "feedback": feedback[:MAX_LEAD_FEEDBACK],
+        "checks": [str(check)[:500] for check in list(checks)[:MAX_LEAD_CHECKS]],
+        "challenges": [
+            challenge.model_dump(mode="json")
+            for challenge in list(challenges)[:MAX_LEAD_CHALLENGES]
+        ],
+    }
+
+
+def _with_history(state: ParentState, entry: dict) -> list[dict]:
+    return [*_prior_lead_history(state), entry]
+
+
+def _challenge_feedback(challenges: Iterable[LeadChallenge]) -> str:
+    """Render concise, concrete structured objections for lead revision."""
+    parts: list[str] = []
+    for challenge in challenges:
+        targets = ", ".join(challenge.affected_finding_ids) or "report-wide"
+        explanation = challenge.explanation.strip() or "No explanation was supplied."
+        resolution = (
+            f" Proposed resolution: {challenge.proposed_resolution.strip()}"
+            if challenge.proposed_resolution and challenge.proposed_resolution.strip()
+            else ""
+        )
+        parts.append(
+            f"[{challenge.materiality.value}] {challenge.challenge_type.value} "
+            f"(affected: {targets}): {explanation}{resolution}"
+        )
+    return "\n".join(parts)[:MAX_LEAD_FEEDBACK]
+
+
+def _challenge_disclosure(challenge: LeadChallenge, *, suppressed: bool) -> str:
+    targets = ", ".join(challenge.affected_finding_ids) or "report-wide"
+    action = "suppressed" if suppressed else "disclosed"
+    explanation = challenge.explanation.strip() or "No explanation was supplied."
+    return (
+        f"Lead verification {action} {challenge.materiality.value} "
+        f"{challenge.challenge_type.value} objection (affected: {targets}): {explanation}"
+    )
+
+
+def _rebuild_synthesis_after_suppression(
+    state: ParentState,
+    report: FinalReport,
+    suppressed_ids: set[str],
+) -> list[dict]:
+    """Remove challenged conclusions and rebuild dependent cluster/index data.
+
+    The lead model is not allowed to leave a stale cluster or evidence index
+    referring to a semantically suppressed final finding.  Deterministic
+    clusters are filtered in parallel because the final hard gate validates
+    their relationship to the parent state.
+    """
+    suppressed_locators = {
+        reference.locator
+        for finding in report.key_findings
+        if finding.final_id in suppressed_ids
+        for reference in finding.evidence
+    }
+    retained_final_locators = {
+        reference.locator
+        for finding in report.key_findings
+        if finding.final_id not in suppressed_ids
+        for reference in finding.evidence
+    }
+    filtered_state_clusters: list[dict] = []
+    state_cluster_ids: set[str] = set()
+    for raw_cluster in state.get("clusters", []):
+        try:
+            cluster = CrossSourceCluster.model_validate(raw_cluster)
+        except ValueError:
+            # validate_final_report already reports malformed deterministic
+            # clusters before semantic review.  Keep malformed data untouched
+            # here so that the hard gate remains authoritative if encountered.
+            continue
+        cluster.findings = [
+            finding_id for finding_id in cluster.findings if finding_id not in suppressed_ids
+        ]
+        if not cluster.findings:
+            continue
+        cluster.supporting_evidence = [
+            reference
+            for reference in cluster.supporting_evidence
+            if reference.locator not in suppressed_locators
+            or reference.locator in retained_final_locators
+        ]
+        state_cluster_ids.add(cluster.cluster_id)
+        filtered_state_clusters.append(cluster.model_dump(mode="json"))
+
+    retained_clusters: list[CrossSourceCluster] = []
+    for cluster in report.cross_source_findings:
+        cluster.findings = [
+            finding_id for finding_id in cluster.findings if finding_id not in suppressed_ids
+        ]
+        if not cluster.findings or cluster.cluster_id not in state_cluster_ids:
+            continue
+        cluster.supporting_evidence = [
+            reference
+            for reference in cluster.supporting_evidence
+            if reference.locator not in suppressed_locators
+            or reference.locator in retained_final_locators
+        ]
+        retained_clusters.append(cluster)
+    retained_cluster_ids = {cluster.cluster_id for cluster in retained_clusters}
+
+    retained_findings = []
+    for finding in report.key_findings:
+        if finding.final_id in suppressed_ids:
+            continue
+        finding.cross_source_cluster_ids = [
+            cluster_id
+            for cluster_id in finding.cross_source_cluster_ids
+            if cluster_id in retained_cluster_ids
+        ]
+        retained_findings.append(finding)
+
+    report.key_findings = retained_findings
+    report.cross_source_findings = retained_clusters
+
+    evidence_index = []
+    seen_locators: set[str] = set()
+    for reference in [
+        *(reference for finding in report.key_findings for reference in finding.evidence),
+        *(reference for cluster in retained_clusters for reference in cluster.supporting_evidence),
+    ]:
+        if reference.locator in seen_locators:
+            continue
+        seen_locators.add(reference.locator)
+        evidence_index.append(reference)
+    report.evidence_index = evidence_index
+    return filtered_state_clusters
+
+
+def _apply_final_round_challenges(
+    state: ParentState,
+    report: FinalReport,
+    challenges: list[LeadChallenge],
+) -> tuple[FinalReport, list[dict], set[str], list[str]]:
+    """Apply final-round materiality rules to structured semantic objections.
+
+    High/critical report-wide or ambiguously targeted objections fail closed.
+    Medium-or-higher targeted objections suppress only the explicitly named
+    final findings.  Informational/low objections are retained as disclosures.
+    """
+    report_ids = {finding.final_id for finding in report.key_findings}
+    suppressed_ids: set[str] = set()
+    blockers: list[str] = []
+    disclosures: list[str] = []
+
+    for challenge in challenges:
+        targets = list(dict.fromkeys(challenge.affected_finding_ids))
+        unknown_targets = sorted(set(targets) - report_ids)
+        materiality = _MATERIALITY_ORDER[challenge.materiality]
+        if materiality < _MATERIAL_OBJECTION_LEVEL:
+            disclosures.append(_challenge_disclosure(challenge, suppressed=False))
+            continue
+
+        # A material objection without a precise final-finding target cannot
+        # be safely repaired by deleting arbitrary synthesis.  We fail closed
+        # for medium as well as high/critical; high/critical is called out in
+        # the user-facing reason because it is the strongest safety boundary.
+        if not targets or unknown_targets:
+            qualifier = "report-wide" if not targets else f"unknown targets {unknown_targets}"
+            blockers.append(
+                f"{challenge.materiality.value} {challenge.challenge_type.value} objection "
+                f"is ambiguously targeted ({qualifier})"
+            )
+            continue
+
+        if materiality >= _MATERIAL_OBJECTION_LEVEL:
+            suppressed_ids.update(targets)
+            disclosures.append(_challenge_disclosure(challenge, suppressed=True))
+
+    if blockers:
+        return report, list(state.get("clusters") or []), suppressed_ids, blockers
+
+    filtered_clusters = _rebuild_synthesis_after_suppression(state, report, suppressed_ids)
+    report.unresolved_questions = [*report.unresolved_questions, *disclosures]
+    return report, filtered_clusters, suppressed_ids, []
+
+
+def _needs_semantic_revision(challenges: Iterable[LeadChallenge]) -> bool:
+    return any(
+        _MATERIALITY_ORDER[challenge.materiality] >= _MATERIAL_OBJECTION_LEVEL
+        for challenge in challenges
+    )
+
+
 def lead_verifier(state: ParentState, config: RunnableConfig) -> dict:
     """Verify the final report; returns the next-state update."""
     report_data = state.get("final_report")
     if not report_data:
         return {"status": "failed", "failure_reason": "lead review produced no report"}
     report = FinalReport.model_validate(report_data)
-    round_number = state.get("lead_round", 0) + 1
+    round_number = int(state.get("lead_round", 0)) + 1
     try:
         feedback_parts = validate_final_report(state, report)
     except FatalEvidenceIntegrityError as exc:
+        failure_reason = str(exc)
+        history = _with_history(
+            state,
+            _history_entry(
+                round_number,
+                decision=VerifierDecision.UNRESOLVED,
+                feedback=failure_reason,
+                checks=["deterministic evidence integrity gate failed"],
+            ),
+        )
         return {
             "lead_round": round_number,
             "lead_feedback": "",
             "lead_status": "complete",
             "status": "failed",
-            "failure_reason": str(exc),
+            "failure_reason": failure_reason,
+            "lead_verification_history": history,
         }
     if feedback_parts:
         feedback = "\n".join(feedback_parts)
+        history = _with_history(
+            state,
+            _history_entry(
+                round_number,
+                decision=VerifierDecision.REVISE,
+                feedback=feedback,
+                checks=["deterministic final-report validation"],
+            ),
+        )
         if round_number >= MAX_LEAD_ROUNDS:
             return {
                 "lead_round": round_number,
@@ -327,11 +598,13 @@ def lead_verifier(state: ParentState, config: RunnableConfig) -> dict:
                 "lead_status": "complete",
                 "status": "failed",
                 "failure_reason": "lead verification deterministic checks failed: " + feedback,
+                "lead_verification_history": history,
             }
         return {
             "lead_round": round_number,
             "lead_feedback": feedback,
             "lead_status": "running",
+            "lead_verification_history": history,
         }
 
     _verified, _unresolved_ids, _all_ids, _index_feedback, all_findings = _specialist_findings(
@@ -348,7 +621,7 @@ def lead_verifier(state: ParentState, config: RunnableConfig) -> dict:
 
     user = (
         f"Verification round: {round_number}\n\nFINAL REPORT (JSON):\n"
-        + json.dumps(report_data, indent=2, default=str)
+        + json.dumps(report.model_dump(mode="json"), indent=2, default=str)
         + "\n\nSPECIALIST FINDINGS (verified and explicitly unresolved):\n"
         + json.dumps(specialist_findings, indent=2)
         + "\n\nReturn your structured verdict."
@@ -364,26 +637,114 @@ def lead_verifier(state: ParentState, config: RunnableConfig) -> dict:
         if isinstance(output, LeadVerifierOutput)
         else LeadVerifierOutput.model_validate(output)
     )
+    challenge_feedback = _challenge_feedback(verdict.challenges)
+    feedback = "\n".join(part for part in (verdict.feedback.strip(), challenge_feedback) if part)[
+        :MAX_LEAD_FEEDBACK
+    ]
+    history = _with_history(
+        state,
+        _history_entry(
+            round_number,
+            decision=verdict.decision,
+            feedback=verdict.feedback,
+            checks=verdict.checks,
+            challenges=verdict.challenges,
+        ),
+    )
+
+    if verdict.decision in (VerifierDecision.REJECT, VerifierDecision.UNRESOLVED):
+        # A semantic rejection is not a successful lead review.  Keeping the
+        # report in state for diagnostics is fine, but parent routing must stop
+        # with a failed run rather than finalize it as accepted.
+        reason = verdict.feedback.strip() or (f"lead verifier returned {verdict.decision.value}")
+        return {
+            "final_report": report.model_dump(mode="json"),
+            "lead_round": round_number,
+            "lead_feedback": "",
+            "lead_status": "complete",
+            "status": "failed",
+            "failure_reason": f"lead verification did not pass: {reason}",
+            "lead_verification_history": history,
+        }
+
     if verdict.decision is VerifierDecision.REVISE:
-        feedback = verdict.feedback
         if round_number >= MAX_LEAD_ROUNDS:
-            # Bounded: accept with honest disclosure (spec section 23).
-            note = f"Lead verification (round {round_number}): {feedback}"
-            report.unresolved_questions = [*report.unresolved_questions, note]
+            # The one revision budget is exhausted. Apply the structured
+            # final-round policy: disclose low objections, suppress precisely
+            # targeted material conclusions, and fail only when safe targeting
+            # is unavailable.
+            final_report, clusters, _suppressed, blockers = _apply_final_round_challenges(
+                state,
+                report,
+                verdict.challenges,
+            )
+            if not verdict.challenges:
+                blockers.append("lead verifier requested revision without structured challenges")
+            if blockers:
+                reason = feedback or "lead verifier requested another revision"
+                return {
+                    "final_report": final_report.model_dump(mode="json"),
+                    "clusters": clusters,
+                    "lead_round": round_number,
+                    "lead_feedback": "",
+                    "lead_status": "complete",
+                    "status": "failed",
+                    "failure_reason": (
+                        "lead verification remained unresolved after one revision: "
+                        + reason
+                        + "; "
+                        + "; ".join(blockers)
+                    ),
+                    "lead_verification_history": history,
+                }
             return {
-                "final_report": report.model_dump(mode="json"),
+                "final_report": final_report.model_dump(mode="json"),
+                "clusters": clusters,
                 "lead_round": round_number,
                 "lead_feedback": "",
                 "lead_status": "complete",
+                "lead_verification_history": history,
             }
         return {
             "lead_round": round_number,
-            "lead_feedback": feedback,
+            "lead_feedback": feedback or "Lead verifier requested a concrete report revision.",
             "lead_status": "running",
+            "lead_verification_history": history,
+        }
+
+    # A first-round PASS with a material objection is not final: the lead must
+    # receive one opportunity to address it.  Low/informational objections can
+    # be disclosed immediately because they do not block acceptance.
+    if round_number < MAX_LEAD_ROUNDS and _needs_semantic_revision(verdict.challenges):
+        return {
+            "lead_round": round_number,
+            "lead_feedback": feedback or "Lead verifier identified a material objection.",
+            "lead_status": "running",
+            "lead_verification_history": history,
+        }
+
+    final_report, clusters, _suppressed, blockers = _apply_final_round_challenges(
+        state,
+        report,
+        verdict.challenges,
+    )
+    if blockers:
+        return {
+            "final_report": final_report.model_dump(mode="json"),
+            "clusters": clusters,
+            "lead_round": round_number,
+            "lead_feedback": "",
+            "lead_status": "complete",
+            "status": "failed",
+            "failure_reason": "lead verification failed closed: " + "; ".join(blockers),
+            "lead_verification_history": history,
         }
 
     return {
+        "final_report": final_report.model_dump(mode="json"),
+        "clusters": clusters,
         "lead_round": round_number,
         "lead_feedback": "",
         "lead_status": "complete",
+        "lead_verification_history": history,
     }

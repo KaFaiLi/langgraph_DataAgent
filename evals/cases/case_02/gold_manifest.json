@@ -1,0 +1,1 @@
+{"schema_version":1,"case_id":"case_02","scenario":"benign_explanation","expected":{"required_findings":[],"forbidden_findings":[{"finding_id":"C02-FALSE-BENIGN"}],"contradictions":[{"id":"C02-TEMPORARY-BOUND","finding_id":"C02-FALSE-BENIGN","challenge_type":"alternative_explanation"}],"expected_dispositions":[{"candidate_id":"C02-APPARENT-BREACH","disposition":"benign"}]}}

@@ -1,0 +1,1 @@
+{"schema_version":1,"case_id":"case_04","scenario":"hidden_contradictory_population","expected":{"required_findings":[{"finding_id":"C04-HIDDEN-BREACH","severity":"high"}],"forbidden_findings":[{"finding_id":"C04-DESK-CLEAN"}],"contradictions":[{"id":"C04-UNSAMPLED-PORTFOLIO","finding_id":"C04-DESK-CLEAN","challenge_type":"population_scope"}]}}

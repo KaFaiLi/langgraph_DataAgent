@@ -15,9 +15,9 @@ from data_agent.review.domain.severity import Severity
 from data_agent.review.domain.source import DateRange
 from data_agent.review.domain.verification import VerifierDecision
 from data_agent.review.llm.models import ModelTier
-from data_agent.review.orchestration.specialist_schemas import (
+from data_agent.review.orchestration.specialist.schemas import (
+    AdjudicatorOutput,
     AnalystOutput,
-    VerifierOutput,
 )
 from data_agent.skills.registry import build_specialist, get_specialist
 from data_agent.tools.review_context import ToolContext
@@ -45,9 +45,9 @@ class _FakeProvider:
         self.calls.append((name, tier))
         if schema is AnalystOutput:
             return RunnableLambda(lambda _m: AnalystOutput(findings=[_fake_finding("F-1")]))
-        if schema is VerifierOutput:
+        if schema is AdjudicatorOutput:
             return RunnableLambda(
-                lambda _m: VerifierOutput(finding_id="F-1", decision=VerifierDecision.PASS)
+                lambda _m: AdjudicatorOutput(finding_id="F-1", decision=VerifierDecision.PASS)
             )
         raise AssertionError(f"unexpected schema {schema}")
 
@@ -80,4 +80,4 @@ def test_specialist_graph_completes(tool_ctx: ToolContext, domain: SpecialistDom
     assert "## Findings" in result["markdown"]
     # Model allocation holds for every specialist.
     assert ("AnalystOutput", ModelTier.LOW_COST) in provider.calls
-    assert ("VerifierOutput", ModelTier.HIGH_COST) in provider.calls
+    assert ("AdjudicatorOutput", ModelTier.HIGH_COST) in provider.calls
