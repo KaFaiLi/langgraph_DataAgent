@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from data_agent.review.domain.domains import SPECIALIST_DOMAINS, SpecialistDomain
+from data_agent.skills.registry import SPECIALISTS, specialist_domain_for
 from data_agent.skills.review import (
     SkillLoadError,
     discover_skills,
@@ -15,7 +16,6 @@ from data_agent.skills.review import (
     load_lead_review_skill,
     load_skill,
 )
-from data_agent.skills.registry import SPECIALISTS, specialist_domain_for
 
 
 def test_repository_analytical_skills_are_discovered() -> None:

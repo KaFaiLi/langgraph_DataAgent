@@ -40,7 +40,7 @@ def invoke_structured(
             if isinstance(output, schema):
                 return output
             return schema.model_validate(_payload(output))
-        except Exception as exc:  # bounded provider/schema retry
+        except Exception as exc:  # noqa: BLE001 - bounded provider/schema retry
             last_error = exc
     raise ValueError(
         f"structured output failed after {attempts} attempt(s): {last_error}"

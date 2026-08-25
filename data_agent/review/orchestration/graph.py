@@ -23,11 +23,11 @@ from data_agent.review.orchestration.nodes import (
     preflight,
 )
 from data_agent.review.orchestration.nodes.correlate import correlate
-from data_agent.review.orchestration.nodes.finalize import finalize
 from data_agent.review.orchestration.nodes.fanout import (
     merge_specialist_outcomes,
     run_specialist_task,
 )
+from data_agent.review.orchestration.nodes.finalize import finalize
 from data_agent.review.orchestration.state import ParentState
 from data_agent.review.synthesis.lead_review import lead_review
 from data_agent.review.synthesis.lead_verifier import lead_verifier

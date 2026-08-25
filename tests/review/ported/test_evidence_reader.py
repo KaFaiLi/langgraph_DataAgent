@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from tests.review.fixtures.builder import make_risky_tree
 
 from data_agent.review.domain.evidence import EvidenceReference
 from data_agent.review.ingestion.catalog import build_catalog
@@ -17,6 +16,7 @@ from data_agent.review.ingestion.evidence_validator import (
     EvidenceFailureCode,
     EvidenceValidator,
 )
+from tests.review.fixtures.builder import make_risky_tree
 
 
 @pytest.fixture()

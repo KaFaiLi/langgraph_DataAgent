@@ -6,8 +6,8 @@ from pathlib import Path
 
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.ingestion.catalog import build_catalog
-from data_agent.skills.review import load_analysis_runner
 from data_agent.skills.registry import get_specialist
+from data_agent.skills.review import load_analysis_runner
 from data_agent.tools.review_context import ToolContext
 
 

@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from data_agent.tools.source_tools import discover_sources
 from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.skills.registry import SPECIALISTS
+from data_agent.tools.source_tools import discover_sources
 
 
 def test_tools_and_skills_have_one_package_each() -> None:

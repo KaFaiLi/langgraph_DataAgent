@@ -60,7 +60,7 @@ def _extract_params(tool: Any) -> dict[str, dict[str, Any]]:
                 else dict(schema_obj)
             )
             return dict(schema.get("properties", {}))
-        except Exception:
+        except Exception:  # noqa: BLE001 - linter must remain best effort for duck-typed tools
             return {}
     return {}
 

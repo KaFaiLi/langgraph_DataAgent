@@ -16,7 +16,6 @@ from data_agent.logging_utils import setup_logging
 from data_agent.review.interface import ReviewRequest, ReviewStatus
 from data_agent.review.service import ReviewService
 
-
 app = typer.Typer(no_args_is_help=True, help="Chat with DataAgent or run a controlled review.")
 review_app = typer.Typer(no_args_is_help=True, help="Run, resume, and inspect controlled reviews.")
 app.add_typer(review_app, name="review")
@@ -47,7 +46,7 @@ async def _chat_repl() -> None:
 
 
 @app.command("chat")
-def chat(message: list[str] | None = typer.Argument(None)) -> None:
+def chat(message: list[str] | None = typer.Argument(None)) -> None:  # noqa: B008 - Typer parameter declaration
     """Send one message, or start an interactive session when MESSAGE is omitted."""
     setup_logging(get_settings().log_level)
     if message:
@@ -71,11 +70,11 @@ def _date(value: str, option: str) -> date:
 
 @review_app.command("run")
 def run_review(
-    source: Path = typer.Option(..., exists=False, file_okay=False),
-    output: Path = typer.Option(..., file_okay=False),
+    source: Path = typer.Option(..., exists=False, file_okay=False),  # noqa: B008 - Typer parameter declaration
+    output: Path = typer.Option(..., file_okay=False),  # noqa: B008 - Typer parameter declaration
     review_start: str = typer.Option(...),
     review_end: str = typer.Option(...),
-    desk_template: Path = typer.Option(..., exists=True, dir_okay=False),
+    desk_template: Path = typer.Option(..., exists=True, dir_okay=False),  # noqa: B008 - Typer parameter declaration
     run_id: str | None = typer.Option(None),
 ) -> None:
     """Start one checkpointed review."""
@@ -112,7 +111,7 @@ def run_review(
 
 @review_app.command("resume")
 def resume_review(
-    run_dir: Path = typer.Argument(..., exists=True, file_okay=False),
+    run_dir: Path = typer.Argument(..., exists=True, file_okay=False),  # noqa: B008 - Typer parameter declaration
 ) -> None:
     """Resume an incomplete checkpoint or reopen a completed run."""
     result = ReviewService().resume(run_dir)
@@ -123,7 +122,7 @@ def resume_review(
 
 @review_app.command("status")
 def review_status(
-    run_dir: Path = typer.Argument(..., exists=False, file_okay=False),
+    run_dir: Path = typer.Argument(..., exists=False, file_okay=False),  # noqa: B008 - Typer parameter declaration
 ) -> None:
     """Read persisted status without running the graph."""
     _json(ReviewService().status(run_dir))

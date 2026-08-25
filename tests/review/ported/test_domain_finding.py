@@ -15,16 +15,16 @@ EVIDENCE = EvidenceReference(locator="source://risk.xlsx#sheet=DailyRisk&rows=12
 
 
 def make_finding(**overrides) -> Finding:
-    values = dict(
-        finding_id="RISK-001",
-        title="VaR level shift",
-        category="limit_breach",
-        severity=Severity.HIGH,
-        confidence=0.85,
-        claim="Daily VaR exceeded the effective limit on three consecutive days.",
-        period=DateRange(start=date(2025, 3, 10), end=date(2025, 3, 12)),
-        evidence=[EVIDENCE],
-    )
+    values = {
+        "finding_id": "RISK-001",
+        "title": "VaR level shift",
+        "category": "limit_breach",
+        "severity": Severity.HIGH,
+        "confidence": 0.85,
+        "claim": "Daily VaR exceeded the effective limit on three consecutive days.",
+        "period": DateRange(start=date(2025, 3, 10), end=date(2025, 3, 12)),
+        "evidence": [EVIDENCE],
+    }
     values.update(overrides)
     return Finding(**values)
 

@@ -36,7 +36,7 @@ from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.finding import Finding, VerificationStatus
 from data_agent.review.domain.overview import DataOverview, OverviewStatus
 from data_agent.review.domain.reports import SpecialistReport
-from data_agent.review.domain.severity import SEVERITY_ORDER, Severity
+from data_agent.review.domain.severity import SEVERITY_ORDER
 from data_agent.review.domain.verification import (
     VerificationRound,
     VerifierDecision,
@@ -74,9 +74,9 @@ from data_agent.review.orchestration.specialist_state import (
     loads_period,
 )
 from data_agent.review.reporting.markdown import render_specialist_report
+from data_agent.tools.research import build_research_tools
 from data_agent.tools.review_context import ToolContext
 from data_agent.tools.tabular_tools import inspect_table
-from data_agent.tools.research import build_research_tools
 
 MAX_MATERIAL_CHARS = 12_000
 MAX_REVISION_CONTEXT_CHARS = 40_000
@@ -250,7 +250,7 @@ def build_specialist_graph(
             )
             messages = result.get("messages", [])
             summary = str(getattr(messages[-1], "content", "")) if messages else ""
-        except Exception as exc:  # bounded exhaustion/provider failure is disclosed
+        except Exception as exc:  # noqa: BLE001 - bounded failure is disclosed
             exhausted = True
             summary = (
                 f"Research stopped at its bounded execution limit: {type(exc).__name__}: {exc}. "

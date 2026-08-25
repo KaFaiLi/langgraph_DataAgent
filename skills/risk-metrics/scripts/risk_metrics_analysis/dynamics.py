@@ -1,6 +1,5 @@
 """Comparable risk-metric dynamics checks."""
 
-# ruff: noqa: F403, F405
 from .limits import _series_key
 from .shared import *
 from .sources import _norm

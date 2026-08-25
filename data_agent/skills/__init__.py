@@ -22,7 +22,7 @@ from data_agent.skills.tools import build_skill_tools, render_skills_overview
 
 __all__ = [
     "Skill",
-    "discover_skills",
     "build_skill_tools",
+    "discover_skills",
     "render_skills_overview",
 ]

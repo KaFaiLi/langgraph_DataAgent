@@ -14,15 +14,15 @@ from data_agent.review.domain.source import DateRange
 
 
 def make_report(**overrides) -> SpecialistReport:
-    values = dict(
-        domain=SpecialistDomain.RISK_METRICS,
-        report_id="RISK",
-        title="Risk Metrics Review",
-        review_period=DateRange(start=date(2025, 1, 1), end=date(2026, 6, 30)),
-        generated_at=datetime(2026, 7, 1, tzinfo=UTC),
-        scope="All daily risk files.",
-        overall_conclusion="Nothing material.",
-    )
+    values = {
+        "domain": SpecialistDomain.RISK_METRICS,
+        "report_id": "RISK",
+        "title": "Risk Metrics Review",
+        "review_period": DateRange(start=date(2025, 1, 1), end=date(2026, 6, 30)),
+        "generated_at": datetime(2026, 7, 1, tzinfo=UTC),
+        "scope": "All daily risk files.",
+        "overall_conclusion": "Nothing material.",
+    }
     values.update(overrides)
     return SpecialistReport(**values)
 

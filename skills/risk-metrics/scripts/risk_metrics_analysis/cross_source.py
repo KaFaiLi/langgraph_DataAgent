@@ -1,6 +1,5 @@
 """Cross-source SGMR and Colibris consistency checks."""
 
-# ruff: noqa: F403, F405
 from .limits import _close
 from .shared import *
 from .sources import _norm

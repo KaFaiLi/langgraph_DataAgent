@@ -8,11 +8,11 @@ from pathlib import Path
 from types import ModuleType
 
 import pytest
-from tests.review.fixtures.builder import make_csv, make_xlsx
 
 from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.review.ingestion.evidence_reader import validate_locator
 from data_agent.tools.review_context import ToolContext
+from tests.review.fixtures.builder import make_csv, make_xlsx
 
 SKILL_SCRIPT = Path(__file__).parents[3] / "skills" / "pnl" / "scripts" / "analysis.py"
 

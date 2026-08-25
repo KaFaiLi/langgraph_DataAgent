@@ -8,7 +8,6 @@ and code owns evidence footers, speaker-note traceability, and overview charts.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import html
 import json
 import math
@@ -29,14 +28,15 @@ RISK_PPT_ROOT = WORKSPACE_ROOT / "skills" / "risk-ppt"
 if str(RISK_PPT_ROOT) not in sys.path:
     sys.path.insert(0, str(RISK_PPT_ROOT))
 
-from data_agent.review.application.run_bundle import load_completed_run  # noqa: E402
-from data_agent.review.domain.overview import DataOverview  # noqa: E402
-from data_agent.review.llm import ConfiguredReviewProvider, ModelTier  # noqa: E402
-from scripts.runtime import (  # noqa: E402
+from scripts.runtime import (
     check_svg_deck,
     convert_svg_deck,
     render_svg_previews,
 )
+
+from data_agent.review.application.run_bundle import load_completed_run
+from data_agent.review.domain.overview import DataOverview
+from data_agent.review.llm import ConfiguredReviewProvider, ModelTier
 
 RUN_DIR = WORKSPACE_ROOT / (
     "evals/cases/case_01/runs/case01-e2e-deepseek-20260824-r5-sequential-no-thinking"
@@ -97,7 +97,7 @@ class DeckPlan(BaseModel):
         ]
 
     @model_validator(mode="after")
-    def _controlled_shape(self) -> "DeckPlan":
+    def _controlled_shape(self) -> DeckPlan:
         expected_roles = [
             "cover",
             "summary",
@@ -276,41 +276,55 @@ def _text_lines(
 def _base_groups(page: int, role: str, eyebrow: str, title: str) -> list[str]:
     title_lines = _wrap(title, 52)[:2]
     return [
-        '<g id="background" data-pptx-bounds="0 0 1280 720">'
-        '<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/></g>',
-        '<g id="header" data-pptx-bounds="48 38 1184 138">'
-        f"{_text_lines([eyebrow.upper()], x=48, y=62, size=13, color=COLORS['muted'], weight=700)}"
-        '<line x1="48" y1="78" x2="248" y2="78" stroke="#E60028" stroke-width="5"/>'
-        f"{_text_lines(title_lines, x=48, y=119, size=34, color=COLORS['ink'], weight=700, line_height=1.08)}"
-        "</g>",
-        '<g id="chrome" data-pptx-bounds="48 662 1184 46">'
-        '<line x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF" stroke-width="1"/>'
-        '<rect x="48" y="680" width="6" height="18" fill="#E60028"/>'
-        f"{_text_lines(['INDEPENDENT RISK REVIEW'], x=64, y=694, size=12, color=COLORS['ink'], weight=700)}"
-        f"{_text_lines([str(page)], x=1232, y=694, size=13, color=COLORS['focus'], weight=700, anchor='end')}"
-        "</g>",
+        (
+            '<g id="background" data-pptx-bounds="0 0 1280 720">'
+            '<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/></g>'
+        ),
+        (
+            '<g id="header" data-pptx-bounds="48 38 1184 138">'
+            f"{_text_lines([eyebrow.upper()], x=48, y=62, size=13, color=COLORS['muted'], weight=700)}"
+            '<line x1="48" y1="78" x2="248" y2="78" stroke="#E60028" stroke-width="5"/>'
+            f"{_text_lines(title_lines, x=48, y=119, size=34, color=COLORS['ink'], weight=700, line_height=1.08)}"
+            "</g>"
+        ),
+        (
+            '<g id="chrome" data-pptx-bounds="48 662 1184 46">'
+            '<line x1="48" y1="666" x2="1232" y2="666" stroke="#D9D9DF" stroke-width="1"/>'
+            '<rect x="48" y="680" width="6" height="18" fill="#E60028"/>'
+            f"{_text_lines(['INDEPENDENT RISK REVIEW'], x=64, y=694, size=12, color=COLORS['ink'], weight=700)}"
+            f"{_text_lines([str(page)], x=1232, y=694, size=13, color=COLORS['focus'], weight=700, anchor='end')}"
+            "</g>"
+        ),
     ]
 
 
 def _cover_svg(copy: AuthoredSlide) -> str:
     title = ["Independent Risk Review"]
     groups = [
-        '<g id="background" data-pptx-bounds="0 0 1280 720">'
-        '<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>'
-        '<rect x="0" y="0" width="130" height="720" fill="#07073F"/>'
-        '<rect x="130" y="0" width="12" height="720" fill="#E60028"/></g>',
-        '<g id="cover-title" data-pptx-bounds="196 150 940 180">'
-        f"{_text_lines(title, x=196, y=218, size=52, color=COLORS['focus'], weight=700, line_height=1.08)}"
-        '<line x1="196" y1="334" x2="560" y2="334" stroke="#E60028" stroke-width="8"/>'
-        "</g>",
-        '<g id="cover-context" data-pptx-bounds="510 370 620 130">'
-        f"{_text_lines(_wrap(copy.why_it_matters, 44)[:2], x=510, y=408, size=24, color=COLORS['ink'], weight=700)}"
-        f"{_text_lines(_wrap(copy.commentary, 56)[:2], x=510, y=475, size=18, color=COLORS['muted'])}"
-        "</g>",
-        '<g id="cover-footer" data-pptx-bounds="196 650 936 44">'
-        '<rect x="196" y="672" width="6" height="22" fill="#E60028"/>'
-        f"{_text_lines(['INDEPENDENT RISK REVIEW'], x=212, y=689, size=13, color=COLORS['ink'], weight=700)}"
-        "</g>",
+        (
+            '<g id="background" data-pptx-bounds="0 0 1280 720">'
+            '<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>'
+            '<rect x="0" y="0" width="130" height="720" fill="#07073F"/>'
+            '<rect x="130" y="0" width="12" height="720" fill="#E60028"/></g>'
+        ),
+        (
+            '<g id="cover-title" data-pptx-bounds="196 150 940 180">'
+            f"{_text_lines(title, x=196, y=218, size=52, color=COLORS['focus'], weight=700, line_height=1.08)}"
+            '<line x1="196" y1="334" x2="560" y2="334" stroke="#E60028" stroke-width="8"/>'
+            "</g>"
+        ),
+        (
+            '<g id="cover-context" data-pptx-bounds="510 370 620 130">'
+            f"{_text_lines(_wrap(copy.why_it_matters, 44)[:2], x=510, y=408, size=24, color=COLORS['ink'], weight=700)}"
+            f"{_text_lines(_wrap(copy.commentary, 56)[:2], x=510, y=475, size=18, color=COLORS['muted'])}"
+            "</g>"
+        ),
+        (
+            '<g id="cover-footer" data-pptx-bounds="196 650 936 44">'
+            '<rect x="196" y="672" width="6" height="22" fill="#E60028"/>'
+            f"{_text_lines(['INDEPENDENT RISK REVIEW'], x=212, y=689, size=13, color=COLORS['ink'], weight=700)}"
+            "</g>"
+        ),
     ]
     return _svg_document("cover", groups)
 

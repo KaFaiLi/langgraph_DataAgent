@@ -1,6 +1,5 @@
 """Colibris excess-workflow checks."""
 
-# ruff: noqa: F403, F405
 from .shared import *
 from .sources import _norm
 

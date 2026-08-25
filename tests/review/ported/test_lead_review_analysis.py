@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.evidence import EvidenceReference
@@ -43,7 +43,7 @@ def analyze(*findings: Finding) -> CrossSpecialistAnalysis:
         report_id="TEST",
         title="Test specialist report",
         review_period=DateRange(start=date(2025, 1, 1), end=date(2025, 12, 31)),
-        generated_at=datetime(2025, 12, 31),
+        generated_at=datetime(2025, 12, 31, tzinfo=UTC),
         scope="Test",
         findings=list(findings),
         overall_conclusion="Test",

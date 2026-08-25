@@ -26,7 +26,7 @@ def estimate_tokens(text: str, model: str = "gpt-4o-mini") -> tuple[int, str]:
         except KeyError:
             enc = tiktoken.get_encoding("cl100k_base")
         return len(enc.encode(text)), enc.name
-    except Exception:
+    except Exception:  # noqa: BLE001 - tokenizer is an optional best-effort enhancement
         # tiktoken missing or failed -> heuristic.
         return max(1, len(text) // _CHARS_PER_TOKEN), "heuristic:chars/4"
 

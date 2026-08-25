@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from data_agent.tools.source_tools import SourcePathError, resolve_source_path
 from data_agent.review.domain.source import SourceManifest
+from data_agent.tools.source_tools import SourcePathError, resolve_source_path
 
 
 @dataclass(frozen=True)

@@ -1,8 +1,8 @@
 """Schema recognition and guarded source loading for risk metrics."""
 
-# ruff: noqa: F403, F405
-from .shared import *
 from fastmcp.exceptions import ToolError
+
+from .shared import *
 
 
 def _classify(frame: pl.DataFrame) -> Role | None:

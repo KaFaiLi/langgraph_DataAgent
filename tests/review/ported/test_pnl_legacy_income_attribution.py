@@ -6,12 +6,12 @@ from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
-from tests.review.fixtures.builder import make_csv
 
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.skills.review import discover_skills, load_analysis_runner
 from data_agent.tools.review_context import ToolContext
+from tests.review.fixtures.builder import make_csv
 
 ATTRIBUTION_PATH = "income_attribution/attribution.csv"
 _DAYS = 40

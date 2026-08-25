@@ -1,6 +1,7 @@
 """Adjustment controls and reconciliation checks."""
 
-# ruff: noqa: F403, F405
+from itertools import pairwise
+
 from .pnl import _overview_evidence
 from .shared import *
 
@@ -106,7 +107,7 @@ def _adjustment_controls(adjustments: list[AdjustmentRow], pnl: list[PnlRow]) ->
     for rows in reversal_groups.values():
         ordered = sorted(rows, key=lambda item: (item.value_end, item.creation_date, item.row))
         reversal_candidates: list[tuple[AdjustmentRow, AdjustmentRow, float]] = []
-        for first, second in zip(ordered, ordered[1:], strict=False):
+        for first, second in pairwise(ordered):
             if first.amount_eur * second.amount_eur >= 0 or first.amount_eur == 0:
                 continue
             gap_days = (second.value_end - first.value_end).days

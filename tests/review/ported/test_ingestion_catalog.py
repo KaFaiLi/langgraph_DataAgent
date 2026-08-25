@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 
 import pytest
-from tests.review.fixtures.builder import make_risky_tree
 
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.source import SourceType
@@ -14,6 +13,7 @@ from data_agent.review.ingestion.catalog import (
     guess_domains_from_path,
     iter_source_files,
 )
+from tests.review.fixtures.builder import make_risky_tree
 
 
 @pytest.fixture()

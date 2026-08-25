@@ -109,7 +109,7 @@ def spawn_http_server(
     return proc
 
 
-class http_server:  # noqa: N801 - context-manager style name
+class http_server:
     """Context manager wrapping :func:`spawn_http_server`.
 
     Example::

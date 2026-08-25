@@ -8,7 +8,6 @@ from typer.testing import CliRunner
 
 from data_agent.cli import app
 
-
 runner = CliRunner()
 
 

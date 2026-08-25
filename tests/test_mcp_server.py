@@ -11,7 +11,6 @@ from data_agent.agent.react_agent import build_mcp_client
 from data_agent.config import Settings
 from data_agent.tool_results import tool_json
 
-
 MIGRATED_TOOL_CALLS = {
     "list_sources": {"max_sources": 10},
     "search_text": {"pattern": "alpha"},

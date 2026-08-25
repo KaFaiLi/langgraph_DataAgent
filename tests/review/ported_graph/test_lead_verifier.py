@@ -6,7 +6,6 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 from langchain_core.runnables import RunnableLambda
-from tests.review.fixtures.builder import make_risky_tree
 
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.evidence import EvidenceReference
@@ -28,6 +27,7 @@ from data_agent.review.synthesis.lead_review import (
     _repair_report_structure,
 )
 from data_agent.review.synthesis.lead_verifier import LeadVerifierOutput, lead_verifier
+from tests.review.fixtures.builder import make_risky_tree
 
 LOCATOR = "source://risk_metrics/risk.csv#rows=2:2"
 PERIOD = DateRange(start=date(2025, 1, 1), end=date(2025, 1, 31))

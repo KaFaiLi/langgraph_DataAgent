@@ -1,6 +1,5 @@
 """Risk input integrity checks."""
 
-# ruff: noqa: F403, F405
 from .limits import _close
 from .shared import *
 from .sources import _duplicates, _norm

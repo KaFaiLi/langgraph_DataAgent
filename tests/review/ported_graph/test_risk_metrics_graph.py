@@ -23,12 +23,12 @@ from data_agent.review.domain.source import DateRange
 from data_agent.review.domain.verification import VerifierDecision
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 from data_agent.review.llm.models import ModelTier
-from data_agent.review.orchestration.nodes.fanout import (
-    _sanitize_verification_collection,
-)
 from data_agent.review.orchestration.finding_policy import (
     MAX_PERSISTED_FINDING_EVIDENCE,
     normalize_findings,
+)
+from data_agent.review.orchestration.nodes.fanout import (
+    _sanitize_verification_collection,
 )
 from data_agent.review.orchestration.prompt_projection import (
     MAX_ANALYSIS_PROMPT_CHARS,

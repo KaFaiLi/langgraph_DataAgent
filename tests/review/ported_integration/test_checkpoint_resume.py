@@ -5,14 +5,13 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
+from data_agent.review import ReviewRequest, ReviewService, ReviewStatus
+from data_agent.review.domain.desk_context import DeskContext
 from tests.review.fixtures.builder import make_risky_tree
 from tests.review.ported_graph.test_orchestration import (
     DESK_TEMPLATE,
     FakeParentProvider,
 )
-
-from data_agent.review import ReviewRequest, ReviewService, ReviewStatus
-from data_agent.review.domain.desk_context import DeskContext
 
 
 def _desk() -> DeskContext:

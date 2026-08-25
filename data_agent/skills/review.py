@@ -15,9 +15,9 @@ from typing import Any, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from data_agent.skills.loader import parse_skill_document
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.reports import CrossSpecialistAnalysis, SpecialistReport
+from data_agent.skills.loader import parse_skill_document
 from data_agent.tools.review_context import ToolContext
 
 SPECIALIST_SKILL_KIND = "specialist-review"

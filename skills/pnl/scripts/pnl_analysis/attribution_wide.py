@@ -1,6 +1,5 @@
 """Wide AIR income-attribution schema, profile, and workflow checks."""
 
-# ruff: noqa: F403, F405
 from .pnl import _overview_evidence
 from .shared import *
 

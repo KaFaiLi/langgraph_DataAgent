@@ -9,11 +9,10 @@ from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from types import ModuleType
 
-from tests.review.fixtures.builder import make_csv, make_parquet
-
 from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.review.ingestion.evidence_reader import validate_locator
 from data_agent.tools.review_context import ToolContext
+from tests.review.fixtures.builder import make_csv, make_parquet
 
 SKILL_SCRIPT = Path(__file__).parents[3] / "skills" / "risk-metrics" / "scripts" / "analysis.py"
 

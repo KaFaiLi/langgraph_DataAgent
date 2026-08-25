@@ -115,7 +115,7 @@ class EvidenceValidator:
             return self._validate_approved(locator_uri)
         try:
             snippet, source = self.reopen(locator_uri)
-        except Exception as exc:  # translated to a stable caller-facing evidence result
+        except Exception as exc:  # noqa: BLE001 - translated to a stable caller-facing evidence result
             code, disposition = self._classify_failure(exc)
             return EvidenceValidationResult(
                 locator=locator_uri,

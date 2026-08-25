@@ -7,6 +7,7 @@ physical row numbering, and source-locator construction consistent across skills
 from __future__ import annotations
 
 import datetime as dt
+import math
 
 import polars as pl
 
@@ -35,7 +36,7 @@ def float_value(value: object) -> float | None:
         parsed = float(str(value).replace(",", ""))
     except (TypeError, ValueError):
         return None
-    return parsed if parsed == parsed and parsed not in {float("inf"), float("-inf")} else None
+    return parsed if math.isfinite(parsed) else None
 
 
 def int_value(value: object) -> int | None:
@@ -53,8 +54,8 @@ def date_value(value: object) -> dt.date | None:
     text = text_value(value)
     for parser in (
         lambda: dt.date.fromisoformat(text[:10]),
-        lambda: dt.datetime.strptime(text, "%m/%d/%Y").date(),
-        lambda: dt.datetime.strptime(text, "%d/%m/%Y").date(),
+        lambda: dt.datetime.strptime(text, "%m/%d/%Y").replace(tzinfo=dt.UTC).date(),
+        lambda: dt.datetime.strptime(text, "%d/%m/%Y").replace(tzinfo=dt.UTC).date(),
     ):
         try:
             return parser()

@@ -12,8 +12,8 @@ from typing import Any, Literal
 
 from langchain_core.tools import BaseTool, StructuredTool, ToolException
 
-from data_agent.tools import source_tools, statistics_tools, tabular_tools
 from data_agent.review.domain.evidence import parse_locator
+from data_agent.tools import source_tools, statistics_tools, tabular_tools
 from data_agent.tools.review_context import ToolContext
 
 MAX_RESULT_CHARS = 12_000
@@ -47,7 +47,7 @@ def build_research_tools(
         try:
             value = operation()
             raw = value if isinstance(value, str) else json.dumps(value, default=str)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - tool failures are captured in the research trace
             error = f"{type(exc).__name__}: {exc}"
             raw = error
         rendered = raw[:MAX_RESULT_CHARS]
@@ -157,7 +157,7 @@ def build_research_tools(
         forbidden = [
             name
             for name, path in all_names.items()
-            if path not in allowed and re.search(rf"\b{re.escape(name)}\b", sql, re.I)
+            if path not in allowed and re.search(rf"\b{re.escape(name)}\b", sql, re.IGNORECASE)
         ]
         if forbidden:
             raise ToolException(f"query references tables outside specialist scope: {forbidden}")

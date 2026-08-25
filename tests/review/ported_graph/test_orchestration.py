@@ -7,7 +7,6 @@ from datetime import date
 from pathlib import Path
 
 from langchain_core.runnables import RunnableLambda
-from tests.review.fixtures.builder import make_risky_tree, make_text
 
 from data_agent.review.domain.desk_context import DeskContext
 from data_agent.review.domain.domains import SPECIALIST_DOMAINS, SpecialistDomain
@@ -21,6 +20,7 @@ from data_agent.review.orchestration.specialist_schemas import (
     AnalystOutput,
     VerifierOutput,
 )
+from tests.review.fixtures.builder import make_risky_tree, make_text
 
 DESK_TEMPLATE = DeskContext(
     desk_name="EM Rates",
@@ -317,7 +317,7 @@ def test_desk_context_bullet_facts_are_shared_with_exact_line_evidence(
 
 
 def test_specialist_failure_fails_run(tmp_path: Path, monkeypatch) -> None:
-    import data_agent.review.orchestration.nodes.fanout as fanout
+    from data_agent.review.orchestration.nodes import fanout
 
     def _exploding_builder(*args, **kwargs):
         raise RuntimeError("boom")

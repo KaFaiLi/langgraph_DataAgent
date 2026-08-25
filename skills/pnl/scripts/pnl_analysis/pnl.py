@@ -1,6 +1,7 @@
 """PnL integrity, behavior, and overview checks."""
 
-# ruff: noqa: F403, F405
+from itertools import pairwise
+
 from .shared import *
 
 
@@ -247,7 +248,7 @@ def _pnl_patterns(pnl: list[PnlRow]) -> AnalysisResult:
                 outlier_matches.append((item, z))
 
         reversal_matches: list[tuple[PnlRow, PnlRow, float, float]] = []
-        for index, (first, second) in enumerate(zip(ordered, ordered[1:], strict=False)):
+        for index, (first, second) in enumerate(pairwise(ordered)):
             if first.dtd * second.dtd >= 0 or first.dtd == 0:
                 continue
             first_z = abs(scores[index])

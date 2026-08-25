@@ -71,8 +71,8 @@ def _json_safe(value: Any) -> Any:
     if callable(item):
         try:
             return _json_safe(item())
-        except Exception:
-            pass
+        except Exception:  # noqa: BLE001 - dataframe scalar conversion is best effort
+            return str(value)
     return str(value)
 
 

@@ -8,7 +8,6 @@ from data_agent.review.domain.reports import CrossSpecialistAnalysis, Specialist
 from data_agent.review.orchestration.state import ParentState
 from data_agent.skills.review import load_lead_analysis_runner
 
-
 _RUN_ANALYSIS = load_lead_analysis_runner()
 
 

@@ -18,8 +18,8 @@ import csv
 import hashlib
 import os
 import re
-from datetime import date
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Annotated, Any
 from urllib.parse import parse_qsl
@@ -336,7 +336,7 @@ def _metadata_for(path: Path, root: Path, source_id: str) -> SourceMetadata:
             finally:
                 workbook.close()
         elif source_type == "docx":
-            values["line_count"] = _line_count(path, source_type)
+            values["line_count"] = len(_text_lines(path, source_type))
         elif source_type == "pdf":
             import pymupdf
 
@@ -344,7 +344,7 @@ def _metadata_for(path: Path, root: Path, source_id: str) -> SourceMetadata:
                 values["page_count"] = document.page_count
         elif source_type == "parquet":
             try:
-                import pyarrow.parquet as parquet
+                from pyarrow import parquet
             except ImportError:
                 import polars as pl
 
@@ -355,7 +355,7 @@ def _metadata_for(path: Path, root: Path, source_id: str) -> SourceMetadata:
                 table = parquet.read_table(path)
                 values["row_count"] = table.num_rows
                 values["column_names"] = tuple(table.column_names)
-    except Exception as exc:  # metadata must still expose the file on parse failure
+    except Exception as exc:  # noqa: BLE001 - metadata must still expose the file on parse failure
         values["parse_error"] = f"{type(exc).__name__}: {str(exc)[:300]}"
     return SourceMetadata(**values)
 
@@ -577,7 +577,7 @@ def read_document_section_data(root: str | os.PathLike[str] | Path, locator_uri:
                 workbook.close()
         if source_type == "parquet":
             try:
-                import pyarrow.parquet as parquet
+                from pyarrow import parquet
             except ImportError:
                 try:
                     import polars as pl
@@ -795,20 +795,20 @@ __all__ = [
     "MAX_OUTPUT_CHARS",
     "SourceMetadata",
     "SourcePathError",
-    "configured_source_root",
     "candidate_domains_from_path",
+    "configured_source_root",
     "discover_sources",
     "file_digest",
     "iter_source_files",
-    "list_sources_data",
     "list_sources",
+    "list_sources_data",
     "parse_source_locator",
-    "read_document_section_data",
     "read_document_section",
-    "read_lines_data",
+    "read_document_section_data",
     "read_lines",
+    "read_lines_data",
     "register",
     "resolve_source_path",
-    "search_text_data",
     "search_text",
+    "search_text_data",
 ]

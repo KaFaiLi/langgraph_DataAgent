@@ -6,7 +6,6 @@ import pytest
 
 from data_agent.tools import statistics_tools
 
-
 SERIES = [1.0, 2.0, 3.0, 4.0, 5.0]
 
 

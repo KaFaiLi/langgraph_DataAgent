@@ -42,8 +42,7 @@ def resolve_relative(
     if (
         path.is_absolute()
         or path.drive
-        or raw.startswith("/")
-        or raw.startswith("//")
+        or raw.startswith(("/", "//"))
         or (len(raw) >= 2 and raw[1] == ":")
     ):
         raise SafePathError("path must be relative to the configured root")
