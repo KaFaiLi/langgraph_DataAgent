@@ -12,7 +12,6 @@ from data_agent.config import Settings, get_settings
 def get_deepseek_chat_model(
     *,
     model: str | None = None,
-    temperature: float | None = None,
     api_key: str | None = None,
     settings: Settings | None = None,
     **kwargs: Any,
@@ -30,7 +29,6 @@ def get_deepseek_chat_model(
 
     model_kwargs: dict[str, Any] = {
         "model": model or settings.deepseek_model,
-        "temperature": (settings.deepseek_temperature if temperature is None else temperature),
         **kwargs,
     }
     configured_api_key = api_key or (

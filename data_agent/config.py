@@ -7,8 +7,8 @@ cached so the ``.env`` file is only parsed once per process.
 
 from __future__ import annotations
 
-from functools import lru_cache
 import os
+from functools import lru_cache
 from pathlib import Path
 
 from pydantic import Field, SecretStr, field_validator
@@ -31,13 +31,11 @@ class Settings(BaseSettings):
     # --- LLM -----------------------------------------------------------------
     llm_provider: str = Field(default="deepseek", description="deepseek | socgenai")
     genai_model: str = Field(default="gpt-4o-mini")
-    genai_temperature: float = Field(default=0.0)
     socgenai_low_cost_model: str = Field(default="gpt-5-mini")
     socgenai_high_cost_model: str = Field(default="gpt-5.4")
     deepseek_low_cost_model: str = Field(default="deepseek-v4-flash")
     deepseek_high_cost_model: str = Field(default="deepseek-v4-pro")
     deepseek_model: str = Field(default="deepseek-chat")
-    deepseek_temperature: float = Field(default=0.0)
     deepseek_max_retries: int = Field(default=5, ge=0)
     deepseek_api_key: SecretStr | None = Field(default=None)
 

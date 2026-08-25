@@ -46,7 +46,6 @@ class _CostTierReviewProvider:
             provider=self.provider_name,
             settings=self.settings,
             model=self.model_name(tier),
-            temperature=0.0,
             **self.model_options(),
         )
         if schema is None:
