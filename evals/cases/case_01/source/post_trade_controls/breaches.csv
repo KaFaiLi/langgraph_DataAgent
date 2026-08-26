@@ -1,0 +1,15 @@
+﻿date,product,severity,status,closure_days,approval,override_by,notes
+2025-07-11,MOCK_PTF_ATLAS,medium,closed,1,control.approver.1,,Independent price check completed
+2025-08-05,MOCK_PTF_BOREAL,low,closed,2,control.approver.2,,Late confirmation received and reconciled
+2025-08-28,MOCK_PTF_CEDAR,low,closed,1,control.approver.3,,Late confirmation received and reconciled
+2025-09-22,MOCK_PTF_DUNE,low,closed,2,control.approver.4,,Late confirmation received and reconciled
+2025-10-15,MOCK_PTF_ECHO,low,closed,1,control.approver.1,,Threshold event closed with supporting evidence
+2025-11-07,MOCK_PTF_FJORD,medium,closed,2,control.approver.2,,Booking amendment reviewed before closure
+2025-12-02,MOCK_PTF_GARNET,low,closed,1,control.approver.3,,Independent price check completed
+2025-12-25,MOCK_PTF_HARBOR,low,closed,2,control.approver.4,,Late confirmation received and reconciled
+2026-01-19,MOCK_PTF_IVORY,low,closed,1,control.approver.1,,Late confirmation received and reconciled
+2026-02-11,MOCK_PTF_JADE,low,closed,2,control.approver.2,,Independent price check completed
+2026-03-06,MOCK_PTF_KITE,medium,closed,1,control.approver.3,,Threshold event closed with supporting evidence
+2026-03-31,MOCK_PTF_LUMEN,low,closed,2,control.approver.4,,Late confirmation received and reconciled
+2026-04-23,MOCK_PTF_ATLAS,low,closed,1,control.approver.1,,Late confirmation received and reconciled
+2026-05-18,MOCK_PTF_BOREAL,low,closed,2,control.approver.2,,Threshold event closed with supporting evidence
