@@ -95,6 +95,17 @@ class Settings(BaseSettings):
         ),
     )
 
+    # --- Execution tracing --------------------------------------------------
+    trace_result_preview_chars: int = Field(
+        default=0,
+        ge=0,
+        le=4_000,
+        description=(
+            "Maximum redacted tool-result characters retained in execution traces. "
+            "Zero records metadata only."
+        ),
+    )
+
     # --- Logging -------------------------------------------------------------
     log_level: str = Field(default="INFO")
 

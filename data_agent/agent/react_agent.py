@@ -15,10 +15,14 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Sequence
+from copy import copy
 from dataclasses import dataclass, field
 from typing import Any
+from uuid import uuid4
 
 from langchain.agents import create_agent
+from langchain_core.callbacks import BaseCallbackManager
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.tools import BaseTool
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -29,6 +33,7 @@ from data_agent.llm import get_chat_model
 from data_agent.logging_utils import get_logger, setup_logging
 from data_agent.skills.loader import Skill, discover_skills
 from data_agent.skills.tools import build_skill_tools, render_skills_overview
+from data_agent.tracing import ExecutionTraceHandler, TraceSink
 
 logger = get_logger(__name__)
 
@@ -96,6 +101,7 @@ class AgentBundle:
     skills: list[Skill] = field(default_factory=list)
     system_prompt: str = ""
     max_iterations: int = 10  # mirrors Settings.agent_max_iterations
+    trace_result_preview_chars: int = 0
 
     @property
     def all_tools(self) -> list[BaseTool]:
@@ -112,17 +118,47 @@ class AgentBundle:
             cfg.update(extra)
         return cfg
 
-    async def ainvoke(self, message: str, **kwargs: Any) -> dict:
+    async def ainvoke(
+        self,
+        message: str,
+        *,
+        trace_sinks: Sequence[TraceSink] = (),
+        **kwargs: Any,
+    ) -> dict:
         """Convenience: send a single user message and return the raw state."""
+        config = self._run_config(kwargs.pop("config", None))
+        if trace_sinks:
+            handler = ExecutionTraceHandler(
+                logical_run_id=f"chat-{uuid4()}",
+                sinks=trace_sinks,
+                result_preview_chars=self.trace_result_preview_chars,
+            )
+            callbacks = config.get("callbacks")
+            if callbacks is None:
+                config["callbacks"] = [handler]
+            elif isinstance(callbacks, list):
+                config["callbacks"] = [*callbacks, handler]
+            elif isinstance(callbacks, BaseCallbackManager):
+                manager = copy(callbacks)
+                manager.add_handler(handler, inherit=True)
+                config["callbacks"] = manager
+            else:
+                raise TypeError("config callbacks must be a callback list or manager")
         return await self.agent.ainvoke(
             {"messages": [{"role": "user", "content": message}]},
-            config=self._run_config(kwargs.pop("config", None)),
+            config=config,
             **kwargs,
         )
 
-    async def ask(self, message: str, **kwargs: Any) -> str:
+    async def ask(
+        self,
+        message: str,
+        *,
+        trace_sinks: Sequence[TraceSink] = (),
+        **kwargs: Any,
+    ) -> str:
         """Convenience: send a message, return just the final text answer."""
-        result = await self.ainvoke(message, **kwargs)
+        result = await self.ainvoke(message, trace_sinks=trace_sinks, **kwargs)
         return result["messages"][-1].content
 
 
@@ -180,4 +216,5 @@ async def build_agent(
         skills=skills,
         system_prompt=system_prompt,
         max_iterations=settings.agent_max_iterations,
+        trace_result_preview_chars=settings.trace_result_preview_chars,
     )

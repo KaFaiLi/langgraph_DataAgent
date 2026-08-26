@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -48,6 +48,8 @@ class ReviewResult(BaseModel):
     failure_reason: str | None = None
     final_report: dict[str, Any] | None = None
     specialist_reports: dict[str, dict[str, Any]] = Field(default_factory=dict)
+    trace_path: Path | None = None
+    last_event_at: datetime | None = None
 
 
 class ReviewRunStatus(BaseModel):
@@ -58,3 +60,5 @@ class ReviewRunStatus(BaseModel):
     output_dir: Path
     failure_reason: str | None = None
     completed_specialists: list[str] = Field(default_factory=list)
+    trace_path: Path | None = None
+    last_event_at: datetime | None = None

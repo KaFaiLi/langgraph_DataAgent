@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from langchain_core.runnables.config import RunnableConfig
 
@@ -55,6 +57,44 @@ class _SpecialistOutcome:
     research_trace: list[dict[str, Any]] | None = None
     adversarial_trace: dict[str, list[dict[str, Any]]] | None = None
     failure_reason: str | None = None
+
+
+def _atomic_write(path: Path, content: str) -> None:
+    """Replace one specialist artifact without exposing a partial file."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
+    try:
+        temporary.write_text(content, encoding="utf-8")
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def _persist_specialist_outcome(output_dir: Path, outcome: _SpecialistOutcome) -> None:
+    """Persist one successful branch before other parallel branches are merged."""
+
+    assert outcome.report is not None
+    assert outcome.verification is not None
+    assert outcome.research_trace is not None
+    assert outcome.adversarial_trace is not None
+    directory = output_dir / "specialists"
+    stem = outcome.domain.value
+    artifacts = {
+        directory / f"{stem}.md": outcome.markdown,
+        directory / f"{stem}.json": json.dumps(outcome.report, indent=2, default=str),
+        directory / f"{stem}.verification.json": json.dumps(
+            outcome.verification, indent=2, default=str
+        ),
+        directory / f"{stem}.research_trace.json": json.dumps(
+            outcome.research_trace, indent=2, default=str
+        ),
+        directory / f"{stem}.adversarial_trace.json": json.dumps(
+            outcome.adversarial_trace, indent=2, default=str
+        ),
+    }
+    for path, content in artifacts.items():
+        _atomic_write(path, content)
 
 
 def _provider(config: RunnableConfig) -> ReviewLLMProvider:
@@ -202,6 +242,8 @@ def run_specialist_task(state: ParentState, config: RunnableConfig) -> dict:
         state=state,
         config=config,
     )
+    if outcome.failure_reason is None:
+        _persist_specialist_outcome(output_dir, outcome)
     return {
         "specialist_outcomes": [
             {
@@ -245,8 +287,6 @@ def _merge_outcomes(state: ParentState, outcomes: list[_SpecialistOutcome]) -> d
     reports: dict[str, dict] = dict(state.get("specialist_reports", {}))
     markdowns: dict[str, str] = dict(state.get("specialist_markdown", {}))
     coverage: list[dict] = [dict(entry) for entry in state.get("coverage", [])]
-    output_dir = Path(state["output_dir"])
-
     failure = next((outcome.failure_reason for outcome in outcomes if outcome.failure_reason), None)
     if failure is not None:
         return {"status": "failed", "failure_reason": failure}
@@ -260,26 +300,6 @@ def _merge_outcomes(state: ParentState, outcomes: list[_SpecialistOutcome]) -> d
         reports[domain.value] = outcome.report
         markdowns[domain.value] = outcome.markdown
 
-        specialist_dir = output_dir / "specialists"
-        (specialist_dir / f"{domain.value}.md").write_text(outcome.markdown, encoding="utf-8")
-        (specialist_dir / f"{domain.value}.json").write_text(
-            json.dumps(outcome.report, indent=2, default=str),
-            encoding="utf-8",
-        )
-        # Verifier-effectiveness artifacts (spec section 37): candidates before
-        # verification vs. verified/rejected/unresolved after.
-        (specialist_dir / f"{domain.value}.verification.json").write_text(
-            json.dumps(outcome.verification, indent=2, default=str),
-            encoding="utf-8",
-        )
-        (specialist_dir / f"{domain.value}.research_trace.json").write_text(
-            json.dumps(outcome.research_trace, indent=2, default=str),
-            encoding="utf-8",
-        )
-        (specialist_dir / f"{domain.value}.adversarial_trace.json").write_text(
-            json.dumps(outcome.adversarial_trace, indent=2, default=str),
-            encoding="utf-8",
-        )
         coverage = _update_coverage(coverage, domain, outcome.source_ids)
 
     return {

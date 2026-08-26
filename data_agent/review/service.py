@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +14,7 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph.state import CompiledStateGraph
 
+from data_agent.config import get_settings
 from data_agent.review.application.run_bundle import (
     load_completed_run,
     load_resume_context,
@@ -28,6 +31,12 @@ from data_agent.review.interface import (
 from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.review.orchestration.graph import build_parent_graph
 from data_agent.review.telemetry import ReviewTelemetryHandler
+from data_agent.tracing import (
+    ExecutionTraceHandler,
+    JsonlTraceSink,
+    TraceSink,
+    read_trace,
+)
 
 
 class ReviewService:
@@ -38,9 +47,11 @@ class ReviewService:
         llm_provider: ReviewLLMProvider | None = None,
         *,
         checkpoint_db_name: str = "checkpoints.sqlite",
+        trace_sinks: Sequence[TraceSink] = (),
     ) -> None:
         self.llm_provider = llm_provider or DEFAULT_LLM_PROVIDER
         self.checkpoint_db_name = checkpoint_db_name
+        self.trace_sinks = tuple(trace_sinks)
 
     def start(self, request: ReviewRequest) -> ReviewResult:
         """Persist authoritative inputs and execute a fresh review."""
@@ -68,6 +79,7 @@ class ReviewService:
         root = Path(run_dir).resolve()
         if (root / "run_manifest.json").is_file():
             bundle = load_completed_run(root)
+            trace_path, last_event_at = self._trace_status(root)
             return ReviewResult(
                 status=ReviewStatus.COMPLETED,
                 run_id=bundle.run.run_id,
@@ -77,6 +89,8 @@ class ReviewService:
                     domain.value: report.model_dump(mode="json")
                     for domain, report in bundle.specialist_reports.items()
                 },
+                trace_path=trace_path,
+                last_event_at=last_event_at,
             )
 
         context = load_resume_context(root, checkpoint_db_name=self.checkpoint_db_name)
@@ -96,26 +110,35 @@ class ReviewService:
         run_id = str(context.get("run_id") or root.name)
         if completed.is_file():
             manifest = self._read_json(completed)
+            trace_path, last_event_at = self._trace_status(root)
             return ReviewRunStatus(
                 status=ReviewStatus.COMPLETED,
                 run_id=str(manifest.get("run_id") or run_id),
                 output_dir=root,
                 completed_specialists=self._completed_specialists(root),
+                trace_path=trace_path,
+                last_event_at=last_event_at,
             )
         if failure.is_file():
             data = self._read_json(failure)
+            trace_path, last_event_at = self._trace_status(root)
             return ReviewRunStatus(
                 status=ReviewStatus.FAILED,
                 run_id=str(data.get("run_id") or run_id),
                 output_dir=root,
                 failure_reason=data.get("failure_reason"),
                 completed_specialists=self._completed_specialists(root),
+                trace_path=trace_path,
+                last_event_at=last_event_at,
             )
+        trace_path, last_event_at = self._trace_status(root)
         return ReviewRunStatus(
             status=ReviewStatus.RUNNING if root.is_dir() else ReviewStatus.NOT_FOUND,
             run_id=run_id,
             output_dir=root,
             completed_specialists=self._completed_specialists(root),
+            trace_path=trace_path,
+            last_event_at=last_event_at,
         )
 
     def _build_graph(self, checkpointer: BaseCheckpointSaver | None = None) -> CompiledStateGraph:
@@ -125,8 +148,19 @@ class ReviewService:
         )
 
     def _config(self, context: RunContext, root: Path) -> RunnableConfig:
+        settings = get_settings()
+        trace_path = self._trace_path(root)
+        operational_sink = JsonlTraceSink(
+            trace_path,
+            include_preview=settings.trace_result_preview_chars > 0,
+        )
         callbacks: list[BaseCallbackHandler] = [
-            ReviewTelemetryHandler(root / "telemetry" / "llm_usage.jsonl")
+            ReviewTelemetryHandler(root / "telemetry" / "llm_usage.jsonl"),
+            ExecutionTraceHandler(
+                logical_run_id=context.run_id,
+                sinks=[operational_sink, *self.trace_sinks],
+                result_preview_chars=settings.trace_result_preview_chars,
+            ),
         ]
         return {
             "configurable": {
@@ -149,6 +183,8 @@ class ReviewService:
             failure_reason=output.get("failure_reason"),
             final_report=output.get("final_report"),
             specialist_reports=dict(output.get("specialist_reports", {})),
+            trace_path=ReviewService._existing_trace_path(root),
+            last_event_at=ReviewService._last_event_at(root),
         )
         if status is ReviewStatus.FAILED:
             root.mkdir(parents=True, exist_ok=True)
@@ -180,6 +216,28 @@ class ReviewService:
         directory = root / "specialists"
         if not directory.is_dir():
             return []
-        return sorted(
-            path.stem for path in directory.glob("*.json") if ".verification" not in path.name
-        )
+        return sorted(path.stem for path in directory.glob("*.json") if "." not in path.stem)
+
+    @staticmethod
+    def _trace_path(root: Path) -> Path:
+        return (root / "telemetry" / "execution_trace.jsonl").resolve()
+
+    @staticmethod
+    def _existing_trace_path(root: Path) -> Path | None:
+        path = ReviewService._trace_path(root)
+        return path if path.is_file() else None
+
+    @staticmethod
+    def _last_event_at(root: Path) -> datetime | None:
+        path = ReviewService._existing_trace_path(root)
+        if path is None:
+            return None
+        try:
+            events = read_trace(path)
+        except (OSError, ValueError):
+            return None
+        return events[-1].timestamp if events else None
+
+    @staticmethod
+    def _trace_status(root: Path) -> tuple[Path | None, datetime | None]:
+        return ReviewService._existing_trace_path(root), ReviewService._last_event_at(root)

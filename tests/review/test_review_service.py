@@ -5,6 +5,7 @@ from pathlib import Path
 
 from data_agent.review import ReviewRequest, ReviewStatus
 from data_agent.review.service import ReviewService
+from data_agent.tracing import read_trace
 
 
 def test_failed_preflight_is_persisted_and_visible_through_status(
@@ -29,6 +30,10 @@ def test_failed_preflight_is_persisted_and_visible_through_status(
     assert result.status is ReviewStatus.FAILED
     assert "does not exist" in (result.failure_reason or "")
     assert (request.output_dir / "failure.json").is_file()
+    assert result.trace_path is not None
+    assert result.trace_path.is_file()
+    read_trace(result.trace_path)
     status = ReviewService().status(request.output_dir)
     assert status.status is ReviewStatus.FAILED
     assert status.run_id == "RUN-MISSING"
+    assert status.trace_path == result.trace_path
