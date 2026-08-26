@@ -38,6 +38,7 @@ coverage.xml
 # Evaluation case inputs
 /evals/cases/*/source/
 /evals/cases/*/sources/
+!/evals/cases/case_01/source/
 
 # Logs and local databases
 *.log
