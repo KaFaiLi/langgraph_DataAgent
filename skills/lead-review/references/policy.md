@@ -15,6 +15,18 @@ Check that:
 8. material cross-source relationships are synthesized without merging unrelated
    observations merely because they share a broad category, date, or desk-context fact.
 
+An empty `key_findings` list is correct when there is no verified specialist support.
+Do not object to an empty `key_findings` list, missing final severities, or missing final
+confidences in that situation. Instead, verify that the executive assessment and
+unresolved-question/follow-up sections clearly label the specialist observations and any
+contradiction as unresolved. Never request promotion merely to make the synthesis visible.
+
+The runtime attaches deterministic cross-source relationship pairs and validates their
+locators. Evaluate each pair on its own concrete shared entity and event window; do not
+infer a larger cluster through transitive association. Evidence quotes are optional, and
+a locator-only reference is complete. Reserve `affected_finding_ids` for actual final
+finding IDs. Specialist IDs and cluster IDs belong in the explanation, not in that field.
+
 Return only `PASS` or `REVISE` with concrete feedback. Do not delete final findings;
 identify how the synthesis must be corrected. Deterministic runtime failures cannot be
 overridden by this policy.

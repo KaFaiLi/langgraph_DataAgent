@@ -28,25 +28,31 @@ def test_socgenai_review_models_have_role_defaults_and_env_overrides() -> None:
     defaults = Settings(_env_file=None)
     assert defaults.socgenai_low_cost_model == "gpt-5-mini"
     assert defaults.socgenai_high_cost_model == "gpt-5.4"
+    assert defaults.socgenai_max_completion_tokens == 128_000
 
     overridden = Settings(
         _env_file=None,
         socgenai_low_cost_model="internal-low",
         socgenai_high_cost_model="internal-high",
+        socgenai_max_completion_tokens=64_000,
     )
     assert overridden.socgenai_low_cost_model == "internal-low"
     assert overridden.socgenai_high_cost_model == "internal-high"
+    assert overridden.socgenai_max_completion_tokens == 64_000
 
 
 def test_deepseek_review_models_have_cost_tier_defaults_and_env_overrides() -> None:
     defaults = Settings(_env_file=None)
     assert defaults.deepseek_low_cost_model == "deepseek-v4-flash"
     assert defaults.deepseek_high_cost_model == "deepseek-v4-pro"
+    assert defaults.deepseek_max_tokens == 384_000
 
     overridden = Settings(
         _env_file=None,
         deepseek_low_cost_model="deepseek-low",
         deepseek_high_cost_model="deepseek-high",
+        deepseek_max_tokens=192_000,
     )
     assert overridden.deepseek_low_cost_model == "deepseek-low"
     assert overridden.deepseek_high_cost_model == "deepseek-high"
+    assert overridden.deepseek_max_tokens == 192_000

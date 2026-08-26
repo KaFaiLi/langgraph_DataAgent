@@ -37,6 +37,7 @@ def test_review_provider_maps_cost_roles_to_explicit_models(monkeypatch) -> None
         _env_file=None,
         socgenai_low_cost_model="low-model",
         socgenai_high_cost_model="high-model",
+        socgenai_max_completion_tokens=120_000,
     )
     provider = SocGenAIReviewProvider(settings)
 
@@ -45,7 +46,9 @@ def test_review_provider_maps_cost_roles_to_explicit_models(monkeypatch) -> None
 
     assert calls[0]["model"] == "low-model"
     assert calls[0]["provider"] == "socgenai"
+    assert calls[0]["model_kwargs"] == {"max_completion_tokens": 120_000}
     assert calls[1]["model"] == "high-model"
+    assert calls[1]["model_kwargs"] == {"max_completion_tokens": 120_000}
     assert calls[2] == {"schema": _Payload}
 
 
@@ -66,6 +69,7 @@ def test_deepseek_review_provider_maps_cost_roles_to_v4_models(monkeypatch) -> N
         _env_file=None,
         deepseek_low_cost_model="deepseek-v4-flash",
         deepseek_high_cost_model="deepseek-v4-pro",
+        deepseek_max_tokens=360_000,
     )
     provider = DeepSeekReviewProvider(settings)
 
@@ -75,9 +79,11 @@ def test_deepseek_review_provider_maps_cost_roles_to_v4_models(monkeypatch) -> N
     assert calls[0]["model"] == "deepseek-v4-flash"
     assert calls[0]["provider"] == "deepseek"
     assert calls[0]["max_retries"] == 5
+    assert calls[0]["max_tokens"] == 360_000
     assert calls[0]["extra_body"] == {"thinking": {"type": "disabled"}}
     assert calls[1]["model"] == "deepseek-v4-pro"
     assert calls[1]["max_retries"] == 5
+    assert calls[1]["max_tokens"] == 360_000
     assert calls[1]["extra_body"] == {"thinking": {"type": "disabled"}}
     assert calls[2] == {"schema": _Payload, "method": "json_mode"}
     messages = runnable.invoke([])

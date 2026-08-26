@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from collections import Counter
 from datetime import date, timedelta
 from itertools import combinations
 
@@ -67,6 +66,8 @@ _STOPWORDS = frozenset(
         "from",
         "this",
         "that",
+        "these",
+        "those",
         "over",
         "under",
         "into",
@@ -160,24 +161,6 @@ _DOWN_WORDS = frozenset(
 )
 
 
-class _UnionFind:
-    def __init__(self, ids: list[str]) -> None:
-        self.parent = {item: item for item in ids}
-
-    def find(self, item: str) -> str:
-        root = item
-        while self.parent[root] != root:
-            root = self.parent[root]
-        while self.parent[item] != root:
-            self.parent[item], item = root, self.parent[item]
-        return root
-
-    def union(self, left: str, right: str) -> None:
-        left_root, right_root = self.find(left), self.find(right)
-        if left_root != right_root:
-            self.parent[right_root] = left_root
-
-
 def _tokenize(text: str) -> set[str]:
     identifiers = {token.lower() for token in _IDENTIFIER_RE.findall(text)}
     proper_names = {
@@ -187,99 +170,68 @@ def _tokenize(text: str) -> set[str]:
     return (identifiers | proper_names | domain_terms) - _STOPWORDS
 
 
-def _entity_tokens(findings: list[Finding], min_count: int = 2) -> dict[str, set[str]]:
-    per_finding = {
-        finding.finding_id: _tokenize(f"{finding.title} {finding.claim}") for finding in findings
-    }
-    counts: Counter[str] = Counter()
-    for tokens in per_finding.values():
-        counts.update(tokens)
-
-    max_document_frequency = max(2, int(len(findings) * 0.20))
-    return {
-        finding_id: {
-            token
-            for token in tokens
-            if counts[token] >= min_count
-            and (len(findings) < 8 or counts[token] <= max_document_frequency)
-        }
-        for finding_id, tokens in per_finding.items()
-    }
-
-
 def _finding_dates(finding: Finding) -> list[date]:
     if finding.period is None:
         return []
     start, end = finding.period.start, finding.period.end
-    if (end - start).days > 366:
-        return [start]
+    if (end - start).days > MAX_EVENT_SPAN_DAYS:
+        return []
     return [start + timedelta(days=offset) for offset in range((end - start).days + 1)]
 
 
-def _date_buckets(findings: list[Finding]) -> dict[date, list[str]]:
-    buckets: dict[date, list[str]] = {}
-    for finding in findings:
-        for day in _finding_dates(finding):
-            buckets.setdefault(day, []).append(finding.finding_id)
-    return buckets
+def _shared_relationship(left: Finding, right: Finding) -> tuple[set[str], set[date], bool, bool]:
+    common = _tokenize(f"{left.title} {left.claim}") & _tokenize(f"{right.title} {right.claim}")
+    shared_dates = set(_finding_dates(left)) & set(_finding_dates(right))
+    specific_common = common - _DOMAIN_ENTITY_TERMS
+    same_event = bool(shared_dates and common)
+    same_entity = len(common) >= MIN_SHARED_ENTITY_TOKENS and bool(specific_common)
+    return common, shared_dates, same_event, same_entity
 
 
-def _relationship_types(findings: list[Finding], dates: set[date], tokens: set[str]) -> list[str]:
-    kinds: list[str] = []
-    if dates:
-        kinds.append("same_date")
-    if tokens:
-        kinds.append("shared_entity")
-    if len({finding.category for finding in findings}) == 1:
-        kinds.append("same_category")
-    return kinds
+def _build_clusters(findings: list[Finding], owners: dict[str, str]) -> list[CrossSourceCluster]:
+    """Return precise cross-specialist relationship pairs.
 
-
-def _build_clusters(findings: list[Finding]) -> list[CrossSourceCluster]:
+    Connected-component unioning is deliberately avoided: a weak bridge through one
+    finding must not turn several distinct issues into one apparent cross-source event.
+    """
     if not findings:
         return []
 
-    union_find = _UnionFind([finding.finding_id for finding in findings])
-    event_findings = [
-        finding
-        for finding in findings
-        if finding.period is not None
-        and (finding.period.end - finding.period.start).days <= MAX_EVENT_SPAN_DAYS
-    ]
-    shared_tokens = _entity_tokens(findings)
-
-    for finding_ids in _date_buckets(event_findings).values():
-        if len(finding_ids) >= 2:
-            for other_id in finding_ids[1:]:
-                union_find.union(finding_ids[0], other_id)
-
-    for left, right in combinations(findings, 2):
-        common = shared_tokens.get(left.finding_id, set()) & shared_tokens.get(
-            right.finding_id, set()
-        )
-        if len(common) >= MIN_SHARED_ENTITY_TOKENS:
-            union_find.union(left.finding_id, right.finding_id)
-
-    grouped: dict[str, list[Finding]] = {}
-    for finding in findings:
-        grouped.setdefault(union_find.find(finding.finding_id), []).append(finding)
-
     clusters: list[CrossSourceCluster] = []
-    groups = sorted(grouped.values(), key=lambda group: sorted(f.finding_id for f in group))
-    for index, members in enumerate(groups, start=1):
-        dates = {day for finding in members for day in _finding_dates(finding)}
-        tokens = set().union(*(shared_tokens.get(finding.finding_id, set()) for finding in members))
-        evidence: list[EvidenceReference] = [
-            reference for finding in members for reference in finding.evidence
-        ]
+    ordered = sorted(findings, key=lambda finding: finding.finding_id)
+    for left, right in combinations(ordered, 2):
+        if owners.get(left.finding_id) == owners.get(right.finding_id):
+            continue
+        common, shared_dates, same_event, same_entity = _shared_relationship(left, right)
+        if not same_event and not same_entity:
+            continue
+
+        relationship_types: list[str] = []
+        if same_event:
+            relationship_types.append("same_date")
+        if common:
+            relationship_types.append("shared_entity")
+        if left.category == right.category:
+            relationship_types.append("same_category")
+
+        evidence: list[EvidenceReference] = []
+        seen_locators: set[str] = set()
+        for reference in [*left.evidence, *right.evidence]:
+            if reference.locator in seen_locators:
+                continue
+            seen_locators.add(reference.locator)
+            # A cluster points back to specialist evidence by locator. Quotes are
+            # omitted because specialist summaries may be derived rather than verbatim.
+            evidence.append(EvidenceReference(locator=reference.locator))
+
         clusters.append(
             CrossSourceCluster(
-                cluster_id=f"CL-{index:03d}",
-                findings=sorted(finding.finding_id for finding in members),
-                relationship_types=_relationship_types(members, dates, tokens),
-                start_date=min(dates) if dates else None,
-                end_date=max(dates) if dates else None,
-                shared_entities=sorted(tokens),
+                cluster_id=f"CL-{len(clusters) + 1:03d}",
+                findings=[left.finding_id, right.finding_id],
+                relationship_types=relationship_types,
+                start_date=min(shared_dates) if shared_dates else None,
+                end_date=max(shared_dates) if shared_dates else None,
+                shared_entities=sorted(common),
                 supporting_evidence=evidence[:20],
             )
         )
@@ -287,7 +239,7 @@ def _build_clusters(findings: list[Finding]) -> list[CrossSourceCluster]:
 
 
 def _polarity(text: str) -> int:
-    tokens = set(text.lower().split())
+    tokens = set(_TOKEN_RE.findall(text.lower()))
     upward = len(tokens & _UP_WORDS)
     downward = len(tokens & _DOWN_WORDS)
     if upward > downward:
@@ -297,16 +249,17 @@ def _polarity(text: str) -> int:
     return 0
 
 
-def _find_contradictions(findings: list[Finding]) -> list[ContradictionCandidate]:
-    shared_tokens = _entity_tokens(findings)
+def _find_contradictions(
+    findings: list[Finding], owners: dict[str, str]
+) -> list[ContradictionCandidate]:
     contradictions: list[ContradictionCandidate] = []
     for left, right in combinations(findings, 2):
+        if owners.get(left.finding_id) == owners.get(right.finding_id):
+            continue
         if left.period is None or right.period is None or not left.period.overlaps(right.period):
             continue
-        common = shared_tokens.get(left.finding_id, set()) & shared_tokens.get(
-            right.finding_id, set()
-        )
-        if not common:
+        common, _shared_dates, same_event, same_entity = _shared_relationship(left, right)
+        if not same_event and not same_entity:
             continue
         left_polarity = _polarity(f"{left.title} {left.claim}")
         right_polarity = _polarity(f"{right.title} {right.claim}")
@@ -330,12 +283,13 @@ def _find_contradictions(findings: list[Finding]) -> list[ContradictionCandidate
 
 def run_analysis(reports: list[SpecialistReport]) -> CrossSpecialistAnalysis:
     """Return deterministic relationship candidates from completed specialist reports."""
-    findings = [
-        finding
-        for report in reports
-        for finding in [*report.verified_findings(), *report.unresolved_findings()]
-    ]
+    findings: list[Finding] = []
+    owners: dict[str, str] = {}
+    for report in reports:
+        for finding in [*report.verified_findings(), *report.unresolved_findings()]:
+            findings.append(finding)
+            owners[finding.finding_id] = report.domain.value
     return CrossSpecialistAnalysis(
-        clusters=_build_clusters(findings),
-        contradiction_candidates=_find_contradictions(findings),
+        clusters=_build_clusters(findings, owners),
+        contradiction_candidates=_find_contradictions(findings, owners),
     )

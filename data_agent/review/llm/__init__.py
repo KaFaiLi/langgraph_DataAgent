@@ -66,6 +66,16 @@ class SocGenAIReviewProvider(_CostTierReviewProvider):
 
     provider_name = "socgenai"
 
+    def model_options(self) -> dict[str, Any]:
+        # GenAIChatModel forwards model_kwargs unchanged to the Azure OpenAI
+        # Chat Completions backend. GPT-5 deployments use the replacement for
+        # the legacy max_tokens parameter.
+        return {
+            "model_kwargs": {
+                "max_completion_tokens": self.settings.socgenai_max_completion_tokens,
+            }
+        }
+
     def model_name(self, tier: ModelTier) -> str:
         return (
             self.settings.socgenai_low_cost_model
@@ -82,6 +92,7 @@ class DeepSeekReviewProvider(_CostTierReviewProvider):
     def model_options(self) -> dict[str, Any]:
         return {
             "max_retries": self.settings.deepseek_max_retries,
+            "max_tokens": self.settings.deepseek_max_tokens,
             # Review calls are schema-constrained and already use low/high-cost
             # model selection. DeepSeek v4 enables high-effort thinking by
             # default, which greatly lengthens these JSON generations and is

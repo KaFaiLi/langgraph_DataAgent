@@ -38,17 +38,30 @@ def make_finding(
 
 
 def analyze(*findings: Finding) -> CrossSpecialistAnalysis:
-    report = SpecialistReport(
-        domain=SpecialistDomain.RISK_METRICS,
-        report_id="TEST",
-        title="Test specialist report",
-        review_period=DateRange(start=date(2025, 1, 1), end=date(2025, 12, 31)),
-        generated_at=datetime(2025, 12, 31, tzinfo=UTC),
-        scope="Test",
-        findings=list(findings),
-        overall_conclusion="Test",
-    )
-    return CrossSpecialistAnalysis.model_validate(RUN_ANALYSIS([report]))
+    domain_by_prefix = {
+        "COMMENTARY": SpecialistDomain.RISK_COMMENTARY,
+        "CONTROLS": SpecialistDomain.POST_TRADE_CONTROLS,
+        "PNL": SpecialistDomain.PNL,
+        "RISK": SpecialistDomain.RISK_METRICS,
+    }
+    grouped: dict[SpecialistDomain, list[Finding]] = {}
+    for finding in findings:
+        domain = domain_by_prefix[finding.finding_id.split("-", 1)[0]]
+        grouped.setdefault(domain, []).append(finding)
+    reports = [
+        SpecialistReport(
+            domain=domain,
+            report_id=domain.value,
+            title=f"{domain.value} specialist report",
+            review_period=DateRange(start=date(2025, 1, 1), end=date(2025, 12, 31)),
+            generated_at=datetime(2025, 12, 31, tzinfo=UTC),
+            scope="Test",
+            findings=domain_findings,
+            overall_conclusion="Test",
+        )
+        for domain, domain_findings in grouped.items()
+    ]
+    return CrossSpecialistAnalysis.model_validate(RUN_ANALYSIS(reports))
 
 
 def test_same_day_and_entity_link_into_one_cluster() -> None:
@@ -76,7 +89,7 @@ def test_unrelated_findings_stay_separate() -> None:
         ),
     )
 
-    assert len(result.clusters) == 2
+    assert result.clusters == []
 
 
 def test_same_category_alone_does_not_merge() -> None:
@@ -85,7 +98,7 @@ def test_same_category_alone_does_not_merge() -> None:
         make_finding("RISK-002", "Exposure up on credit.", start="2025-06-01", end="2025-06-02"),
     )
 
-    assert len(result.clusters) == 2
+    assert result.clusters == []
 
 
 def test_contradiction_candidates_pair_opposite_polarity() -> None:
@@ -113,6 +126,26 @@ def test_no_contradiction_when_polarities_agree() -> None:
     assert result.contradiction_candidates == []
 
 
+def test_broad_generic_overlap_is_not_a_contradiction_candidate() -> None:
+    result = analyze(
+        make_finding(
+            "RISK-001",
+            "VaR increased over the annual review.",
+            start="2025-01-01",
+            end="2025-12-31",
+        ),
+        make_finding(
+            "COMMENTARY-001",
+            "VaR remained stable in the second half.",
+            start="2025-07-01",
+            end="2025-12-31",
+            category="commentary",
+        ),
+    )
+
+    assert result.contradiction_candidates == []
+
+
 def test_entity_tokens_require_recurrence() -> None:
     result = analyze(
         make_finding("RISK-001", "VaR increased for the options book."),
@@ -125,7 +158,7 @@ def test_entity_tokens_require_recurrence() -> None:
 def test_numeric_tokens_are_not_entities() -> None:
     result = analyze(
         make_finding("RISK-001", "VaR event 2026 affected Atlas."),
-        make_finding("PNL-001", "PnL event 2026 affected Harbor."),
+        make_finding("PNL-001", "VaR loss event 2026 affected Atlas."),
     )
 
     assert "2026" not in result.clusters[0].shared_entities
@@ -137,7 +170,7 @@ def test_one_generic_shared_token_does_not_merge_findings() -> None:
         make_finding("PNL-001", "Harbor workflow delay.", start="2025-06-01", end="2025-06-02"),
     )
 
-    assert len(result.clusters) == 2
+    assert result.clusters == []
 
 
 def test_broad_overlapping_periods_are_not_treated_as_same_day_events() -> None:
@@ -156,4 +189,32 @@ def test_broad_overlapping_periods_are_not_treated_as_same_day_events() -> None:
         ),
     )
 
+    assert result.clusters == []
+
+
+def test_same_day_without_a_shared_entity_does_not_create_a_cluster() -> None:
+    result = analyze(
+        make_finding("RISK-001", "Atlas VaR exceeded its limit."),
+        make_finding("PNL-001", "Harbor adjustment was recorded.", category="adjustment"),
+    )
+
+    assert result.clusters == []
+
+
+def test_transitive_bridge_does_not_create_an_incoherent_mega_cluster() -> None:
+    result = analyze(
+        make_finding("RISK-001", "Atlas VaR breached."),
+        make_finding("RISK-002", "Atlas workflow approval was delayed."),
+        make_finding(
+            "COMMENTARY-001",
+            "Atlas VaR workflow commentary remained reassuring.",
+            category="commentary",
+        ),
+    )
+
     assert len(result.clusters) == 2
+    assert all(len(cluster.findings) == 2 for cluster in result.clusters)
+    assert {tuple(cluster.findings) for cluster in result.clusters} == {
+        ("COMMENTARY-001", "RISK-001"),
+        ("COMMENTARY-001", "RISK-002"),
+    }

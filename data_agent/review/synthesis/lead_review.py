@@ -356,11 +356,9 @@ def _repair_report_structure(report: FinalReport, collected: dict) -> FinalRepor
         final.unresolved_dependencies = dependencies
         support = [verified_by_id[item] for item in derived if item in verified_by_id]
         if not support:
-            unresolved_questions.append(
-                f"Lead draft {final.final_id} ({final.title}) was not promoted because "
-                "it has no verified specialist support; investigate its unresolved "
-                f"dependencies {sorted(set(derived) & set(unresolved_by_id))}."
-            )
+            # Do not expose the model's discarded draft ID as though it were a
+            # promoted lead finding. The complete specialist-level disclosure is
+            # appended below using the authoritative unresolved finding IDs.
             continue
         if not final.evidence:
             copied: list[EvidenceReference] = []

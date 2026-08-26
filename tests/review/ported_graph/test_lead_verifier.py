@@ -221,7 +221,10 @@ def test_lead_report_structure_is_repaired_from_exact_specialist_support() -> No
     assert repaired.evidence_index == [
         EvidenceReference(locator=LOCATOR),
     ]
-    assert "FF-002" in "\n".join(repaired.unresolved_questions)
+    unresolved_text = "\n".join(repaired.unresolved_questions)
+    assert "Unresolved specialist finding RISK-002" in unresolved_text
+    assert "FF-002" not in unresolved_text
+    assert "Lead draft" not in unresolved_text
 
 
 def test_lead_repair_never_promotes_specialist_counter_evidence() -> None:

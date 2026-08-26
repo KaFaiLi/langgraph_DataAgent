@@ -45,6 +45,17 @@ Determine:
 8. Never state fraud, misconduct, unauthorized activity, or causation as proven without
    direct verified support. Separate a reproducible divergence from an unresolved claim
    about its cause.
+9. `key_findings` contains promoted conclusions and therefore requires at least one
+   verified specialist finding per item. An empty `key_findings` list is required when no
+   specialist finding is verified. This is a valid, complete synthesis—not a missing report.
+   Summarize the unresolved observations cautiously in the executive assessment, unresolved
+   questions, control/PnL lists, and follow-up actions without assigning them final finding
+   IDs, severity, or confidence.
+10. Treat each deterministic cross-source cluster as one bounded relationship candidate.
+    Do not combine clusters into a broader issue unless the supplied findings share a
+    concrete entity and event window. A shared desk, broad category, or generic workflow
+    vocabulary is not sufficient. Explicitly discuss supplied contradiction candidates;
+    when their support is unresolved, frame the conflict as an investigation question.
 
 ## Required reconciliations
 
@@ -70,4 +81,6 @@ unresolved claim that a mapping exception caused the headline metric behavior.
 
 Produce the structured lead-review draft requested by the runtime. Keep final finding
 IDs stable during revisions. Use concise statements whose support can be reopened from
-their copied evidence locators.
+their copied evidence locators. During revision, remove editorial descriptions of
+discarded draft findings; disclose the authoritative specialist finding IDs and their
+unresolved status instead.

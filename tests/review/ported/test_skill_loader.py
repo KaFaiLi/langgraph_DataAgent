@@ -40,7 +40,9 @@ def test_repository_lead_review_skill_is_loaded() -> None:
     assert definition.analysis_file.is_file()
     assert definition.analysis_function == "run_analysis"
     assert "Required reconciliations" in definition.instructions
+    assert "empty `key_findings` list is required" in definition.instructions
     assert "PASS" in definition.verifier_policy
+    assert "Do not object to an empty `key_findings` list" in definition.verifier_policy
 
 
 def test_lead_review_prompts_are_loaded_from_the_skill() -> None:
