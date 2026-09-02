@@ -12,7 +12,12 @@ from data_agent.review.domain.finding import Finding, VerificationStatus
 from data_agent.review.domain.overview import DataOverview
 from data_agent.review.domain.severity import Severity
 from data_agent.review.domain.source import DateRange
-from data_agent.review.domain.verification import OmissionAuditResult, VerificationRound
+from data_agent.review.domain.verification import (
+    CheckCoverageRecord,
+    OmissionAuditResult,
+    ReviewIssue,
+    VerificationRound,
+)
 
 
 class SpecialistReport(BaseModel):
@@ -38,6 +43,8 @@ class SpecialistReport(BaseModel):
 
     omission_audit: OmissionAuditResult | None = None
     """Deterministic candidate coverage and bounded rescue outcome."""
+    issues: list[ReviewIssue] = Field(default_factory=list)
+    check_coverage: list[CheckCoverageRecord] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _unique_finding_ids(self) -> SpecialistReport:
@@ -141,6 +148,7 @@ class FinalReport(BaseModel):
     control_weaknesses: list[str] = Field(default_factory=list)
     pnl_risk_inconsistencies: list[str] = Field(default_factory=list)
     unresolved_questions: list[str] = Field(default_factory=list)
+    unresolved_issues: list[ReviewIssue] = Field(default_factory=list)
     recommended_follow_up: list[str] = Field(default_factory=list)
     evidence_index: list[EvidenceReference] = Field(default_factory=list)
     specialist_report_references: list[str] = Field(default_factory=list)

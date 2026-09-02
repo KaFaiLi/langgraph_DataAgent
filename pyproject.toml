@@ -37,6 +37,9 @@ dev = [
     "pytest-asyncio>=0.24",
     "ruff>=0.12",
 ]
+presentation = [
+    "python-pptx>=1.0",
+]
 
 [project.scripts]
 data-agent = "data_agent.cli:main"

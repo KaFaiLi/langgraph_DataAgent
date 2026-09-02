@@ -78,6 +78,8 @@ def test_tabular_paths_apply_hidden_and_secret_file_policy(tmp_path: Path):
         "SELECT * FROM read_json_auto('../outside.json')",
         "SELECT * FROM read_text('../outside.txt')",
         "SELECT * FROM '../outside.csv'",
+        "SELECT * FROM risk_metrics.source.parquet",
+        "SELECT * FROM sales_csv",
     ],
 )
 def test_duckdb_rejects_mutating_or_chained_sql(tmp_path: Path, sql: str):

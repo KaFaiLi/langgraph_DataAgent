@@ -729,7 +729,12 @@ def build(run_dir: Path) -> Path:
     for slide in plan.slides:
         unknown = set(slide.finding_ids) - allowed_ids
         if unknown:
-            raise ValueError(f"plan invented finding IDs: {sorted(unknown)}")
+            # A report may intentionally contain no verified final findings while
+            # disclosing specialist issues. Do not let IDs copied from unresolved
+            # prose become presentation support; remove them and retain the gap.
+            slide.finding_ids = [item for item in slide.finding_ids if item in allowed_ids]
+            disclosure = "Unverified finding references were removed: " + ", ".join(sorted(unknown))
+            slide.limitation = "; ".join(filter(None, [slide.limitation, disclosure]))
 
     svg_files: list[Path] = []
     notes: dict[str, str] = {}
@@ -763,6 +768,18 @@ def build(run_dir: Path) -> Path:
                 ),
                 why_it_matters=(
                     "Approval evidence is complete, but closure tracking needs better date quality."
+                ),
+            )
+        if not finding_index and slide.role == "synthesis":
+            copy = AuthoredSlide(
+                eyebrow="Synthesis Review",
+                headline="No cross-specialist conclusion cleared verification",
+                commentary=(
+                    "The review retained unresolved observations and evidence gaps, but no "
+                    "finding qualified for final synthesis."
+                ),
+                why_it_matters=(
+                    "Treat all apparent relationships as investigation leads, not conclusions."
                 ),
             )
         selected_findings = [finding_index[item] for item in slide.finding_ids]

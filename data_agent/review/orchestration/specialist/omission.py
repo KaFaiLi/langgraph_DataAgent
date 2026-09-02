@@ -8,7 +8,13 @@ from typing import Any
 from langchain_core.runnables.config import RunnableConfig
 
 from data_agent.review.domain.evidence import EvidenceReference, parse_locator
-from data_agent.review.domain.verification import CandidateDispositionRecord, OmissionAuditResult
+from data_agent.review.domain.verification import (
+    CandidateDispositionRecord,
+    OmissionAuditResult,
+    ReviewIssue,
+    ReviewIssueKind,
+    ReviewIssueStatus,
+)
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 from data_agent.review.orchestration.specialist.runtime import SpecialistRuntime
 from data_agent.review.orchestration.specialist.scope import context_from_config
@@ -107,6 +113,34 @@ def audit_omission_candidates(
         "omission_rescue_requested": should_rescue,
         "loop_status": "running" if should_rescue else "complete",
     }
+    issues_by_id = dict(state.get("issues_by_id", {}))
+    covered_ids = set(audit.covered_candidate_ids)
+    pending_work = []
+    for work in state.get("pending_work", []):
+        item = dict(work)
+        targets = set(item.get("target_ids", []))
+        if item.get("work_type") == "candidate_accounting" and targets <= covered_ids:
+            item["status"] = "complete"
+        pending_work.append(item)
+    candidates = {item.candidate_id: item for item in audit.uncovered_candidates}
+    for candidate_id in audit.material_candidate_ids:
+        candidate = candidates[candidate_id]
+        issue_id = f"omitted-candidate:{candidate_id}"
+        issues_by_id[issue_id] = ReviewIssue(
+            issue_id=issue_id,
+            kind=ReviewIssueKind.OMITTED_CANDIDATE,
+            status=(
+                ReviewIssueStatus.REPAIR_PENDING if should_rescue else ReviewIssueStatus.DISCLOSED
+            ),
+            description=candidate.reason,
+            material=True,
+            candidate_ids=[candidate_id],
+            evidence=candidate.evidence,
+            attempts=int(bool(state.get("omission_rescue_used"))),
+            attempt_budget=runtime.max_omission_rescue_rounds,
+        ).model_dump(mode="json")
+    result["issues_by_id"] = issues_by_id
+    result["pending_work"] = pending_work
     if should_rescue:
         result.update(
             {

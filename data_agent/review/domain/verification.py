@@ -79,7 +79,7 @@ class AdversarialCase(BaseModel):
     contradictory_evidence: list[EvidenceReference] = Field(default_factory=list, max_length=16)
     unresolved_questions: list[str] = Field(default_factory=list, max_length=32)
     assigned_source_paths: list[str] = Field(default_factory=list, max_length=256)
-    research_complete: bool = True
+    research_complete: bool = False
     provider_error: bool = False
 
     @model_validator(mode="after")
@@ -262,6 +262,75 @@ class CandidateDispositionRecord(BaseModel):
     disposition: CandidateDisposition
     reason: str = Field(default="", max_length=4_000)
     evidence: list[EvidenceReference] = Field(default_factory=list, max_length=16)
+
+
+class ReviewIssueKind(StrEnum):
+    """A review gap that must be repaired or disclosed before acceptance."""
+
+    OMITTED_CANDIDATE = "omitted_candidate"
+    INCOMPLETE_CHECK = "incomplete_check"
+    UNAVAILABLE_EVIDENCE = "unavailable_evidence"
+    RESEARCH_EXHAUSTED = "research_exhausted"
+    VERIFICATION_OBJECTION = "verification_objection"
+
+
+class ReviewIssueStatus(StrEnum):
+    """Lifecycle of a review issue in checkpointed state."""
+
+    OPEN = "open"
+    REPAIR_PENDING = "repair_pending"
+    RESOLVED = "resolved"
+    DISCLOSED = "disclosed"
+
+
+class ReviewIssue(BaseModel):
+    """Typed, durable contract for analytical uncertainty and required repair."""
+
+    issue_id: str
+    kind: ReviewIssueKind
+    status: ReviewIssueStatus = ReviewIssueStatus.OPEN
+    description: str = Field(default="", max_length=4_000)
+    material: bool = False
+    finding_ids: list[str] = Field(default_factory=list, max_length=128)
+    candidate_ids: list[str] = Field(default_factory=list, max_length=128)
+    check_ids: list[str] = Field(default_factory=list, max_length=128)
+    evidence: list[EvidenceReference] = Field(default_factory=list, max_length=16)
+    limitations: list[str] = Field(default_factory=list, max_length=32)
+    resolution: str | None = Field(default=None, max_length=4_000)
+    attempts: int = Field(default=0, ge=0)
+    attempt_budget: int = Field(default=0, ge=0)
+
+
+class CheckCoverageRecord(BaseModel):
+    """Auditable accounting for one required source/check operation."""
+
+    check_id: str
+    source_ids: list[str] = Field(default_factory=list, max_length=256)
+    check_type: str
+    performed: bool = False
+    population_definition: str = Field(default="", max_length=2_000)
+    filters: list[str] = Field(default_factory=list, max_length=64)
+    population_count: int | None = Field(default=None, ge=0)
+    examined_count: int | None = Field(default=None, ge=0)
+    result: str = Field(default="", max_length=4_000)
+    limitations: list[str] = Field(default_factory=list, max_length=32)
+    evidence: list[EvidenceReference] = Field(default_factory=list, max_length=16)
+    issue_ids: list[str] = Field(default_factory=list, max_length=128)
+
+
+class PendingWorkItem(BaseModel):
+    """One idempotent, bounded repair or analysis task."""
+
+    work_id: str
+    work_type: str
+    target_ids: list[str] = Field(default_factory=list, max_length=128)
+    attempts: int = Field(default=0, ge=0)
+    attempt_budget: int = Field(default=1, ge=1)
+    status: str = "pending"
+
+    @property
+    def exhausted(self) -> bool:
+        return self.attempts >= self.attempt_budget
 
 
 class OmissionCandidate(BaseModel):

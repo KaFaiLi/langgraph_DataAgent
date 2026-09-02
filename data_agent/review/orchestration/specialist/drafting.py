@@ -107,6 +107,17 @@ def draft_findings(
         previous=previous_findings,
     )
     findings = [dumps_finding(finding) for finding in repaired]
+    findings_by_id = dict(state.get("findings_by_id", {}))
+    for finding in repaired:
+        previous_record = findings_by_id.get(finding.finding_id, {})
+        if previous_record.get("settled"):
+            continue
+        findings_by_id[finding.finding_id] = {
+            **previous_record,
+            "finding": dumps_finding(finding),
+            "disposition": "candidate",
+            "settled": False,
+        }
     disposition_history = _merge_candidate_dispositions(
         state.get("candidate_dispositions", []),
         analyst_output.candidate_dispositions,
@@ -117,6 +128,7 @@ def draft_findings(
             "initial_candidates": findings,
             "candidate_dispositions": disposition_history,
             "verifier_feedback": "",
+            "findings_by_id": findings_by_id,
         }
     # Revision round: record the analyst's response in every finding's history.
     history: dict[str, list[dict]] = dict(state.get("verification_history", {}))
@@ -136,6 +148,7 @@ def draft_findings(
         "candidate_findings": findings,
         "verification_history": history,
         "candidate_dispositions": disposition_history,
+        "findings_by_id": findings_by_id,
     }
 
 

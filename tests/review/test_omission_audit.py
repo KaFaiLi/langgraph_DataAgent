@@ -41,11 +41,11 @@ def _analysis() -> list[dict]:
     ]
 
 
-def test_omission_audit_uses_stable_ids_and_locator_overlap() -> None:
+def test_omission_audit_requires_explicit_candidate_relationship() -> None:
     audit = audit_omissions(_analysis(), [_finding()])
 
-    assert audit.covered_candidate_ids
-    assert not audit.material_omission_exists
+    assert audit.covered_candidate_ids == []
+    assert audit.material_omission_exists
 
 
 def test_finding_disposition_without_finding_does_not_cover_candidate() -> None:

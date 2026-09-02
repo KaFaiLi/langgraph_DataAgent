@@ -217,6 +217,19 @@ def _sanitize_challenge_case(
                 )
                 break
 
+    complete = (
+        all(
+            bool(challenge.explanation.strip())
+            and not (
+                challenge.material
+                and challenge.status in (ChallengeStatus.FAIL, ChallengeStatus.UNKNOWN)
+            )
+            for challenge in sanitized
+            if challenge.challenge_type in required
+        )
+        and not errors
+        and not output.unresolved_questions
+    )
     return AdversarialCase(
         finding_id=finding_id,
         challenges=sanitized,
@@ -224,7 +237,9 @@ def _sanitize_challenge_case(
         contradictory_evidence=contradictory,
         unresolved_questions=list(output.unresolved_questions),
         assigned_source_paths=list(assigned_paths),
-        research_complete=output.research_complete,
+        # Completion is derived from recorded checks, not trusted from the
+        # model's self-assessment. The output field remains a compatibility hint.
+        research_complete=complete,
     )
 
 

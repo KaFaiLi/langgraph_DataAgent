@@ -16,6 +16,8 @@ class ReviewStatus(StrEnum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    INTERRUPTED = "interrupted"
+    RETRYABLE_FAILURE = "retryable_failure"
     NOT_FOUND = "not_found"
 
 

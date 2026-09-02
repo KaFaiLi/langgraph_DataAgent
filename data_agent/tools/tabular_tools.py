@@ -370,7 +370,12 @@ def _register_frame(
     )
 
 
-def _register_tables(root: Path, connection: duckdb.DuckDBPyConnection) -> None:
+def _register_tables(
+    root: Path,
+    connection: duckdb.DuckDBPyConnection,
+    *,
+    requested_names: set[str] | None = None,
+) -> None:
     used_names: set[str] = set()
 
     def register(name: str, frame: pl.DataFrame) -> None:
@@ -384,6 +389,11 @@ def _register_tables(root: Path, connection: duckdb.DuckDBPyConnection) -> None:
 
     for path in _iter_table_paths(root):
         relative = path.relative_to(root)
+        base_name = _table_name(relative)
+        if requested_names is not None and not any(
+            name == base_name or name.startswith(base_name + "__") for name in requested_names
+        ):
+            continue
         try:
             if path.suffix.lower() in {".xlsx", ".xlsm"}:
                 # Keep one-sheet workbooks convenient and expose every sheet
@@ -414,6 +424,11 @@ _SQL_FORBIDDEN = re.compile(
     re.IGNORECASE,
 )
 _SQL_EXTERNAL_TABLE_LITERAL = re.compile(r"\b(?:FROM|JOIN)\s*['\"]", re.IGNORECASE)
+_SQL_DOTTED_TABLE = re.compile(r"\b(?:FROM|JOIN)\s+([A-Za-z_][A-Za-z0-9_.-]*)", re.IGNORECASE)
+_SQL_TABLE_IDENTIFIER = re.compile(r"\b(?:FROM|JOIN)\s+([A-Za-z_][A-Za-z0-9_]*)", re.IGNORECASE)
+_SQL_CTE_IDENTIFIER = re.compile(
+    r"(?:\bWITH|,)\s*([A-Za-z_][A-Za-z0-9_]*)\s+AS\s*\(", re.IGNORECASE
+)
 
 
 def _validate_read_only_sql(sql: str) -> str:
@@ -435,6 +450,19 @@ def _validate_read_only_sql(sql: str) -> str:
     # which would bypass the configured table registration and root guard.
     if _SQL_EXTERNAL_TABLE_LITERAL.search(statement):
         raise ToolError("external table paths are not allowed")
+    if any("." in match for match in _SQL_DOTTED_TABLE.findall(statement)):
+        # Registered tables use sanitized ``src_*`` identifiers. Dotted names
+        # are commonly model-authored source paths and can make DuckDB spend a
+        # long time binding nonexistent catalogs before it fails.
+        raise ToolError("dotted or path-like table names are not allowed; use a src_* table")
+    table_names = set(_SQL_TABLE_IDENTIFIER.findall(statement))
+    cte_names = set(_SQL_CTE_IDENTIFIER.findall(statement))
+    invalid_names = sorted(name for name in table_names - cte_names if not name.startswith("src_"))
+    if invalid_names:
+        raise ToolError(
+            "unregistered table names are not allowed; use src_* tables: "
+            + ", ".join(invalid_names)
+        )
     return statement
 
 
@@ -444,9 +472,12 @@ def run_duckdb_query(root: Path, sql: str, max_rows: int = MAX_QUERY_ROWS) -> li
     if not 1 <= max_rows <= MAX_QUERY_ROWS:
         raise ToolError(f"max_rows must be between 1 and {MAX_QUERY_ROWS}")
     statement = _validate_read_only_sql(sql)
+    table_names = {
+        name for name in _SQL_TABLE_IDENTIFIER.findall(statement) if name.startswith("src_")
+    }
     try:
         with duckdb.connect(":memory:") as connection:
-            _register_tables(root, connection)
+            _register_tables(root, connection, requested_names=table_names)
             result = connection.execute(statement)
             columns = [item[0] for item in result.description or []]
             return _json_safe(

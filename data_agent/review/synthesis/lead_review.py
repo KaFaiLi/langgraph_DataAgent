@@ -18,6 +18,7 @@ from data_agent.review.domain.evidence import EvidenceReference
 from data_agent.review.domain.finding import Finding
 from data_agent.review.domain.reports import FinalFinding, FinalReport, SpecialistReport
 from data_agent.review.domain.severity import SEVERITY_ORDER
+from data_agent.review.domain.verification import ReviewIssue
 from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.review.llm.models import ModelTier
 from data_agent.review.llm.structured import invoke_structured
@@ -181,6 +182,9 @@ VERIFIED SPECIALIST FINDINGS (JSON):
 UNRESOLVED SPECIALIST FINDINGS (JSON):
 {unresolved}
 
+UNRESOLVED REVIEW ISSUES (JSON):
+{issues}
+
 CROSS-SOURCE CLUSTERS (JSON):
 {clusters}
 
@@ -201,13 +205,20 @@ def _collect(state: ParentState) -> dict:
     }
     verified: list[dict] = []
     unresolved: list[dict] = []
+    issues: list[dict] = []
     for report in reports.values():
         verified.extend(f.model_dump(mode="json") for f in report.verified_findings())
         unresolved.extend(f.model_dump(mode="json") for f in report.unresolved_findings())
+        issues.extend(
+            issue.model_dump(mode="json")
+            for issue in report.issues
+            if issue.status.value != "resolved"
+        )
     return {
         "reports": reports,
         "verified": verified,
         "unresolved": unresolved,
+        "issues": issues,
     }
 
 
@@ -411,6 +422,27 @@ def _repair_report_structure(report: FinalReport, collected: dict) -> FinalRepor
             f"Unresolved specialist finding {finding.finding_id}: {finding.title}."
         )
 
+    retained_clusters = []
+    for cluster in report.cross_source_findings:
+        unverified_members = [
+            finding_id for finding_id in cluster.findings if finding_id not in verified_by_id
+        ]
+        if unverified_members:
+            unresolved_questions.append(
+                f"Cross-source relationship {cluster.cluster_id} remains an investigation "
+                f"lead because its support is not verified: {', '.join(unverified_members)}."
+            )
+            continue
+        retained_clusters.append(cluster)
+    retained_cluster_ids = {cluster.cluster_id for cluster in retained_clusters}
+    for final in retained:
+        final.cross_source_cluster_ids = [
+            cluster_id
+            for cluster_id in final.cross_source_cluster_ids
+            if cluster_id in retained_cluster_ids
+        ]
+    report.cross_source_findings = retained_clusters
+
     indexed = []
     seen_locators: set[str] = set()
     for reference in [
@@ -428,6 +460,17 @@ def _repair_report_structure(report: FinalReport, collected: dict) -> FinalRepor
 
     report.key_findings = retained
     report.unresolved_questions = unresolved_questions
+    report.unresolved_issues = [
+        ReviewIssue.model_validate(item)
+        for item in collected.get("issues", [])
+        if item.get("status") != "resolved"
+    ]
+    disclosed = "\n".join(report.unresolved_questions)
+    for issue in report.unresolved_issues:
+        if issue.issue_id not in disclosed:
+            report.unresolved_questions.append(
+                f"Review issue {issue.issue_id}: {issue.description or issue.kind.value}."
+            )
     report.evidence_index = indexed
     return report
 
@@ -440,6 +483,7 @@ def lead_review(state: ParentState, config: RunnableConfig) -> dict:
         desk_context=_compact_json(state.get("desk_context", {})),
         verified=_compact_json(_finding_payload(collected["verified"])),
         unresolved=_compact_json(_finding_payload(collected["unresolved"])),
+        issues=_compact_json(collected["issues"]),
         clusters=_compact_json(_cluster_payload(clusters)),
         contradictions=_compact_json(state.get("contradictions", [])),
         references=", ".join(

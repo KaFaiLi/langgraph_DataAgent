@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import UTC, datetime
 from pathlib import Path
+from uuid import uuid4
 
 from langchain_core.runnables.config import RunnableConfig
 
@@ -22,6 +24,18 @@ from data_agent.review.synthesis.lead_verifier import (
     FatalEvidenceIntegrityError,
     validate_final_report,
 )
+
+
+def _atomic_write(path: Path, content: str) -> None:
+    """Publish one validated final artifact without exposing partial content."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
+    try:
+        temporary.write_text(content, encoding="utf-8")
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def finalize(state: ParentState, config: RunnableConfig) -> dict:
@@ -43,12 +57,13 @@ def finalize(state: ParentState, config: RunnableConfig) -> dict:
     markdown = render_final_report(report)
 
     output_dir = Path(state["output_dir"])
-    (output_dir / "final_findings.md").write_text(markdown, encoding="utf-8")
-    (output_dir / "final_report.json").write_text(
+    _atomic_write(output_dir / "final_findings.md", markdown)
+    _atomic_write(
+        output_dir / "final_report.json",
         json.dumps(report.model_dump(mode="json"), indent=2, default=str),
-        encoding="utf-8",
     )
-    (output_dir / "lead_verification.json").write_text(
+    _atomic_write(
+        output_dir / "lead_verification.json",
         json.dumps(
             {
                 "lead_round": int(state.get("lead_round", 0)),
@@ -57,7 +72,6 @@ def finalize(state: ParentState, config: RunnableConfig) -> dict:
             indent=2,
             default=str,
         ),
-        encoding="utf-8",
     )
 
     manifest = SourceManifest.model_validate(state["manifest"])
@@ -73,8 +87,9 @@ def finalize(state: ParentState, config: RunnableConfig) -> dict:
         coverage=coverage,
         tasks=tasks,
     )
-    (output_dir / "run_manifest.json").write_text(
+    # Publish the run manifest last: its presence seals the preceding artifacts.
+    _atomic_write(
+        output_dir / "run_manifest.json",
         json.dumps(run.model_dump(mode="json"), indent=2, default=str),
-        encoding="utf-8",
     )
     return {"status": "completed", "final_markdown": markdown}

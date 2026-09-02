@@ -17,6 +17,7 @@ from data_agent.review.domain.reports import SpecialistReport
 from data_agent.review.domain.source import SourceManifest
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
+from data_agent.review.llm.errors import RetryableLLMError
 from data_agent.review.orchestration.finding_policy import sanitize_finding_references
 from data_agent.review.orchestration.state import ParentState
 from data_agent.skills.registry import build_specialist, get_specialist
@@ -105,14 +106,27 @@ def _provider(config: RunnableConfig) -> ReviewLLMProvider:
 
 
 def _update_coverage(
-    coverage: list[dict], domain: SpecialistDomain, source_ids: list[str]
+    coverage: list[dict],
+    domain: SpecialistDomain,
+    source_ids: list[str],
+    report: SpecialistReport | None = None,
 ) -> list[dict]:
     for entry in coverage:
         if entry["source_id"] not in source_ids:
             continue
         if domain.value not in entry["completed_reviewers"]:
             entry["completed_reviewers"].append(domain.value)
-        if set(entry["completed_reviewers"]) >= set(entry["required_reviewers"]):
+        relevant_checks = [
+            check
+            for check in (report.check_coverage if report is not None else [])
+            if entry["source_id"] in check.source_ids
+        ]
+        if relevant_checks:
+            entry["checks"] = [check.model_dump(mode="json") for check in relevant_checks]
+        checks_complete = not relevant_checks or all(check.performed for check in relevant_checks)
+        if checks_complete and set(entry["completed_reviewers"]) >= set(
+            entry["required_reviewers"]
+        ):
             entry["status"] = "reviewed"
     return coverage
 
@@ -215,6 +229,10 @@ def _run_specialist(
                 for finding_id, trace in result.get("adversarial_trace", {}).items()
             },
         )
+    except RetryableLLMError:
+        # Let LangGraph preserve this failed Send task. Successful sibling writes
+        # remain checkpointed, so resume retries only the affected specialist.
+        raise
     except Exception as exc:  # noqa: BLE001 - explicit run failure
         return _SpecialistOutcome(
             domain=domain,
@@ -300,7 +318,12 @@ def _merge_outcomes(state: ParentState, outcomes: list[_SpecialistOutcome]) -> d
         reports[domain.value] = outcome.report
         markdowns[domain.value] = outcome.markdown
 
-        coverage = _update_coverage(coverage, domain, outcome.source_ids)
+        coverage = _update_coverage(
+            coverage,
+            domain,
+            outcome.source_ids,
+            SpecialistReport.model_validate(outcome.report),
+        )
 
     return {
         "specialist_reports": reports,

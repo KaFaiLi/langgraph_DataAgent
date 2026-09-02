@@ -149,7 +149,7 @@ class ChallengerOutput(BaseModel):
         default_factory=list, max_length=MAX_CHALLENGE_EVIDENCE
     )
     unresolved_questions: list[ShortAnalystText] = Field(default_factory=list, max_length=12)
-    research_complete: bool = True
+    research_complete: bool = False
 
     @field_validator("finding_id", mode="before")
     @classmethod
