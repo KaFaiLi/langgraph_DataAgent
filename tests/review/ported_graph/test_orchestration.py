@@ -6,6 +6,7 @@ import re
 from datetime import date
 from pathlib import Path
 
+import pytest
 from langchain_core.runnables import RunnableLambda
 
 from data_agent.review.domain.desk_context import DeskContext
@@ -321,3 +322,20 @@ def test_specialist_failure_fails_run(tmp_path: Path, monkeypatch) -> None:
     assert result["status"] == "failed"
     assert "risk_metrics" in (result["failure_reason"] or "")
     assert "boom" in (result["failure_reason"] or "")
+
+
+def test_retryable_specialist_failure_escapes_for_checkpoint_resume(
+    tmp_path: Path, monkeypatch
+) -> None:
+    from data_agent.review.llm.errors import RetryableLLMError
+    from data_agent.review.orchestration.nodes import fanout
+
+    original = ConnectionError("temporary")
+
+    def _retryable_builder(*args, **kwargs):
+        raise RetryableLLMError("try later", cause=original, attempts=2)
+
+    monkeypatch.setattr(fanout, "build_specialist", _retryable_builder)
+
+    with pytest.raises(RetryableLLMError):
+        run_parent(tmp_path, FakeParentProvider())

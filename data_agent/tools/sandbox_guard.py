@@ -115,6 +115,7 @@ class _PathGuard:
         self.original_open = builtins.open
         self.original_io_open = io.open
         self.original_os_open = os.open
+        self._normalizing = False
 
     @staticmethod
     def _within(candidate: str, roots: list[str]) -> bool:
@@ -130,9 +131,12 @@ class _PathGuard:
                 return
             raise PermissionError("sandbox file descriptor access is blocked")
         try:
+            self._normalizing = True
             candidate = _norm(file)
         except (TypeError, ValueError) as exc:
             raise PermissionError("sandbox path must be a filesystem path") from exc
+        finally:
+            self._normalizing = False
         wants_write = (
             write if write is not None else any(flag in mode for flag in ("w", "a", "x", "+"))
         )
@@ -193,6 +197,8 @@ def install_path_guard() -> None:
         def checked_read(
             path: Any, *args: object, _original: Any = original, **kwargs: object
         ) -> Any:
+            if guard._normalizing:
+                return _original(path, *args, **kwargs)
             guard.check_read(path)
             return _original(path, *args, **kwargs)
 

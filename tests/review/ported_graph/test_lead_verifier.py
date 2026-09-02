@@ -21,6 +21,8 @@ from data_agent.review.domain.verification import (
     LeadChallenge,
     LeadChallengeType,
     ObjectionMateriality,
+    ReviewIssue,
+    ReviewIssueKind,
     VerifierDecision,
 )
 from data_agent.review.ingestion.catalog import build_catalog
@@ -28,6 +30,7 @@ from data_agent.review.synthesis.lead_review import (
     MAX_LEAD_UNRESOLVED_ITEMS,
     LeadDraft,
     LeadFinalFinding,
+    _collect,
     _finding_payload,
     _repair_report_structure,
 )
@@ -95,6 +98,33 @@ def test_lead_finding_payload_keeps_locators_but_drops_repeated_quotes() -> None
         {"locator": "source://risk_metrics/risk.csv#rows=3:3"}
     ]
     assert "quote" not in str(payload)
+
+
+def test_lead_collection_preserves_specialist_review_issues() -> None:
+    specialist = SpecialistReport(
+        domain=SpecialistDomain.RISK_METRICS,
+        report_id="risk_metrics",
+        title="Risk Metrics Review",
+        review_period=PERIOD,
+        generated_at=datetime.now(UTC),
+        scope="scope",
+        overall_conclusion="conclusion",
+        issues=[
+            ReviewIssue(
+                issue_id="omitted-candidate:C-1",
+                kind=ReviewIssueKind.OMITTED_CANDIDATE,
+                description="Material signal was not resolved.",
+                material=True,
+                candidate_ids=["C-1"],
+            )
+        ],
+    )
+
+    collected = _collect(
+        {"specialist_reports": {"risk_metrics": specialist.model_dump(mode="json")}}
+    )
+
+    assert collected["issues"][0]["issue_id"] == "omitted-candidate:C-1"
 
 
 def _state(tmp_path, report: FinalReport) -> dict:

@@ -11,7 +11,13 @@ from data_agent.review.domain.finding import Finding
 from data_agent.review.domain.overview import DataOverview, OverviewStatus
 from data_agent.review.domain.reports import SpecialistReport
 from data_agent.review.domain.severity import SEVERITY_ORDER
-from data_agent.review.domain.verification import OmissionAuditResult, VerificationRound
+from data_agent.review.domain.verification import (
+    OmissionAuditResult,
+    ReviewIssue,
+    ReviewIssueKind,
+    ReviewIssueStatus,
+    VerificationRound,
+)
 from data_agent.review.ingestion.evidence_validator import EvidenceDisposition, EvidenceValidator
 from data_agent.review.orchestration.finding_policy import sanitize_finding_references
 from data_agent.review.orchestration.specialist.runtime import SpecialistRuntime
@@ -79,6 +85,57 @@ def finalize(runtime: SpecialistRuntime, state: SpecialistState, config: Runnabl
             f"Omission disclosure: {disclosure}"
             for disclosure in omission_audit.unresolved_disclosures
         )
+    issues_by_id = {
+        issue.issue_id: issue
+        for raw in state.get("issues_by_id", {}).values()
+        for issue in [ReviewIssue.model_validate(raw)]
+    }
+    for finding in unresolved_findings:
+        issue_id = f"unresolved-finding:{finding.finding_id}"
+        issues_by_id.setdefault(
+            issue_id,
+            ReviewIssue(
+                issue_id=issue_id,
+                kind=ReviewIssueKind.VERIFICATION_OBJECTION,
+                status=ReviewIssueStatus.DISCLOSED,
+                description=next(
+                    (record.feedback for record in reversed(history.get(finding.finding_id, []))),
+                    f"{finding.finding_id} remains unresolved",
+                ),
+                material=True,
+                finding_ids=[finding.finding_id],
+                evidence=finding.evidence,
+            ),
+        )
+    if omission_audit is not None:
+        candidates = {item.candidate_id: item for item in omission_audit.uncovered_candidates}
+        for candidate_id in omission_audit.material_candidate_ids:
+            candidate = candidates.get(candidate_id)
+            issue_id = f"omitted-candidate:{candidate_id}"
+            issues_by_id.setdefault(
+                issue_id,
+                ReviewIssue(
+                    issue_id=issue_id,
+                    kind=ReviewIssueKind.OMITTED_CANDIDATE,
+                    status=ReviewIssueStatus.DISCLOSED,
+                    description=(candidate.reason if candidate else "Material candidate omitted"),
+                    material=True,
+                    candidate_ids=[candidate_id],
+                    evidence=(candidate.evidence if candidate else []),
+                ),
+            )
+    if state.get("research_budget_exhausted"):
+        issue_id = f"research-exhausted:{runtime.spec.report_id}"
+        issues_by_id.setdefault(
+            issue_id,
+            ReviewIssue(
+                issue_id=issue_id,
+                kind=ReviewIssueKind.RESEARCH_EXHAUSTED,
+                status=ReviewIssueStatus.DISCLOSED,
+                description="Specialist research budget was exhausted.",
+                material=bool(unresolved_findings),
+            ),
+        )
     conclusion = (
         f"{runtime.spec.domain_label} review completed: {len(verified)} finding(s) verified, "
         f"{len(rejected)} rejected, {len(unresolved_findings)} unresolved. "
@@ -139,6 +196,8 @@ def finalize(runtime: SpecialistRuntime, state: SpecialistState, config: Runnabl
         overall_conclusion=conclusion,
         verification_history=history,
         omission_audit=omission_audit,
+        issues=list(issues_by_id.values()),
+        check_coverage=list(state.get("checks_by_id", {}).values()),
     )
     return {
         "report": report.model_dump(mode="json"),

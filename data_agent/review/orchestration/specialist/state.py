@@ -62,6 +62,14 @@ class SpecialistState(TypedDict, total=False):
     omission_rescue_used: bool
     omission_rescue_requested: bool
 
+    # Authoritative state introduced for incremental migration. Compatibility
+    # lists above remain derived artifact seams until old checkpoints age out.
+    findings_by_id: dict[str, dict]
+    issues_by_id: dict[str, dict]
+    checks_by_id: dict[str, dict]
+    candidates_by_id: dict[str, dict]
+    pending_work: list[dict]
+
     report: dict | None
     markdown: str
     error: str | None

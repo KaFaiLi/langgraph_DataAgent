@@ -172,6 +172,24 @@ def validate_final_report(state: ParentState, report: FinalReport) -> list[str]:
         for reference in [*finding.evidence, *finding.counter_evidence]
     }
     final_locators: set[str] = set()
+    specialist_issues = {
+        issue.issue_id: issue
+        for data in state.get("specialist_reports", {}).values()
+        for issue in SpecialistReport.model_validate(data).issues
+        if issue.status.value != "resolved"
+    }
+    final_issue_ids = {issue.issue_id for issue in report.unresolved_issues}
+    missing_issues = sorted(set(specialist_issues) - final_issue_ids)
+    if missing_issues:
+        feedback.append(f"unresolved specialist issues are not carried forward: {missing_issues}")
+    disclosed_issue_text = "\n".join(report.unresolved_questions)
+    undisclosed_material = sorted(
+        issue_id
+        for issue_id, issue in specialist_issues.items()
+        if issue.material and issue_id not in disclosed_issue_text
+    )
+    if undisclosed_material:
+        feedback.append(f"material review issues are not disclosed: {undisclosed_material}")
 
     cluster_ids = {
         str(cluster.get("cluster_id", ""))
@@ -480,8 +498,41 @@ def _rebuild_synthesis_after_suppression(
         ]
         retained_findings.append(finding)
 
+    suppressed_findings = [
+        finding for finding in report.key_findings if finding.final_id in suppressed_ids
+    ]
+    stale_tokens = {
+        token.casefold()
+        for finding in suppressed_findings
+        for token in [finding.final_id, finding.title, finding.statement]
+        if token.strip()
+    }
+
+    def is_stale(text: str) -> bool:
+        lowered = text.casefold()
+        return any(token in lowered for token in stale_tokens)
+
+    def retain_narrative(items: list[str]) -> list[str]:
+        return [item for item in items if not is_stale(item)]
+
     report.key_findings = retained_findings
     report.cross_source_findings = retained_clusters
+    report.potential_unauthorized_activity_indicators = retain_narrative(
+        report.potential_unauthorized_activity_indicators
+    )
+    report.control_weaknesses = retain_narrative(report.control_weaknesses)
+    report.pnl_risk_inconsistencies = retain_narrative(report.pnl_risk_inconsistencies)
+    report.recommended_follow_up = retain_narrative(report.recommended_follow_up)
+    if is_stale(report.executive_summary):
+        report.executive_summary = (
+            f"Lead review retained {len(retained_findings)} verified conclusion(s); "
+            "materially challenged conclusions were suppressed and disclosed below."
+        )
+    if is_stale(report.overall_desk_risk_assessment):
+        report.overall_desk_risk_assessment = (
+            "The overall assessment is limited to the retained verified conclusions "
+            "and the unresolved issues disclosed in this report."
+        )
 
     evidence_index = []
     seen_locators: set[str] = set()

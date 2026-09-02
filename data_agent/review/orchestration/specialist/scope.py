@@ -63,6 +63,11 @@ def prepare_scope(
         "omission_audit": None,
         "omission_rescue_used": False,
         "omission_rescue_requested": False,
+        "findings_by_id": {},
+        "issues_by_id": {},
+        "checks_by_id": {},
+        "candidates_by_id": {},
+        "pending_work": [],
     }
 
 
@@ -110,6 +115,10 @@ def run_deterministic_analysis(
     ctx = context_from_config(config)
     analyses = runtime.spec.analyses_runner(ctx, list(state.get("source_paths", [])))
     serialized: list[dict] = []
+    checks_by_id: dict[str, dict] = dict(state.get("checks_by_id", {}))
+    candidates_by_id: dict[str, dict] = dict(state.get("candidates_by_id", {}))
+    pending_work = list(state.get("pending_work", []))
+    queued_ids = {str(item.get("work_id")) for item in pending_work}
     for analysis in analyses:
         data = analysis.model_dump(mode="json")
         candidates = data.get("flag_candidates", [])
@@ -118,8 +127,41 @@ def run_deterministic_analysis(
                 str(data.get("name") or "analysis"),
                 [candidate for candidate in candidates if isinstance(candidate, dict)],
             )
+            for candidate in data["flag_candidates"]:
+                candidate_id = str(candidate["candidate_id"])
+                candidates_by_id[candidate_id] = candidate
+                work_id = f"account-candidate:{candidate_id}"
+                if work_id not in queued_ids:
+                    pending_work.append(
+                        {
+                            "work_id": work_id,
+                            "work_type": "candidate_accounting",
+                            "target_ids": [candidate_id],
+                            "attempt_budget": 2,
+                            "attempts": 0,
+                            "status": "pending",
+                        }
+                    )
+                    queued_ids.add(work_id)
+        check_id = f"analysis:{data.get('name') or 'analysis'}"
+        checks_by_id[check_id] = {
+            "check_id": check_id,
+            "source_ids": list(state.get("source_ids", [])),
+            "check_type": str(data.get("name") or "analysis"),
+            "performed": True,
+            "population_definition": "Assigned specialist source population",
+            "result": str(data.get("summary") or "")[:4_000],
+            "limitations": [],
+            "evidence": [],
+            "issue_ids": [],
+        }
         serialized.append(data)
-    return {"analyses": serialized}
+    return {
+        "analyses": serialized,
+        "checks_by_id": checks_by_id,
+        "candidates_by_id": candidates_by_id,
+        "pending_work": pending_work,
+    }
 
 
 __all__ = [

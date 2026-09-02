@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from data_agent.review.domain.desk_context import DeskContext
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.source import DateRange, SourceManifest
+from data_agent.review.domain.verification import CheckCoverageRecord
 
 CoverageStatus = Literal["pending", "reviewed", "irrelevant", "unsupported"]
 
@@ -28,6 +29,7 @@ class SourceCoverage(BaseModel):
     completed_reviewers: list[str] = Field(default_factory=list)
     status: CoverageStatus = "pending"
     notes: str | None = None
+    checks: list[CheckCoverageRecord] = Field(default_factory=list)
 
     def is_settled(self) -> bool:
         """True when the source no longer blocks synthesis."""

@@ -20,10 +20,12 @@ from data_agent.review.verification import (
     audit_omissions,
     can_pass,
     candidate_locators,
+    candidate_relationship_suggested,
     check_challenge_completeness,
     reduce_verification,
     stable_candidate_id,
 )
+from data_agent.review.verification.candidates import link_finding_to_candidates
 
 
 def _finding(*, severity: Severity = Severity.MEDIUM) -> Finding:
@@ -146,7 +148,7 @@ def test_candidate_identity_uses_arbitrary_locator_fields_and_ignores_prose() ->
     assert stable_candidate_id("limits", first) == stable_candidate_id("limits", second)
 
 
-def test_locator_overlap_counts_as_candidate_coverage() -> None:
+def test_locator_overlap_only_suggests_candidate_relationship() -> None:
     candidate = {
         "kind": "limit_breach",
         "locator": "source://risk.csv#rows=2:4",
@@ -158,8 +160,24 @@ def test_locator_overlap_counts_as_candidate_coverage() -> None:
         [_finding()],
     )
 
-    assert result.material_omission_exists is False
-    assert len(result.covered_candidate_ids) == 1
+    assert result.material_omission_exists is True
+    assert result.covered_candidate_ids == []
+    assert candidate_relationship_suggested(_finding(), candidate) is True
+
+
+def test_two_signals_in_same_region_require_explicit_candidate_ids() -> None:
+    candidates = [
+        {
+            "kind": kind,
+            "locator": "source://risk.csv#rows=2:4",
+            "candidate_id": f"limits:{kind}",
+        }
+        for kind in ("limit_breach", "stale_limit")
+    ]
+
+    linked = link_finding_to_candidates(_finding(), candidates, analysis_name="limits")
+
+    assert linked.deterministic_candidate_ids == []
 
 
 def test_unsupported_disposition_does_not_hide_material_omission() -> None:

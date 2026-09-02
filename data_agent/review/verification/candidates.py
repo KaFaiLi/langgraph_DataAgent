@@ -221,11 +221,23 @@ def finding_covers_candidate(
     *,
     analysis_name: str | None = None,
 ) -> bool:
-    """Check explicit-ID or source-region linkage between a finding/candidate."""
+    """Require an explicit candidate relationship to close candidate coverage.
+
+    Evidence overlap is intentionally not acceptance evidence: several distinct
+    signals may share a broad source region. Call :func:`candidate_relationship_suggested`
+    when overlap is useful for proposing, rather than validating, a relationship.
+    """
 
     candidate_id = _candidate_id(candidate, analysis_name)
-    if candidate_id in finding.deterministic_candidate_ids:
-        return True
+    return candidate_id in finding.deterministic_candidate_ids
+
+
+def candidate_relationship_suggested(
+    finding: Finding,
+    candidate: Mapping[str, Any] | object,
+) -> bool:
+    """Return whether evidence overlap suggests a relationship for review."""
+
     candidate_regions = candidate_locators(candidate)
     finding_regions = _finding_locators(finding)
     return any(
@@ -302,13 +314,19 @@ def link_finding_to_candidates(
     *,
     analysis_name: str | None = None,
 ) -> Finding:
-    """Return a finding with deterministic IDs for overlapping candidates added."""
+    """Validate an unambiguous overlap suggestion at the normalization seam.
+
+    One overlap can be promoted to an explicit relationship. Multiple candidates
+    sharing the region remain unaccounted for until the analyst names their IDs.
+    """
 
     identifiers = list(finding.deterministic_candidate_ids)
-    for candidate in candidates:
-        identifier = _candidate_id(candidate, analysis_name)
-        if identifier not in identifiers and finding_covers_candidate(
-            finding, candidate, analysis_name=analysis_name
-        ):
-            identifiers.append(identifier)
+    suggestions = [
+        candidate
+        for candidate in candidates
+        if candidate_relationship_suggested(finding, candidate)
+        and _candidate_id(candidate, analysis_name) not in identifiers
+    ]
+    if len(suggestions) == 1:
+        identifiers.append(_candidate_id(suggestions[0], analysis_name))
     return finding.model_copy(update={"deterministic_candidate_ids": identifiers})

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.runnables.config import RunnableConfig
@@ -29,6 +31,7 @@ from data_agent.review.interface import (
     ReviewStatus,
 )
 from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
+from data_agent.review.llm.errors import RetryableLLMError, is_retryable_provider_error
 from data_agent.review.orchestration.graph import build_parent_graph
 from data_agent.review.telemetry import ReviewTelemetryHandler
 from data_agent.tracing import (
@@ -63,15 +66,22 @@ class ReviewService:
             review_period=request.review_period,
         )
         root = Path(context.output_dir)
-        with SqliteSaver.from_conn_string(str(root / self.checkpoint_db_name)) as checkpointer:
-            output = self._build_graph(checkpointer).invoke(
-                {
-                    "run_id": context.run_id,
-                    "source_root": context.source_root,
-                    "output_dir": str(root),
-                },
-                config=self._config(context, root),
-            )
+        self._write_execution_status(root, ReviewStatus.RUNNING, context.run_id)
+        try:
+            with SqliteSaver.from_conn_string(str(root / self.checkpoint_db_name)) as checkpointer:
+                output = self._build_graph(checkpointer).invoke(
+                    {
+                        "run_id": context.run_id,
+                        "source_root": context.source_root,
+                        "output_dir": str(root),
+                    },
+                    config=self._config(context, root),
+                )
+        except (KeyboardInterrupt, InterruptedError):
+            self._write_execution_status(root, ReviewStatus.INTERRUPTED, context.run_id)
+            raise
+        except Exception as exc:  # noqa: BLE001 - service persistence boundary
+            return self._exception_result(root, context.run_id, exc)
         return self._result(output, root)
 
     def resume(self, run_dir: str | Path) -> ReviewResult:
@@ -94,11 +104,18 @@ class ReviewService:
             )
 
         context = load_resume_context(root, checkpoint_db_name=self.checkpoint_db_name)
-        with SqliteSaver.from_conn_string(str(root / self.checkpoint_db_name)) as checkpointer:
-            output = self._build_graph(checkpointer).invoke(
-                None,
-                config=self._config(context, root),
-            )
+        self._write_execution_status(root, ReviewStatus.RUNNING, context.run_id)
+        try:
+            with SqliteSaver.from_conn_string(str(root / self.checkpoint_db_name)) as checkpointer:
+                output = self._build_graph(checkpointer).invoke(
+                    None,
+                    config=self._config(context, root),
+                )
+        except (KeyboardInterrupt, InterruptedError):
+            self._write_execution_status(root, ReviewStatus.INTERRUPTED, context.run_id)
+            raise
+        except Exception as exc:  # noqa: BLE001 - service persistence boundary
+            return self._exception_result(root, context.run_id, exc)
         return self._result(output, root)
 
     def status(self, run_dir: str | Path) -> ReviewRunStatus:
@@ -115,6 +132,23 @@ class ReviewService:
                 status=ReviewStatus.COMPLETED,
                 run_id=str(manifest.get("run_id") or run_id),
                 output_dir=root,
+                completed_specialists=self._completed_specialists(root),
+                trace_path=trace_path,
+                last_event_at=last_event_at,
+            )
+        execution = self._read_json(root / "execution_status.json")
+        persisted_status = execution.get("status")
+        if persisted_status in {
+            ReviewStatus.RUNNING.value,
+            ReviewStatus.INTERRUPTED.value,
+            ReviewStatus.RETRYABLE_FAILURE.value,
+        }:
+            trace_path, last_event_at = self._trace_status(root)
+            return ReviewRunStatus(
+                status=ReviewStatus(persisted_status),
+                run_id=str(execution.get("run_id") or run_id),
+                output_dir=root,
+                failure_reason=execution.get("failure_reason"),
                 completed_specialists=self._completed_specialists(root),
                 trace_path=trace_path,
                 last_event_at=last_event_at,
@@ -199,7 +233,69 @@ class ReviewService:
                 ),
                 encoding="utf-8",
             )
+        ReviewService._write_execution_status(
+            root, status, result.run_id, failure_reason=result.failure_reason
+        )
         return result
+
+    @staticmethod
+    def _exception_result(root: Path, run_id: str, exc: Exception) -> ReviewResult:
+        status = (
+            ReviewStatus.RETRYABLE_FAILURE
+            if isinstance(exc, RetryableLLMError) or is_retryable_provider_error(exc)
+            else ReviewStatus.FAILED
+        )
+        reason = f"{type(exc).__name__}: {exc}"
+        ReviewService._write_execution_status(root, status, run_id, failure_reason=reason)
+        if status is ReviewStatus.FAILED:
+            ReviewService._atomic_json(
+                root / "failure.json",
+                {"run_id": run_id, "status": status.value, "failure_reason": reason},
+            )
+        return ReviewResult(
+            status=status,
+            run_id=run_id,
+            output_dir=root.resolve(),
+            failure_reason=reason,
+            trace_path=ReviewService._existing_trace_path(root),
+            last_event_at=ReviewService._last_event_at(root),
+        )
+
+    @staticmethod
+    def _write_execution_status(
+        root: Path,
+        status: ReviewStatus,
+        run_id: str,
+        *,
+        failure_reason: str | None = None,
+    ) -> None:
+        root.mkdir(parents=True, exist_ok=True)
+        if status in {
+            ReviewStatus.RUNNING,
+            ReviewStatus.INTERRUPTED,
+            ReviewStatus.RETRYABLE_FAILURE,
+        }:
+            # A previous terminal attempt must not override the authoritative
+            # status of a later resume attempt.
+            (root / "failure.json").unlink(missing_ok=True)
+        ReviewService._atomic_json(
+            root / "execution_status.json",
+            {
+                "run_id": run_id,
+                "status": status.value,
+                "failure_reason": failure_reason,
+                "updated_at": datetime.now().astimezone().isoformat(),
+            },
+        )
+
+    @staticmethod
+    def _atomic_json(path: Path, value: dict[str, Any]) -> None:
+        temporary = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
+        try:
+            temporary.write_text(json.dumps(value, indent=2), encoding="utf-8")
+            os.replace(temporary, path)
+        finally:
+            temporary.unlink(missing_ok=True)
 
     @staticmethod
     def _read_json(path: Path) -> dict[str, Any]:
