@@ -27,6 +27,7 @@ class SpecialistState(TypedDict, total=False):
     scope: str
     source_ids: list[str]
     source_paths: list[str]
+    planned_checks: list[dict]
 
     desk_context: dict
 

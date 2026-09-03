@@ -116,6 +116,19 @@ def run_deterministic_analysis(
     analyses = runtime.spec.analyses_runner(ctx, list(state.get("source_paths", [])))
     serialized: list[dict] = []
     checks_by_id: dict[str, dict] = dict(state.get("checks_by_id", {}))
+    planned_checks = list(state.get("planned_checks", []))
+    for check in planned_checks:
+        checks_by_id[check["check_id"]] = {
+            "check_id": check["check_id"],
+            "source_ids": list(check["source_ids"]),
+            "check_type": check["title"],
+            "performed": True,
+            "population_definition": "Assigned planned-check source population",
+            "result": "The trusted analysis runner completed without a matching result.",
+            "limitations": ["No matching deterministic analysis result was emitted."],
+            "evidence": [],
+            "issue_ids": [],
+        }
     candidates_by_id: dict[str, dict] = dict(state.get("candidates_by_id", {}))
     pending_work = list(state.get("pending_work", []))
     queued_ids = {str(item.get("work_id")) for item in pending_work}
@@ -143,18 +156,19 @@ def run_deterministic_analysis(
                         }
                     )
                     queued_ids.add(work_id)
-        check_id = f"analysis:{data.get('name') or 'analysis'}"
-        checks_by_id[check_id] = {
-            "check_id": check_id,
-            "source_ids": list(state.get("source_ids", [])),
-            "check_type": str(data.get("name") or "analysis"),
-            "performed": True,
-            "population_definition": "Assigned specialist source population",
-            "result": str(data.get("summary") or "")[:4_000],
-            "limitations": [],
-            "evidence": [],
-            "issue_ids": [],
-        }
+        analysis_name = str(data.get("name") or "analysis")
+        matched = [
+            check
+            for check in planned_checks
+            if "*" in check["analysis_names"] or analysis_name in check["analysis_names"]
+        ]
+        for check in matched:
+            record = checks_by_id[check["check_id"]]
+            record["performed"] = True
+            record["limitations"] = []
+            prior = record["result"]
+            summary = f"{analysis_name}: {data.get('summary') or ''}"[:4_000]
+            record["result"] = f"{prior}\n{summary}".strip()[:4_000]
         serialized.append(data)
     return {
         "analyses": serialized,

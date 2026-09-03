@@ -16,6 +16,9 @@ class ParentState(TypedDict, total=False):
 
     manifest: dict | None
     desk_context: dict | None
+    review_plan: dict | None
+    review_plan_fingerprint: str
+    check_results: dict[str, dict]
     tasks: list[dict]
     active_task: dict
     specialist_outcomes: Annotated[list[dict], operator.add]

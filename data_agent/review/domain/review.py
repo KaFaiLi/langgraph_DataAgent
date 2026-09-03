@@ -42,6 +42,7 @@ class ReviewTask(BaseModel):
     task_id: str
     domain: SpecialistDomain
     source_ids: list[str] = Field(default_factory=list)
+    check_ids: list[str] = Field(default_factory=list)
     scope: DateRange | None = None
 
 

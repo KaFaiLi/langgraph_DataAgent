@@ -177,6 +177,11 @@ def _run_specialist(
             "domain_label": registration.label,
             "source_ids": source_ids,
             "source_paths": source_paths,
+            "planned_checks": [
+                check
+                for check in (state.get("review_plan") or {}).get("checks", [])
+                if check["check_id"] in task_data.get("check_ids", [])
+            ],
             "desk_context": state.get("desk_context", {}),
             "review_period": state.get("review_period", {}),
         }
