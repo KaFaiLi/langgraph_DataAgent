@@ -60,6 +60,7 @@ class RunContext(BaseModel):
     output_dir: str
     desk_template: DeskContext
     review_period: DateRange
+    selected_review_domains: list[SpecialistDomain] | None = None
 
 
 class ReviewRun(BaseModel):
@@ -74,5 +75,8 @@ class ReviewRun(BaseModel):
     manifest: SourceManifest
     coverage: list[SourceCoverage] = Field(default_factory=list)
     tasks: list[ReviewTask] = Field(default_factory=list)
+    review_plan: dict | None = None
+    review_plan_fingerprint: str | None = None
+    check_results: list[CheckCoverageRecord] = Field(default_factory=list)
 
     failure_reason: str | None = None

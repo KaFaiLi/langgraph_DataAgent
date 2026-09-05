@@ -19,6 +19,7 @@ from data_agent.review.llm.models import ModelTier
 from data_agent.review.llm.structured import invoke_structured
 from data_agent.review.orchestration.state import ParentState
 from data_agent.skills.registry import SPECIALISTS
+from data_agent.tools.source_roles import pnl_source_role
 
 REGISTERED_DOMAINS = tuple(SPECIALISTS)
 _CLASSIFY_SYSTEM = "Classify trading-desk source files into these domains: " + ", ".join(
@@ -37,6 +38,7 @@ class _CheckDefinition:
     title: str
     required: tuple[SpecialistDomain, ...]
     analyses: tuple[str, ...]
+    implemented: bool = True
 
 
 # Independent calculations are separate checks. Cross-source checks are blocked
@@ -55,7 +57,7 @@ _PNL_CHECKS = (
         ("pnl_adjustment_controls",),
     ),
     _CheckDefinition(
-        "ATTRIBUTION-CONSISTENCY",
+        "ATTRIBUTION-INTERNAL-CONSISTENCY",
         "Income attribution consistency",
         (SpecialistDomain.INCOME_ATTRIBUTION,),
         (
@@ -81,9 +83,36 @@ _PNL_CHECKS = (
         "ATTRIBUTION-RECONCILIATION",
         "Attribution/P&L reconciliation",
         (SpecialistDomain.PNL, SpecialistDomain.INCOME_ATTRIBUTION),
-        ("income_attribution_reconciliation",),
+        ("pnl_to_attribution_reconciliation",),
+        implemented=False,
     ),
 )
+
+_DOMAIN_ANALYSES = {
+    SpecialistDomain.RISK_METRICS: (
+        "risk_metrics_input_contract",
+        "risk_metrics_data_integrity",
+        "risk_limit_consumption",
+        "risk_metric_dynamics",
+        "risk_excess_workflow",
+        "risk_cross_source_consistency",
+    ),
+    SpecialistDomain.POST_TRADE_CONTROLS: (
+        "repeated_breaches",
+        "product_recurrence",
+        "resolution_time",
+        "approval_gaps",
+        "override_patterns",
+        "severity_changes",
+    ),
+    SpecialistDomain.RISK_COMMENTARY: (
+        "commentary_extract_population",
+        "commentary_validation_gaps",
+        "commentary_internal_consistency",
+        "commentary_repeated_explanations",
+        "commentary_normalized_reassurance_claims",
+    ),
+}
 
 
 def _provider(config: RunnableConfig) -> ReviewLLMProvider:
@@ -116,7 +145,10 @@ def _definitions(
         return _PNL_CHECKS
     return (
         _CheckDefinition(
-            domain.value.upper(), f"{domain.value} core review", source_domains, ("*",)
+            domain.value.upper(),
+            f"{domain.value} core review",
+            source_domains,
+            _DOMAIN_ANALYSES[domain],
         ),
     )
 
@@ -131,16 +163,22 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
     """Compatibility-stable graph node that classifies, plans, and dispatches checks."""
     manifest = SourceManifest.model_validate(state["manifest"])
     for source in manifest.sources:
-        if not source.candidate_domains:
+        schema_role = pnl_source_role(source.column_names, allow_legacy_pnl=True)
+        path_is_pnl_family = source.candidate_domains == [SpecialistDomain.PNL]
+        if schema_role is not None:
+            source.candidate_domains = [schema_role]
+        elif not source.candidate_domains or path_is_pnl_family:
             domains = _classify_source(
                 _provider(config), source.source_id, source.path, source.column_names
             )
-            source.candidate_domains = domains or list(REGISTERED_DOMAINS)
+            source.candidate_domains = domains
 
-    desk = state.get("desk_context") or {}
-    selected = set(desk.get("required_review_domains", ())) or {
-        domain.value for domain in REGISTERED_DOMAINS
-    }
+    configured = state.get("selected_review_domains")
+    selected = (
+        {domain.value for domain in REGISTERED_DOMAINS}
+        if configured is None
+        else {SpecialistDomain(domain).value for domain in configured}
+    )
     checks: list[PlannedCheck] = []
     tasks: list[dict] = []
     reviewers_by_source: dict[str, list[SpecialistDomain]] = {
@@ -162,10 +200,28 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
             missing = [
                 required.value for required in definition.required if required not in present
             ]
+            analysis_names = definition.analyses
+            if definition.suffix == "ATTRIBUTION-INTERNAL-CONSISTENCY" and any(
+                {"driver", "pnl_musd"} <= set(source.column_names)
+                for source in manifest.sources
+                if source.source_id in matched
+            ):
+                analysis_names = (
+                    "driver_concentration",
+                    "unexpected_drivers",
+                    "income_source_shifts",
+                    "risk_consistency",
+                    "risk_pnl_mismatch",
+                )
             if domain.value not in selected:
                 applicability, reason = (
                     CheckApplicability.INAPPLICABLE,
                     "Playbook is not required by desk scope.",
+                )
+            elif not definition.implemented:
+                applicability, reason = (
+                    CheckApplicability.BLOCKED,
+                    "No trusted cross-source implementation with compatible entity, date, currency, unit, and inclusion basis is registered.",
                 )
             elif missing:
                 applicability, reason = (
@@ -185,7 +241,7 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
                 playbook_version=f"1.0+{policy_fingerprint[:12]}",
                 required_source_domains=list(definition.required),
                 source_ids=matched,
-                analysis_names=list(definition.analyses),
+                analysis_names=list(analysis_names),
                 applicability=applicability,
                 applicability_reason=reason,
                 completion_criteria=[
@@ -229,10 +285,20 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
         SourceCoverage(
             source_id=source.source_id,
             required_reviewers=[domain.value for domain in reviewers_by_source[source.source_id]],
-            status="irrelevant" if not reviewers_by_source[source.source_id] else "pending",
-            notes="No applicable planned check."
-            if not reviewers_by_source[source.source_id]
-            else None,
+            status=(
+                "unsupported"
+                if not source.candidate_domains
+                else "irrelevant"
+                if not reviewers_by_source[source.source_id]
+                else "pending"
+            ),
+            notes=(
+                "Source role remains unresolved."
+                if not source.candidate_domains
+                else "No applicable planned check."
+                if not reviewers_by_source[source.source_id]
+                else None
+            ),
         ).model_dump(mode="json")
         for source in manifest.sources
     ]

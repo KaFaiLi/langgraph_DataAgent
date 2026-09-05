@@ -13,6 +13,7 @@ class ParentState(TypedDict, total=False):
     source_root: str
     output_dir: str
     review_period: dict[str, str]
+    selected_review_domains: list[str] | None
 
     manifest: dict | None
     desk_context: dict | None

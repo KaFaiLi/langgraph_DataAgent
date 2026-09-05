@@ -25,11 +25,6 @@ class CheckApplicability(StrEnum):
     INAPPLICABLE = "inapplicable"
 
 
-class ExecutionBudget(StrictPlanModel):
-    max_model_calls: int = Field(default=100, ge=0)
-    max_investigations: int = Field(default=20, ge=0)
-
-
 class PlannedCheck(StrictPlanModel):
     check_id: str = Field(pattern=r"^CHECK-[A-Z0-9_-]+$")
     domain: SpecialistDomain
@@ -64,7 +59,6 @@ class ReviewPlan(StrictPlanModel):
     plan_id: str = Field(pattern=r"^PLAN-[A-F0-9]{16}$")
     review_period: DateRange
     checks: list[PlannedCheck]
-    budget: ExecutionBudget = Field(default_factory=ExecutionBudget)
 
     @model_validator(mode="after")
     def _unique_checks(self) -> ReviewPlan:
@@ -77,3 +71,24 @@ class ReviewPlan(StrictPlanModel):
     def fingerprint(self) -> str:
         payload = json.dumps(self.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(payload.encode()).hexdigest()
+
+
+class AnalysisReceipt(StrictPlanModel):
+    """Proof that one declared deterministic analysis emitted a result."""
+
+    analysis_name: str = Field(min_length=1)
+    result_digest: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+class CheckResult(StrictPlanModel):
+    """Authoritative execution result for one planned check and attempt."""
+
+    plan_fingerprint: str = Field(pattern=r"^[a-f0-9]{64}$")
+    check_id: str
+    domain: SpecialistDomain
+    source_ids: list[str]
+    receipts: list[AnalysisReceipt]
+    population_start: str
+    population_end: str
+    completion_rule_passed: bool = False
+    limitations: list[str] = Field(default_factory=list)

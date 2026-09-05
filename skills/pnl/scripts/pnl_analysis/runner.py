@@ -38,6 +38,14 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseMode
     adjustments, adjustment_issues = _adjustment_rows(tables)
     validation, validation_issues = _validation_rows(tables)
     income_attribution, income_issues = _income_attribution_rows(tables)
+    if ctx.review_period is not None:
+        start, end = ctx.review_period.start, ctx.review_period.end
+        pnl = [row for row in pnl if start <= row.day <= end]
+        adjustments = [
+            row for row in adjustments if row.value_start <= end and row.value_end >= start
+        ]
+        validation = [row for row in validation if start <= row.request_date <= end]
+        income_attribution = [row for row in income_attribution if start <= row.day <= end]
     legacy_income_paths = list(
         dict.fromkeys(table.path for table in tables if table.role == "income_attribution_legacy")
     )

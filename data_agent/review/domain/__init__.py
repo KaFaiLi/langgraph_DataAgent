@@ -1,10 +1,11 @@
 """Internal Pydantic contracts for the review pipeline."""
 
 from data_agent.review.domain.plan import (
+    AnalysisReceipt,
     CheckApplicability,
-    ExecutionBudget,
+    CheckResult,
     PlannedCheck,
     ReviewPlan,
 )
 
-__all__ = ["CheckApplicability", "ExecutionBudget", "PlannedCheck", "ReviewPlan"]
+__all__ = ["AnalysisReceipt", "CheckApplicability", "CheckResult", "PlannedCheck", "ReviewPlan"]

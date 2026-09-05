@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import date
 from pathlib import Path
@@ -111,6 +112,11 @@ def test_happy_path_covers_all_sources(tmp_path: Path) -> None:
     result, out = run_parent(tmp_path, provider)
 
     assert result.get("status") == "completed", result.get("failure_reason")
+    assert (out / "review_plan.json").is_file()
+    run_manifest = json.loads((out / "run_manifest.json").read_text())
+    assert run_manifest["review_plan_fingerprint"] == result["review_plan_fingerprint"]
+    assert run_manifest["review_plan"]["checks"]
+    assert run_manifest["check_results"]
     assert len(result["tasks"]) == 4  # every active specialist has material
     assert all(entry["status"] == "reviewed" for entry in result["coverage"])
     assert len(result["specialist_reports"]) == 4
@@ -179,7 +185,7 @@ def test_unclassified_source_gets_classified_by_flash(tmp_path: Path) -> None:
     assert unknown["status"] == "reviewed"
 
 
-def test_empty_classification_routes_to_all_specialists(tmp_path: Path) -> None:
+def test_empty_classification_remains_unresolved(tmp_path: Path) -> None:
     provider = FakeParentProvider(classification={"misc/unknown.csv": []})
 
     def _add_unclassified(source: Path) -> None:
@@ -191,8 +197,9 @@ def test_empty_classification_routes_to_all_specialists(tmp_path: Path) -> None:
     assert result.get("status") != "failed", result.get("failure_reason")
     unknown_id = _source_id_by_path(result, "misc/unknown.csv")
     unknown = next(entry for entry in result["coverage"] if entry["source_id"] == unknown_id)
-    assert len(unknown["required_reviewers"]) == len(SPECIALIST_DOMAINS)
-    assert unknown["status"] == "reviewed"
+    assert unknown["required_reviewers"] == []
+    assert unknown["status"] == "unsupported"
+    assert unknown["notes"] == "Source role remains unresolved."
 
 
 def test_unsupported_source_fails_run(tmp_path: Path) -> None:

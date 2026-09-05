@@ -2,11 +2,14 @@
 
 from fastmcp.exceptions import ToolError
 
+from data_agent.tools.source_roles import pnl_source_role
+
 from .shared import *
 
 
 def _classify(frame: pl.DataFrame) -> Role | None:
     columns = normalized_columns(frame)
+    shared_role = pnl_source_role(frame.columns)
     if columns >= INCOME_ATTRIBUTION_COLUMNS:
         return "income_attribution"
     if columns >= LEGACY_INCOME_ATTRIBUTION_COLUMNS:
@@ -17,6 +20,14 @@ def _classify(frame: pl.DataFrame) -> Role | None:
         return "adjustment"
     if columns >= VALIDATION_COLUMNS:
         return "validation"
+    if shared_role is SpecialistDomain.PNL_ADJUSTMENTS:
+        return "adjustment"
+    if shared_role is SpecialistDomain.PNL_VALIDATION:
+        return "validation"
+    if shared_role is SpecialistDomain.PNL:
+        return "pnl"
+    if shared_role is SpecialistDomain.INCOME_ATTRIBUTION:
+        return "income_attribution_legacy"
     return None
 
 

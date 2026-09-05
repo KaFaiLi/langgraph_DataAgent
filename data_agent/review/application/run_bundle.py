@@ -21,6 +21,7 @@ from data_agent.review.domain.reports import FinalReport, SpecialistReport
 from data_agent.review.domain.review import ReviewRun, RunContext, RunStatus
 from data_agent.review.domain.source import DateRange, SourceManifest
 from data_agent.review.domain.verification import OmissionAuditResult
+from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 
 RUN_CONTEXT_FILE = "run_context.json"
@@ -412,6 +413,7 @@ def write_run_context(
     source_root: str | Path,
     desk_template: DeskContext,
     review_period: Any,
+    selected_review_domains: list[SpecialistDomain] | None = None,
 ) -> RunContext:
     """Atomically persist authoritative fresh-run inputs before graph invocation."""
     root = Path(output_dir).resolve()
@@ -422,6 +424,7 @@ def write_run_context(
         output_dir=str(root),
         desk_template=desk_template,
         review_period=review_period,
+        selected_review_domains=selected_review_domains,
     )
     target = root / RUN_CONTEXT_FILE
     temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
@@ -525,4 +528,13 @@ def load_resume_context(
             "checkpoint_missing", f"checkpoint database missing: {checkpoint_db_name}"
         )
     _checkpoint_state(db_path, context)
+    catalog_path = root / CATALOG_FILE
+    if catalog_path.is_file():
+        persisted = _typed(SourceManifest, _read_json(catalog_path, CATALOG_FILE), CATALOG_FILE)
+        current = build_catalog(context.source_root)
+        if _manifest_identity(persisted) != _manifest_identity(current):
+            raise RunBundleError(
+                "inputs_changed",
+                "the complete source snapshot changed after checkpointing; start a new review",
+            )
     return context

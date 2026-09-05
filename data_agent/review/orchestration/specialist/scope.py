@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 
 from fastmcp.exceptions import ToolError
@@ -122,12 +123,18 @@ def run_deterministic_analysis(
             "check_id": check["check_id"],
             "source_ids": list(check["source_ids"]),
             "check_type": check["title"],
-            "performed": True,
+            "performed": False,
             "population_definition": "Assigned planned-check source population",
-            "result": "The trusted analysis runner completed without a matching result.",
-            "limitations": ["No matching deterministic analysis result was emitted."],
+            "result": "",
+            "limitations": ["Required deterministic analysis receipts are incomplete."],
             "evidence": [],
             "issue_ids": [],
+            "plan_fingerprint": state.get("plan_fingerprint", ""),
+            "owner_domain": state.get("domain", ""),
+            "analysis_receipts": [],
+            "population_start": state["review_period"]["start"],
+            "population_end": state["review_period"]["end"],
+            "completion_rule_passed": False,
         }
     candidates_by_id: dict[str, dict] = dict(state.get("candidates_by_id", {}))
     pending_work = list(state.get("pending_work", []))
@@ -157,19 +164,28 @@ def run_deterministic_analysis(
                     )
                     queued_ids.add(work_id)
         analysis_name = str(data.get("name") or "analysis")
-        matched = [
-            check
-            for check in planned_checks
-            if "*" in check["analysis_names"] or analysis_name in check["analysis_names"]
-        ]
+        matched = [check for check in planned_checks if analysis_name in check["analysis_names"]]
         for check in matched:
             record = checks_by_id[check["check_id"]]
-            record["performed"] = True
-            record["limitations"] = []
+            digest = hashlib.sha256(
+                json.dumps(data, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            record["analysis_receipts"].append(
+                {"analysis_name": analysis_name, "result_digest": digest}
+            )
             prior = record["result"]
             summary = f"{analysis_name}: {data.get('summary') or ''}"[:4_000]
             record["result"] = f"{prior}\n{summary}".strip()[:4_000]
         serialized.append(data)
+    for check in planned_checks:
+        record = checks_by_id[check["check_id"]]
+        emitted = {receipt["analysis_name"] for receipt in record["analysis_receipts"]}
+        required = set(check["analysis_names"])
+        complete = required <= emitted and len(record["analysis_receipts"]) == len(required)
+        record["performed"] = complete
+        record["completion_rule_passed"] = complete
+        if complete:
+            record["limitations"] = []
     return {
         "analyses": serialized,
         "checks_by_id": checks_by_id,

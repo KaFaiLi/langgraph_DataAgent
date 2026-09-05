@@ -28,6 +28,7 @@ class SpecialistState(TypedDict, total=False):
     source_ids: list[str]
     source_paths: list[str]
     planned_checks: list[dict]
+    plan_fingerprint: str
 
     desk_context: dict
 
