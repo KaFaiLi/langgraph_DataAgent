@@ -6,7 +6,6 @@ from data_agent.review.interface import (
     ReviewRunStatus,
     ReviewStatus,
 )
-from data_agent.review.service import ReviewService
 
 __all__ = [
     "ReviewRequest",
@@ -15,3 +14,12 @@ __all__ = [
     "ReviewService",
     "ReviewStatus",
 ]
+
+
+def __getattr__(name: str) -> object:
+    """Keep the service API lazy so domain imports cannot re-enter the skill registry."""
+    if name == "ReviewService":
+        from data_agent.review.service import ReviewService
+
+        return ReviewService
+    raise AttributeError(name)
