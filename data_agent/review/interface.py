@@ -9,12 +9,14 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
+from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.source import DateRange
 
 
 class ReviewStatus(StrEnum):
     RUNNING = "running"
     COMPLETED = "completed"
+    COMPLETED_WITH_GAPS = "completed_with_gaps"
     FAILED = "failed"
     INTERRUPTED = "interrupted"
     RETRYABLE_FAILURE = "retryable_failure"
@@ -30,6 +32,7 @@ class ReviewRequest(BaseModel):
     review_start: date
     review_end: date
     desk_context: dict[str, Any]
+    selected_review_domains: list[SpecialistDomain] | None = None
 
     @model_validator(mode="after")
     def _ordered_period(self) -> ReviewRequest:

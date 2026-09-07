@@ -14,7 +14,7 @@ from langchain_core.runnables.config import RunnableConfig
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.finding import Finding
 from data_agent.review.domain.reports import SpecialistReport
-from data_agent.review.domain.source import SourceManifest
+from data_agent.review.domain.source import DateRange, SourceManifest
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.review.llm.errors import RetryableLLMError
@@ -177,6 +177,12 @@ def _run_specialist(
             "domain_label": registration.label,
             "source_ids": source_ids,
             "source_paths": source_paths,
+            "planned_checks": [
+                check
+                for check in (state.get("review_plan") or {}).get("checks", [])
+                if check["check_id"] in task_data.get("check_ids", [])
+            ],
+            "plan_fingerprint": state.get("review_plan_fingerprint", ""),
             "desk_context": state.get("desk_context", {}),
             "review_period": state.get("review_period", {}),
         }
@@ -251,6 +257,7 @@ def run_specialist_task(state: ParentState, config: RunnableConfig) -> dict:
         source_root=Path(state["source_root"]),
         workspace_root=output_dir / "workspace",
         manifest=manifest,
+        review_period=DateRange.model_validate(state["review_period"]),
     )
     outcome = _run_specialist(
         task,

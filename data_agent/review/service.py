@@ -58,12 +58,22 @@ class ReviewService:
 
     def start(self, request: ReviewRequest) -> ReviewResult:
         """Persist authoritative inputs and execute a fresh review."""
+        occupied = Path(request.output_dir).resolve()
+        identity_files = ("run_context.json", "run_manifest.json", self.checkpoint_db_name)
+        if any((occupied / name).exists() for name in identity_files):
+            return ReviewResult(
+                status=ReviewStatus.FAILED,
+                run_id=request.run_id,
+                output_dir=occupied,
+                failure_reason="output directory already contains a review attempt",
+            )
         context = write_run_context(
             request.output_dir,
             run_id=request.run_id,
             source_root=request.source_root,
             desk_template=DeskContext.model_validate(request.desk_context),
             review_period=request.review_period,
+            selected_review_domains=request.selected_review_domains,
         )
         root = Path(context.output_dir)
         self._write_execution_status(root, ReviewStatus.RUNNING, context.run_id)
@@ -91,7 +101,7 @@ class ReviewService:
             bundle = load_completed_run(root)
             trace_path, last_event_at = self._trace_status(root)
             return ReviewResult(
-                status=ReviewStatus.COMPLETED,
+                status=ReviewStatus(bundle.run.status.value),
                 run_id=bundle.run.run_id,
                 output_dir=bundle.run_dir,
                 final_report=bundle.final_report.model_dump(mode="json"),
@@ -129,7 +139,7 @@ class ReviewService:
             manifest = self._read_json(completed)
             trace_path, last_event_at = self._trace_status(root)
             return ReviewRunStatus(
-                status=ReviewStatus.COMPLETED,
+                status=ReviewStatus(str(manifest.get("status", ReviewStatus.COMPLETED.value))),
                 run_id=str(manifest.get("run_id") or run_id),
                 output_dir=root,
                 completed_specialists=self._completed_specialists(root),
@@ -201,6 +211,7 @@ class ReviewService:
                 "thread_id": context.run_id,
                 "desk_template": context.desk_template.model_dump(mode="json"),
                 "review_period": context.review_period,
+                "selected_review_domains": context.selected_review_domains,
                 "llm_provider": self.llm_provider,
             },
             "metadata": {"risk_agent_graph": "parent"},

@@ -35,11 +35,11 @@ def test_resume_returns_checkpointed_state(tmp_path: Path) -> None:
             desk_context=_desk().model_dump(mode="json"),
         )
     )
-    assert first.status is ReviewStatus.COMPLETED, first.failure_reason
+    assert first.status is ReviewStatus.COMPLETED_WITH_GAPS, first.failure_reason
     calls_after_first = len(provider.calls)
 
     resumed = service.resume(run_dir)
-    assert resumed.status is ReviewStatus.COMPLETED
+    assert resumed.status is ReviewStatus.COMPLETED_WITH_GAPS
     assert resumed.run_id == "RUN-1"
     # Resuming a completed run re-reads the checkpoint without new LLM calls.
     assert len(provider.calls) == calls_after_first

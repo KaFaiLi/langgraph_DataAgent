@@ -316,6 +316,12 @@ class CheckCoverageRecord(BaseModel):
     limitations: list[str] = Field(default_factory=list, max_length=32)
     evidence: list[EvidenceReference] = Field(default_factory=list, max_length=16)
     issue_ids: list[str] = Field(default_factory=list, max_length=128)
+    plan_fingerprint: str = ""
+    owner_domain: str = ""
+    analysis_receipts: list[dict[str, str]] = Field(default_factory=list)
+    population_start: str = ""
+    population_end: str = ""
+    completion_rule_passed: bool = False
 
 
 class PendingWorkItem(BaseModel):
