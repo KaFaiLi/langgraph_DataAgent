@@ -101,9 +101,10 @@ def finalize(state: ParentState, config: RunnableConfig) -> dict:
     manifest = SourceManifest.model_validate(state["manifest"])
     coverage = [SourceCoverage.model_validate(entry) for entry in state.get("coverage", [])]
     tasks = [ReviewTask.model_validate(task) for task in state.get("tasks", [])]
+    run_status = RunStatus.COMPLETED_WITH_GAPS if blocked else RunStatus.COMPLETED
     run = ReviewRun(
         run_id=state.get("run_id", "RUN-UNKNOWN"),
-        status=RunStatus.COMPLETED,
+        status=run_status,
         created_at=datetime.now(UTC),
         source_root=state["source_root"],
         output_dir=state["output_dir"],
@@ -119,4 +120,4 @@ def finalize(state: ParentState, config: RunnableConfig) -> dict:
         output_dir / "run_manifest.json",
         json.dumps(run.model_dump(mode="json"), indent=2, default=str),
     )
-    return {"status": "completed", "final_markdown": markdown}
+    return {"status": run_status.value, "final_markdown": markdown}

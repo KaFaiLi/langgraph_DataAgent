@@ -101,7 +101,7 @@ class ReviewService:
             bundle = load_completed_run(root)
             trace_path, last_event_at = self._trace_status(root)
             return ReviewResult(
-                status=ReviewStatus.COMPLETED,
+                status=ReviewStatus(bundle.run.status.value),
                 run_id=bundle.run.run_id,
                 output_dir=bundle.run_dir,
                 final_report=bundle.final_report.model_dump(mode="json"),
@@ -139,7 +139,7 @@ class ReviewService:
             manifest = self._read_json(completed)
             trace_path, last_event_at = self._trace_status(root)
             return ReviewRunStatus(
-                status=ReviewStatus.COMPLETED,
+                status=ReviewStatus(str(manifest.get("status", ReviewStatus.COMPLETED.value))),
                 run_id=str(manifest.get("run_id") or run_id),
                 output_dir=root,
                 completed_specialists=self._completed_specialists(root),

@@ -16,6 +16,7 @@ from data_agent.review.domain.source import DateRange
 class ReviewStatus(StrEnum):
     RUNNING = "running"
     COMPLETED = "completed"
+    COMPLETED_WITH_GAPS = "completed_with_gaps"
     FAILED = "failed"
     INTERRUPTED = "interrupted"
     RETRYABLE_FAILURE = "retryable_failure"

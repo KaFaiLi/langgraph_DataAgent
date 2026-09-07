@@ -37,5 +37,5 @@ class ParentState(TypedDict, total=False):
     lead_verification_history: list[dict]
     lead_status: str  # "running" | "complete"
 
-    status: str  # "running" | "completed" | "failed"
+    status: str  # "running" | "completed" | "completed_with_gaps" | "failed"
     failure_reason: str | None

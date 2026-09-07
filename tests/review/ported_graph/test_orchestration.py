@@ -111,12 +111,13 @@ def test_happy_path_covers_all_sources(tmp_path: Path) -> None:
     provider = FakeParentProvider()
     result, out = run_parent(tmp_path, provider)
 
-    assert result.get("status") == "completed", result.get("failure_reason")
+    assert result.get("status") == "completed_with_gaps", result.get("failure_reason")
     assert (out / "review_plan.json").is_file()
     run_manifest = json.loads((out / "run_manifest.json").read_text())
     assert run_manifest["review_plan_fingerprint"] == result["review_plan_fingerprint"]
     assert run_manifest["review_plan"]["checks"]
     assert run_manifest["check_results"]
+    assert "CHECK-ATTRIBUTION-RECONCILIATION" in (out / "final_findings.md").read_text()
     assert len(result["tasks"]) == 4  # every active specialist has material
     assert all(entry["status"] == "reviewed" for entry in result["coverage"])
     assert len(result["specialist_reports"]) == 4

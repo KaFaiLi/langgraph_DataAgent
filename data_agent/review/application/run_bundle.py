@@ -279,7 +279,7 @@ def load_completed_run(run_dir: str | Path) -> CompletedRunBundle:
         _read_json(_artifact_path(root, RUN_MANIFEST_FILE), RUN_MANIFEST_FILE),
         RUN_MANIFEST_FILE,
     )
-    if run.status is not RunStatus.COMPLETED:
+    if run.status not in {RunStatus.COMPLETED, RunStatus.COMPLETED_WITH_GAPS}:
         raise RunBundleError("run_not_completed", f"run status is {run.status.value!r}")
     if not run.manifest.sources:
         raise RunBundleError("manifest_empty", "completed run manifest contains no sources")
