@@ -69,6 +69,7 @@ class SpecialistState(TypedDict, total=False):
     findings_by_id: dict[str, dict]
     issues_by_id: dict[str, dict]
     checks_by_id: dict[str, dict]
+    check_results_by_id: dict[str, dict]
     candidates_by_id: dict[str, dict]
     pending_work: list[dict]
 

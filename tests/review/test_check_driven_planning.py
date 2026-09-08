@@ -158,14 +158,17 @@ def test_forged_result_digest_and_wrong_population_are_rejected() -> None:
                 "sha256": "a" * 64,
             }
         ],
-        "rows_read": 0,
-        "rows_in_scope": 0,
-        "rows_processed": 0,
+        "dataset_id": "risk_metrics:test",
+        "rows_read": 1,
+        "rows_in_scope": 1,
+        "rows_processed": 1,
         "rows_rejected": 0,
         "rows_excluded": 0,
         "exclusion_reasons": {},
         "actual_date_range": None,
         "calculation_basis": "synthetic empty population",
+        "observations_produced": 1,
+        "issues": [],
     }
     outputs = [
         {
@@ -206,7 +209,25 @@ def test_forged_result_digest_and_wrong_population_are_rejected() -> None:
     }
     result["specialist_reports"] = {"risk_metrics": {"check_coverage": [record]}}
     result["specialist_outcomes"] = [
-        {"domain": "risk_metrics", "verification": {"analysis_outputs": outputs}}
+        {
+            "domain": "risk_metrics",
+            "verification": {
+                "analysis_outputs": outputs,
+                "check_results": {
+                    check["check_id"]: {
+                        "plan_fingerprint": result["review_plan_fingerprint"],
+                        "check_id": check["check_id"],
+                        "attempt_id": f"TASK-risk_metrics:{check['check_id']}",
+                        "domain": "risk_metrics",
+                        "status": "performed",
+                        "source_ids": check["source_ids"],
+                        "receipts": receipts,
+                        "completion_rule_passed": True,
+                        "limitations": [],
+                    }
+                },
+            },
+        }
     ]
     assert coverage_gate(result, {}) == {}
 

@@ -35,7 +35,7 @@ from data_agent.review.domain.source import (
 )
 
 
-def _write_completed_run(run_dir: Path) -> None:
+def _write_completed_run(run_dir: Path, *, status: RunStatus = RunStatus.COMPLETED) -> None:
     run_dir.mkdir(parents=True, exist_ok=True)
     specialists = run_dir / "specialists"
     specialists.mkdir(exist_ok=True)
@@ -68,7 +68,7 @@ def _write_completed_run(run_dir: Path) -> None:
     )
     review = ReviewRun(
         run_id="ARCHIVED-RUN",
-        status=RunStatus.COMPLETED,
+        status=status,
         created_at=datetime.now(UTC),
         source_root="C:/historical/source",
         output_dir="C:/historical/output",
@@ -133,6 +133,17 @@ def test_completed_bundle_is_relocatable_and_ignores_stale_specialist_files(
     assert list(bundle.specialist_reports) == [SpecialistDomain.RISK_METRICS]
     assert bundle.final_markdown == "# Final\n"
     assert bundle.lead_verification_history[0]["decision"] == "pass"
+
+
+def test_completed_with_gaps_bundle_remains_readable(tmp_path: Path) -> None:
+    run_dir = tmp_path / "run"
+    _write_completed_run(run_dir, status=RunStatus.COMPLETED_WITH_GAPS)
+
+    bundle = load_completed_run(run_dir)
+    status = ReviewService().status(run_dir)
+
+    assert bundle.run.status is RunStatus.COMPLETED_WITH_GAPS
+    assert status.status is ReviewStatus.COMPLETED_WITH_GAPS
 
 
 def test_completed_bundle_rejects_unsettled_coverage_before_reading_presentation_inputs(

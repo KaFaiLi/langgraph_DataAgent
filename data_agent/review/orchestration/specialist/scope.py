@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 
 from fastmcp.exceptions import ToolError
 from langchain_core.runnables.config import RunnableConfig
 
+from data_agent.review.completion import evaluate_check
+from data_agent.review.domain.analysis import AnalysisResult
+from data_agent.review.domain.plan import PlannedCheck
 from data_agent.review.orchestration.specialist.runtime import SpecialistRuntime
 from data_agent.review.orchestration.specialist.state import (
     SpecialistState,
@@ -118,24 +120,6 @@ def run_deterministic_analysis(
     serialized: list[dict] = []
     checks_by_id: dict[str, dict] = dict(state.get("checks_by_id", {}))
     planned_checks = list(state.get("planned_checks", []))
-    for check in planned_checks:
-        checks_by_id[check["check_id"]] = {
-            "check_id": check["check_id"],
-            "source_ids": list(check["source_ids"]),
-            "check_type": check["title"],
-            "performed": False,
-            "population_definition": "Assigned planned-check source population",
-            "result": "",
-            "limitations": ["Required deterministic analysis receipts are incomplete."],
-            "evidence": [],
-            "issue_ids": [],
-            "plan_fingerprint": state.get("plan_fingerprint", ""),
-            "owner_domain": state.get("domain", ""),
-            "analysis_receipts": [],
-            "population_start": state["review_period"]["start"],
-            "population_end": state["review_period"]["end"],
-            "completion_rule_passed": False,
-        }
     candidates_by_id: dict[str, dict] = dict(state.get("candidates_by_id", {}))
     pending_work = list(state.get("pending_work", []))
     queued_ids = {str(item.get("work_id")) for item in pending_work}
@@ -163,68 +147,45 @@ def run_deterministic_analysis(
                         }
                     )
                     queued_ids.add(work_id)
-        analysis_name = str(data.get("name") or "analysis")
-        matched = [check for check in planned_checks if analysis_name in check["analysis_names"]]
-        for check in matched:
-            record = checks_by_id[check["check_id"]]
-            execution = data.get("execution")
-            if not execution:
-                execution = {
-                    "status": "unavailable",
-                    "population": {
-                        "source_bindings": [],
-                        "rows_read": 0,
-                        "rows_in_scope": 0,
-                        "rows_processed": 0,
-                        "rows_rejected": 0,
-                        "rows_excluded": 0,
-                        "exclusion_reasons": {},
-                        "actual_date_range": None,
-                        "calculation_basis": "analysis emitted no execution metadata",
-                    },
-                    "issue_codes": ["missing_execution_metadata"],
-                }
-            digest = hashlib.sha256(
-                json.dumps(data, sort_keys=True, separators=(",", ":")).encode()
-            ).hexdigest()
-            record["analysis_receipts"].append(
-                {
-                    "analysis_name": analysis_name,
-                    "status": execution["status"],
-                    "population": execution["population"],
-                    "result_digest": digest,
-                    "issue_codes": execution.get("issue_codes", []),
-                }
-            )
-            prior = record["result"]
-            summary = f"{analysis_name}: {data.get('summary') or ''}"[:4_000]
-            record["result"] = f"{prior}\n{summary}".strip()[:4_000]
         serialized.append(data)
-    for check in planned_checks:
-        record = checks_by_id[check["check_id"]]
-        emitted = {receipt["analysis_name"] for receipt in record["analysis_receipts"]}
-        required = set(check["analysis_names"])
-        complete = (
-            required <= emitted
-            and len(record["analysis_receipts"]) == len(required)
-            and all(
-                receipt["status"] == "succeeded"
-                or (receipt["status"] == "empty" and check.get("empty_population_allowed", False))
-                for receipt in record["analysis_receipts"]
-            )
-            and all(
-                receipt["population"]["rows_rejected"] == 0
-                or check.get("partial_rejection_allowed", False)
-                for receipt in record["analysis_receipts"]
-            )
+    typed_outputs = [AnalysisResult.model_validate(data) for data in serialized]
+    check_results_by_id: dict[str, dict] = {}
+    for check_data in planned_checks:
+        check = PlannedCheck.model_validate(check_data)
+        result = evaluate_check(
+            check,
+            typed_outputs,
+            ctx.manifest,
+            state.get("plan_fingerprint", ""),
+            attempt_id=f"{state.get('task_id', 'task')}:{check.check_id}",
         )
-        record["performed"] = complete
-        record["completion_rule_passed"] = complete
-        if complete:
-            record["limitations"] = []
+        check_results_by_id[check.check_id] = result.model_dump(mode="json")
+        summaries = [
+            f"{output.name}: {output.summary}"
+            for output in typed_outputs
+            if output.name in check.analysis_names
+        ]
+        checks_by_id[check.check_id] = {
+            "check_id": check.check_id,
+            "source_ids": check.source_ids,
+            "check_type": check.title,
+            "performed": result.completion_rule_passed,
+            "population_definition": "Parser-owned populations in analysis receipts",
+            "result": "\n".join(summaries)[:4_000],
+            "limitations": result.limitations,
+            "evidence": [],
+            "issue_ids": [],
+            "plan_fingerprint": result.plan_fingerprint,
+            "owner_domain": result.domain.value,
+            "analysis_receipts": [receipt.model_dump(mode="json") for receipt in result.receipts],
+            "population_start": state["review_period"]["start"],
+            "population_end": state["review_period"]["end"],
+            "completion_rule_passed": result.completion_rule_passed,
+        }
     return {
         "analyses": serialized,
         "checks_by_id": checks_by_id,
+        "check_results_by_id": check_results_by_id,
         "candidates_by_id": candidates_by_id,
         "pending_work": pending_work,
     }

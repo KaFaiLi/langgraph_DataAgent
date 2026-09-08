@@ -108,19 +108,37 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseMode
     paths_by_role = {
         role: [table.path for table in tables if table.role == role] for role in role_rows
     }
+    rows_read_by_role = {
+        role: sum(table.frame.height for table in tables if table.role == role)
+        for role in role_rows
+    }
+    unrecognized_rows = sum(
+        int(issue.get("rows_read", 0))
+        for issue in load_issues
+        if issue.get("kind") == "unrecognized_pnl_table"
+    )
     issue_codes = [
         str(issue.get("kind", "parse_failure"))
         for issue in [*load_issues, *parse_issues, *income_issues]
     ]
     enriched: list[AnalysisResult] = []
     for result in results:
+        if result.execution is not None:
+            enriched.append(result)
+            continue
         roles = analysis_roles.get(result.name)
         if roles is None:  # Legacy attribution has its own stable analysis contract.
             roles = ("income_attribution",)
         processed = sum(len(role_rows[role]) for role in roles)
         excluded = sum(before_scope[role] - len(role_rows[role]) for role in roles)
         paths = [path for role in roles for path in paths_by_role[role]]
+        rows_read = sum(rows_read_by_role[role] for role in roles)
+        rejected = max(rows_read - sum(before_scope[role] for role in roles), 0)
         relevant_issues = issue_codes if result.name == "pnl_input_contract" else []
+        if result.name == "pnl_input_contract":
+            paths = list(source_paths)
+            rows_read += unrecognized_rows
+            rejected += unrecognized_rows
         status = (
             AnalysisStatus.UNAVAILABLE
             if not paths or relevant_issues
@@ -140,12 +158,15 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseMode
             population=population_receipt(
                 ctx,
                 paths,
+                dataset_id="pnl:" + "+".join(roles),
+                rows_read=rows_read,
                 rows_processed=processed,
-                rows_rejected=len(relevant_issues),
+                rows_rejected=rejected,
                 rows_excluded=excluded,
                 exclusion_reasons={"outside_reporting_period": excluded} if excluded else {},
                 actual_date_range=actual_range,
                 calculation_basis="typed rows within the configured reporting period",
+                issues=relevant_issues,
             ),
             issue_codes=relevant_issues,
         )

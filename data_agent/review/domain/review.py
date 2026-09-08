@@ -18,6 +18,7 @@ CoverageStatus = Literal["pending", "reviewed", "irrelevant", "unsupported"]
 
 class RunStatus(StrEnum):
     COMPLETED = "completed"
+    COMPLETED_WITH_GAPS = "completed_with_gaps"
     FAILED = "failed"
 
 

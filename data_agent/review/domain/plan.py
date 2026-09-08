@@ -26,6 +26,11 @@ class CheckApplicability(StrEnum):
     INAPPLICABLE = "inapplicable"
 
 
+class CheckStatus(StrEnum):
+    PERFORMED = "performed"
+    UNRESOLVED = "unresolved"
+
+
 class PlannedCheck(StrictPlanModel):
     check_id: str = Field(pattern=r"^CHECK-[A-Z0-9_-]+$")
     domain: SpecialistDomain
@@ -91,7 +96,9 @@ class CheckResult(StrictPlanModel):
 
     plan_fingerprint: str = Field(pattern=r"^[a-f0-9]{64}$")
     check_id: str
+    attempt_id: str
     domain: SpecialistDomain
+    status: CheckStatus
     source_ids: list[str]
     receipts: list[AnalysisReceipt]
     completion_rule_passed: bool = False

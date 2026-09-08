@@ -884,21 +884,38 @@ def run_post_trade_controls_analyses(
         ("override_patterns", override_patterns),
         ("severity_changes", severity_changes),
     )
-    volume = sum(
-        source.row_count or source.line_count or source.page_count or 0
-        for source in ctx.manifest.sources
-        if source.path in source_paths
-    )
+    recognized_paths: list[str] = []
+    parsed_records = 0
+    rejected_records = 0
+    population_issues: list[str] = []
+    for path in source_paths:
+        try:
+            view = _view(ctx, path)
+        except (KeyError, TypeError, ValueError) as exc:
+            population_issues.append(f"parse_failure:{path}:{type(exc).__name__}")
+            continue
+        if view is None:
+            frame = load_frame(ctx, path)
+            rejected_records += 0 if frame is None else frame.height
+            population_issues.append(f"unrecognized_control_schema:{path}")
+            continue
+        recognized_paths.append(path)
+        parsed_records += len(_records(view))
+    rows_read = parsed_records + rejected_records
     results: list[AnalysisResult] = []
     for name, analysis in analyses:
         try:
-            result = analysis(ctx, source_paths)
+            result = analysis(ctx, recognized_paths)
             results.extend(
                 attach_execution(
                     [result],
                     ctx,
                     source_paths,
-                    rows_processed=volume,
+                    dataset_id="post_trade_controls:breach_records",
+                    rows_read=rows_read,
+                    rows_processed=parsed_records,
+                    rows_rejected=rejected_records,
+                    issue_codes=population_issues,
                     calculation_basis="parsed post-trade control records",
                 )
             )
@@ -912,9 +929,12 @@ def run_post_trade_controls_analyses(
                         population=population_receipt(
                             ctx,
                             source_paths,
+                            dataset_id="post_trade_controls:breach_records",
+                            rows_read=rows_read,
                             rows_processed=0,
-                            rows_rejected=volume,
+                            rows_rejected=rows_read,
                             calculation_basis="post-trade parser rejected the assigned population",
+                            issues=["parse_failure"],
                         ),
                         issue_codes=["parse_failure"],
                     ),

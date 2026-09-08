@@ -507,7 +507,17 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> list[BaseModel]:
         results,
         ctx,
         source_paths,
+        dataset_id="risk_commentary:source_records",
+        rows_read=sum(len(lines) for _, lines, _ in extracts),
         rows_processed=len(records),
-        rows_rejected=max(len(source_paths) - len(extracts), 0),
+        rows_excluded=sum(len(lines) for _, lines, _ in extracts) - len(records),
+        exclusion_reasons={
+            "non_source_record_lines": sum(len(lines) for _, lines, _ in extracts) - len(records)
+        },
+        issue_codes=(
+            ["unreadable_or_unsupported_commentary_source"]
+            if len(extracts) != len(source_paths)
+            else []
+        ),
         calculation_basis="parsed dated commentary records",
     )

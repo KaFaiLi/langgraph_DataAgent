@@ -8,7 +8,7 @@ from pathlib import Path
 from data_agent.review import ReviewRequest, ReviewService, ReviewStatus
 from data_agent.review.domain.desk_context import DeskContext
 from data_agent.review.domain.domains import SpecialistDomain
-from tests.review.fixtures.builder import make_risky_tree
+from tests.review.fixtures.builder import make_valid_controls_tree
 from tests.review.ported_graph.test_orchestration import (
     DESK_TEMPLATE,
     FakeParentProvider,
@@ -21,7 +21,7 @@ def _desk() -> DeskContext:
 
 def test_resume_returns_checkpointed_state(tmp_path: Path) -> None:
     source = tmp_path / "source"
-    make_risky_tree(source)
+    make_valid_controls_tree(source)
     run_dir = tmp_path / "runs" / "RUN-1"
 
     provider = FakeParentProvider()

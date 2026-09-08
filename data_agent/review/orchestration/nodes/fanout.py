@@ -200,6 +200,7 @@ def _run_specialist(
         validator = EvidenceValidator.source_backed(ctx.source_root, ctx.manifest)
         verification: dict[str, Any] = {"verifier_round": result.get("verifier_round", 0)}
         verification["analysis_outputs"] = list(result.get("analyses", []))
+        verification["check_results"] = dict(result.get("check_results_by_id", {}))
         for artifact_key in (
             "evidence_gates",
             "adversarial_cases",

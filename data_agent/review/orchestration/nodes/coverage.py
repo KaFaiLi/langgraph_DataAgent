@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from collections import Counter
 from pathlib import Path
 
 from langchain_core.runnables.config import RunnableConfig
 from pydantic import ValidationError
 
-from data_agent.review.domain.plan import CheckApplicability, ReviewPlan
+from data_agent.review.completion import evaluate_check
+from data_agent.review.domain.analysis import AnalysisResult
+from data_agent.review.domain.plan import CheckApplicability, CheckResult, ReviewPlan
 from data_agent.review.domain.source import SourceManifest
 from data_agent.review.domain.verification import CheckCoverageRecord
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
@@ -77,22 +77,49 @@ def coverage_gate(state: ParentState, config: RunnableConfig) -> dict:
                     "status": "failed",
                     "failure_reason": f"coverage gate failed: invalid result for {check_id}: {exc}",
                 }
-    outputs: dict[tuple[str, str], dict] = {}
-    duplicate_outputs: set[tuple[str, str]] = set()
-    for outcome in state.get("specialist_outcomes", []):
-        owner = str(outcome.get("domain", ""))
-        for output in (outcome.get("verification") or {}).get("analysis_outputs", []):
-            key = (owner, str(output.get("name", "")))
-            if key in outputs:
-                duplicate_outputs.add(key)
-            outputs[key] = output
-    if duplicate_outputs:
-        names = ", ".join(f"{owner}:{name}" for owner, name in sorted(duplicate_outputs))
+    unknown_results = sorted(set(records) - {check.check_id for check in plan.checks})
+    if unknown_results:
         return {
             "status": "failed",
-            "failure_reason": f"coverage gate failed: duplicate analysis outputs: {names}",
+            "failure_reason": "coverage gate failed: unknown check results: "
+            + ", ".join(unknown_results),
         }
-
+    outputs_by_owner: dict[str, list[AnalysisResult]] = {}
+    authoritative_results: dict[str, CheckResult] = {}
+    for outcome in state.get("specialist_outcomes", []):
+        owner = str(outcome.get("domain", ""))
+        raw_outputs = (outcome.get("verification") or {}).get("analysis_outputs", [])
+        raw_results = (outcome.get("verification") or {}).get("check_results", {})
+        try:
+            outputs_by_owner.setdefault(owner, []).extend(
+                AnalysisResult.model_validate(output) for output in raw_outputs
+            )
+            for check_id, raw_result in raw_results.items():
+                if check_id in authoritative_results:
+                    raise ValueError(f"duplicate authoritative result {check_id}")
+                authoritative_results[check_id] = CheckResult.model_validate(raw_result)
+        except (ValidationError, ValueError) as exc:
+            return {
+                "status": "failed",
+                "failure_reason": f"coverage gate failed: invalid saved analysis output: {exc}",
+            }
+    declared_outputs = {
+        (check.domain.value, analysis_name)
+        for check in plan.checks
+        for analysis_name in check.analysis_names
+    }
+    unexpected_outputs = sorted(
+        (owner, output.name)
+        for owner, outputs in outputs_by_owner.items()
+        for output in outputs
+        if (owner, output.name) not in declared_outputs
+    )
+    if unexpected_outputs:
+        names = ", ".join(f"{owner}:{name}" for owner, name in unexpected_outputs)
+        return {
+            "status": "failed",
+            "failure_reason": f"coverage gate failed: unexpected analysis outputs: {names}",
+        }
     validator = EvidenceValidator.source_backed(Path(state.get("source_root", ".")), manifest)
     failures: list[str] = []
     for check in plan.checks:
@@ -102,35 +129,21 @@ def coverage_gate(state: ParentState, config: RunnableConfig) -> dict:
         if record is None:
             failures.append(f"{check.check_id}: result missing")
             continue
-        receipt_names = [receipt.analysis_name for receipt in record.analysis_receipts]
-        required = set(check.analysis_names)
-        receipts_complete = required == set(receipt_names) and len(receipt_names) == len(required)
-        receipts_valid = True
-        for receipt in record.analysis_receipts:
-            output = outputs.get((check.domain.value, receipt.analysis_name))
-            digest = (
-                hashlib.sha256(
-                    json.dumps(output, sort_keys=True, separators=(",", ":")).encode()
-                ).hexdigest()
-                if output is not None
-                else ""
-            )
-            population = receipt.population
-            bound_ids = {binding.source_id for binding in population.source_bindings}
-            usable_status = receipt.status.value == "succeeded" or (
-                receipt.status.value == "empty" and check.empty_population_allowed
-            )
-            accounted = (
-                population.rows_processed + population.rows_rejected + population.rows_excluded
-            )
-            receipts_valid = receipts_valid and (
-                digest == receipt.result_digest
-                and set(check.source_ids) <= bound_ids
-                and usable_status
-                and (population.rows_rejected == 0 or check.partial_rejection_allowed)
-                and accounted >= population.rows_read
-                and bool(population.calculation_basis)
-            )
+        evaluated = evaluate_check(
+            check,
+            outputs_by_owner.get(check.domain.value, []),
+            manifest,
+            fingerprint,
+            attempt_id=f"gate:{check.check_id}",
+        )
+        receipts_match = [receipt.model_dump(mode="json") for receipt in evaluated.receipts] == [
+            receipt.model_dump(mode="json") for receipt in record.analysis_receipts
+        ]
+        authoritative = authoritative_results.get(check.check_id)
+        authoritative_matches = (
+            authoritative is not None
+            and authoritative.model_copy(update={"attempt_id": evaluated.attempt_id}) == evaluated
+        )
         evidence_valid = all(
             validator.validate(reference.locator).valid for reference in record.evidence
         )
@@ -139,8 +152,9 @@ def coverage_gate(state: ParentState, config: RunnableConfig) -> dict:
             and record.owner_domain == check.domain.value
             and record.performed
             and record.completion_rule_passed
-            and receipts_complete
-            and receipts_valid
+            and evaluated.completion_rule_passed
+            and authoritative_matches
+            and receipts_match
             and evidence_valid
         ):
             failures.append(f"{check.check_id}: execution contract not satisfied")

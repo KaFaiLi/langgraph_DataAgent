@@ -39,6 +39,7 @@ class _CheckDefinition:
     required: tuple[SpecialistDomain, ...]
     analyses: tuple[str, ...]
     implemented: bool = True
+    source_variant: str | None = None
 
 
 # Independent calculations are separate checks. Cross-source checks are blocked
@@ -57,8 +58,8 @@ _PNL_CHECKS = (
         ("pnl_adjustment_controls",),
     ),
     _CheckDefinition(
-        "ATTRIBUTION-INTERNAL-CONSISTENCY",
-        "Income attribution consistency",
+        "ATTRIBUTION-WIDE-INTERNAL-CONSISTENCY",
+        "Wide income attribution consistency",
         (SpecialistDomain.INCOME_ATTRIBUTION,),
         (
             "income_attribution_schema",
@@ -66,6 +67,20 @@ _PNL_CHECKS = (
             "income_attribution_persistence",
             "income_attribution_status",
         ),
+        source_variant="wide_attribution",
+    ),
+    _CheckDefinition(
+        "ATTRIBUTION-LEGACY-INTERNAL-CONSISTENCY",
+        "Legacy income attribution consistency",
+        (SpecialistDomain.INCOME_ATTRIBUTION,),
+        (
+            "driver_concentration",
+            "unexpected_drivers",
+            "income_source_shifts",
+            "risk_consistency",
+            "risk_pnl_mismatch",
+        ),
+        source_variant="legacy_attribution",
     ),
     _CheckDefinition(
         "PNL-VALIDATION-WORKFLOW",
@@ -160,6 +175,17 @@ def _policy_fingerprint(registration: object) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
+def _matches_definition(source: object, definition: _CheckDefinition) -> bool:
+    if not any(role in source.candidate_domains for role in definition.required):
+        return False
+    columns = {column.casefold() for column in source.column_names}
+    if definition.source_variant == "wide_attribution":
+        return {"asofdate", "gop", "final result acc dtd"} <= columns
+    if definition.source_variant == "legacy_attribution":
+        return {"driver", "pnl_musd"} <= columns
+    return True
+
+
 def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
     """Compatibility-stable graph node that classifies, plans, and dispatches checks."""
     manifest = SourceManifest.model_validate(state["manifest"])
@@ -193,7 +219,7 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
             matched = sorted(
                 source.source_id
                 for source in manifest.sources
-                if any(required in source.candidate_domains for required in definition.required)
+                if _matches_definition(source, definition)
             )
             present = {
                 candidate for source in manifest.sources for candidate in source.candidate_domains
@@ -201,19 +227,9 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
             missing = [
                 required.value for required in definition.required if required not in present
             ]
+            if definition.source_variant and not matched:
+                missing = [definition.source_variant]
             analysis_names = definition.analyses
-            if definition.suffix == "ATTRIBUTION-INTERNAL-CONSISTENCY" and any(
-                {"driver", "pnl_musd"} <= set(source.column_names)
-                for source in manifest.sources
-                if source.source_id in matched
-            ):
-                analysis_names = (
-                    "driver_concentration",
-                    "unexpected_drivers",
-                    "income_source_shifts",
-                    "risk_consistency",
-                    "risk_pnl_mismatch",
-                )
             if domain.value not in selected:
                 applicability, reason = (
                     CheckApplicability.INAPPLICABLE,

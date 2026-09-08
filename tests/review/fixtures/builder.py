@@ -162,3 +162,31 @@ def make_risky_tree(root: Path) -> dict[str, Path]:
         "validation_pdf": validation_pdf,
         "adjustments_txt": adjustments_txt,
     }
+
+
+def make_valid_controls_tree(root: Path) -> dict[str, Path]:
+    """Build a minimal executable package for publication-path tests."""
+    directory = root / "post_trade_controls"
+    directory.mkdir(parents=True)
+    path = make_csv(
+        directory / "breaches.csv",
+        [
+            {
+                "breach_date": "2025-03-10",
+                "product": "FXOPT",
+                "severity": "medium",
+                "approved_by": "control.user",
+                "closed_date": "2025-03-11",
+                "status": "closed",
+            },
+            {
+                "breach_date": "2025-03-12",
+                "product": "IRS",
+                "severity": "low",
+                "approved_by": "control.user",
+                "closed_date": "2025-03-13",
+                "status": "closed",
+            },
+        ],
+    )
+    return {"controls": path.relative_to(root)}
