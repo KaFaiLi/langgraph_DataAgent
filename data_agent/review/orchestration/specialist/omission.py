@@ -115,6 +115,18 @@ def audit_omission_candidates(
     }
     issues_by_id = dict(state.get("issues_by_id", {}))
     covered_ids = set(audit.covered_candidate_ids)
+    for issue_id, raw_issue in list(issues_by_id.items()):
+        issue = ReviewIssue.model_validate(raw_issue)
+        if (
+            issue.kind is ReviewIssueKind.OMITTED_CANDIDATE
+            and set(issue.candidate_ids) <= covered_ids
+        ):
+            issues_by_id[issue_id] = issue.model_copy(
+                update={
+                    "status": ReviewIssueStatus.RESOLVED,
+                    "resolution": "Candidate was accounted for by the bounded omission rescue.",
+                }
+            ).model_dump(mode="json")
     pending_work = []
     for work in state.get("pending_work", []):
         item = dict(work)

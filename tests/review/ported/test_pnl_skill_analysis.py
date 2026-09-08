@@ -584,3 +584,25 @@ def test_wide_income_attribution_export_runs_inside_the_pnl_skill(
     status_flags = results["income_attribution_status"].flag_candidates
     assert status_flags[0]["kind"] == "income_attribution_processing_state"
     assert status_flags[0]["status"] == "IA process is running"
+
+
+def test_missing_required_pnl_column_is_unavailable_without_suppressing_adjustments(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source"
+    (source / "pnl").mkdir(parents=True)
+    (source / "pnl_adjustments").mkdir()
+    pnl_row = _pnl_row("2025-07-02")
+    pnl_row.pop("WTD")
+    make_csv(source / "pnl" / "malformed.csv", [pnl_row])
+    make_csv(source / "pnl_adjustments" / "adjustments.csv", [_adjustment_row()])
+    manifest = build_catalog(source)
+    ctx = ToolContext(source_root=source, workspace_root=tmp_path / "workspace", manifest=manifest)
+
+    results = _results(ctx)
+
+    assert results["pnl_input_contract"].execution.status.value == "unavailable"
+    assert results["pnl_input_contract"].execution.population.rows_processed == 1
+    assert "unrecognized_pnl_table" in results["pnl_input_contract"].execution.issue_codes
+    assert results["pnl_adjustment_controls"].execution.status.value == "succeeded"
+    assert results["pnl_adjustment_controls"].execution.population.rows_processed == 1

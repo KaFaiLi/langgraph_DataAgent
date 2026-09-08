@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from langchain_core.runnables.config import RunnableConfig
 
+from data_agent.review.domain.plan import CheckApplicability, ReviewPlan
 from data_agent.review.domain.reports import FinalReport
 from data_agent.review.domain.review import (
     ReviewRun,
@@ -55,6 +56,13 @@ def finalize(state: ParentState, config: RunnableConfig) -> dict:
             + "\n".join(evidence_failures),
         }
     markdown = render_final_report(report)
+    plan = ReviewPlan.model_validate(state["review_plan"])
+    blocked = [check for check in plan.checks if check.applicability is CheckApplicability.BLOCKED]
+    if blocked:
+        markdown += "\n\n## Review limitations\n\n" + "\n".join(
+            f"- **{check.check_id} — {check.title}:** {check.applicability_reason}"
+            for check in blocked
+        )
 
     output_dir = Path(state["output_dir"])
     _atomic_write(output_dir / "final_findings.md", markdown)
@@ -73,6 +81,22 @@ def finalize(state: ParentState, config: RunnableConfig) -> dict:
             default=str,
         ),
     )
+    check_results = [
+        check
+        for specialist in state.get("specialist_reports", {}).values()
+        for check in specialist.get("check_coverage", [])
+    ]
+    _atomic_write(
+        output_dir / "review_plan.json",
+        json.dumps(
+            {
+                "plan": plan.model_dump(mode="json"),
+                "fingerprint": state["review_plan_fingerprint"],
+                "check_results": check_results,
+            },
+            indent=2,
+        ),
+    )
 
     manifest = SourceManifest.model_validate(state["manifest"])
     coverage = [SourceCoverage.model_validate(entry) for entry in state.get("coverage", [])]
@@ -86,6 +110,9 @@ def finalize(state: ParentState, config: RunnableConfig) -> dict:
         manifest=manifest,
         coverage=coverage,
         tasks=tasks,
+        review_plan=plan.model_dump(mode="json"),
+        review_plan_fingerprint=state["review_plan_fingerprint"],
+        check_results=check_results,
     )
     # Publish the run manifest last: its presence seals the preceding artifacts.
     _atomic_write(

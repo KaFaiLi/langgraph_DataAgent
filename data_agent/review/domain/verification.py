@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from data_agent.review.domain.evidence import EvidenceReference
 from data_agent.review.domain.finding import Finding
+from data_agent.review.domain.plan import AnalysisReceipt
 
 # Importing this validator contract here keeps evidence-gate artifacts typed at
 # the persistence seam.  ``evidence_validator`` only imports domain evidence
@@ -316,6 +317,12 @@ class CheckCoverageRecord(BaseModel):
     limitations: list[str] = Field(default_factory=list, max_length=32)
     evidence: list[EvidenceReference] = Field(default_factory=list, max_length=16)
     issue_ids: list[str] = Field(default_factory=list, max_length=128)
+    plan_fingerprint: str = ""
+    owner_domain: str = ""
+    analysis_receipts: list[AnalysisReceipt] = Field(default_factory=list)
+    population_start: str = ""
+    population_end: str = ""
+    completion_rule_passed: bool = False
 
 
 class PendingWorkItem(BaseModel):

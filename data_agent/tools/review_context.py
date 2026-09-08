@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from data_agent.review.domain.source import SourceManifest
+from data_agent.review.domain.source import DateRange, SourceManifest
 from data_agent.tools.source_tools import SourcePathError, resolve_source_path
 
 
@@ -16,6 +16,7 @@ class ToolContext:
     source_root: Path
     workspace_root: Path
     manifest: SourceManifest
+    review_period: DateRange | None = None
 
 
 def source_file(ctx: ToolContext, relative_path: str) -> Path:

@@ -15,7 +15,7 @@ from typing import NamedTuple
 
 import polars as pl
 
-from data_agent.review.domain.analysis import AnalysisResult
+from data_agent.review.domain.analysis import AnalysisExecution, AnalysisResult, AnalysisStatus
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.evidence import EvidenceReference, Locator, format_locator
 from data_agent.review.domain.overview import (
@@ -29,6 +29,7 @@ from data_agent.review.domain.overview import (
 )
 from data_agent.review.domain.source import SourceType
 from data_agent.tools.analysis_helpers import tabular_row_offset
+from data_agent.tools.analysis_receipts import attach_execution, population_receipt
 from data_agent.tools.review_context import ToolContext
 from data_agent.tools.statistics_tools import trend_analysis
 from data_agent.tools.tabular_helpers import (
@@ -875,14 +876,51 @@ def run_post_trade_controls_analyses(
     ctx: ToolContext, source_paths: list[str]
 ) -> list[AnalysisResult]:
     """Run the full deterministic post-trade controls battery (spec section 17)."""
-    return [
-        repeated_breaches(ctx, source_paths),
-        product_recurrence(ctx, source_paths),
-        resolution_time(ctx, source_paths),
-        approval_gaps(ctx, source_paths),
-        override_patterns(ctx, source_paths),
-        severity_changes(ctx, source_paths),
-    ]
+    analyses = (
+        ("repeated_breaches", repeated_breaches),
+        ("product_recurrence", product_recurrence),
+        ("resolution_time", resolution_time),
+        ("approval_gaps", approval_gaps),
+        ("override_patterns", override_patterns),
+        ("severity_changes", severity_changes),
+    )
+    volume = sum(
+        source.row_count or source.line_count or source.page_count or 0
+        for source in ctx.manifest.sources
+        if source.path in source_paths
+    )
+    results: list[AnalysisResult] = []
+    for name, analysis in analyses:
+        try:
+            result = analysis(ctx, source_paths)
+            results.extend(
+                attach_execution(
+                    [result],
+                    ctx,
+                    source_paths,
+                    rows_processed=volume,
+                    calculation_basis="parsed post-trade control records",
+                )
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            results.append(
+                AnalysisResult(
+                    name=name,
+                    summary=f"Analysis unavailable: {type(exc).__name__}: {exc}",
+                    execution=AnalysisExecution(
+                        status=AnalysisStatus.UNAVAILABLE,
+                        population=population_receipt(
+                            ctx,
+                            source_paths,
+                            rows_processed=0,
+                            rows_rejected=volume,
+                            calculation_basis="post-trade parser rejected the assigned population",
+                        ),
+                        issue_codes=["parse_failure"],
+                    ),
+                )
+            )
+    return results
 
 
 run_analysis = run_post_trade_controls_analyses

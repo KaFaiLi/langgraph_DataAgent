@@ -18,6 +18,7 @@ from data_agent.review.domain.overview import (
     OverviewStatus,
     TableVisual,
 )
+from data_agent.tools.analysis_receipts import attach_execution
 from data_agent.tools.review_context import ToolContext, source_file
 
 MAX_FLAGS: Final = 50
@@ -495,10 +496,18 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> list[BaseModel]:
             continue
         extracts.append((path, lines, source_records))
         records.extend(source_records)
-    return [
+    results = [
         _population_profile(extracts),
         _validation_gaps(records),
         _internal_consistency(records),
         _repeated_explanations(records),
         _normalized_reassurance_claims(records),
     ]
+    return attach_execution(
+        results,
+        ctx,
+        source_paths,
+        rows_processed=len(records),
+        rows_rejected=max(len(source_paths) - len(extracts), 0),
+        calculation_basis="parsed dated commentary records",
+    )
