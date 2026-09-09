@@ -40,6 +40,7 @@ def evaluate_check(
         issues.append("duplicate_analysis_output")
 
     receipts: list[AnalysisReceipt] = []
+    requirements = {item.name: item for item in planned_check.analysis_requirements}
     for output in selected:
         execution = output.execution
         if execution is None:
@@ -56,12 +57,33 @@ def evaluate_check(
             if source.path != binding.path or source.sha256 != binding.sha256:
                 issues.append(f"source_binding_mismatch:{output.name}:{binding.source_id}")
             bound_ids.add(binding.source_id)
-        if not set(planned_check.source_ids) <= bound_ids:
+        requirement = requirements.get(output.name)
+        required_ids = (
+            set(requirement.required_source_ids)
+            if requirement is not None
+            else set(planned_check.source_ids)
+        )
+        permitted_ids = required_ids | (
+            set(requirement.supporting_source_ids) if requirement is not None else set()
+        )
+        if not required_ids <= bound_ids:
             issues.append(f"incomplete_source_binding:{output.name}")
+        if requirement is not None and required_ids and not bound_ids <= permitted_ids:
+            issues.append(f"unexpected_source_binding:{output.name}")
         if execution.status is AnalysisStatus.SUCCEEDED and population.rows_processed == 0:
             issues.append(f"successful_empty_population:{output.name}")
-        if execution.status is AnalysisStatus.EMPTY and not planned_check.empty_population_allowed:
+        empty_allowed = (
+            requirement.empty_population_allowed
+            if requirement is not None
+            else planned_check.empty_population_allowed
+        )
+        if execution.status is AnalysisStatus.EMPTY and not empty_allowed:
             issues.append(f"empty_population_not_allowed:{output.name}")
+        if requirement is not None:
+            if population.observations_produced < requirement.minimum_observations:
+                issues.append(f"insufficient_observations:{output.name}")
+            if requirement.date_range_required and population.actual_date_range is None:
+                issues.append(f"missing_observed_date_range:{output.name}")
         if execution.status not in {AnalysisStatus.SUCCEEDED, AnalysisStatus.EMPTY}:
             issues.append(f"unusable_analysis:{output.name}:{execution.status.value}")
         if population.rows_rejected and not planned_check.partial_rejection_allowed:

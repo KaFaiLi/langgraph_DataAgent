@@ -189,8 +189,9 @@ def test_unclassified_source_gets_classified_by_flash(tmp_path: Path) -> None:
     assert classification_calls[0][1] is ModelTier.LOW_COST
     unknown_id = _source_id_by_path(result, "misc/unknown.csv")
     unknown = next(entry for entry in result["coverage"] if entry["source_id"] == unknown_id)
-    assert unknown["required_reviewers"] == ["risk_metrics"]
-    assert unknown["status"] == "pending"
+    # A model-assigned domain cannot make a schema-incompatible source executable.
+    assert unknown["required_reviewers"] == []
+    assert unknown["status"] == "irrelevant"
 
 
 def test_empty_classification_remains_unresolved(tmp_path: Path) -> None:
@@ -335,7 +336,7 @@ def test_specialist_failure_fails_run(tmp_path: Path, monkeypatch) -> None:
     result, _ = run_parent(tmp_path, FakeParentProvider())
 
     assert result["status"] == "failed"
-    assert "risk_metrics" in (result["failure_reason"] or "")
+    assert "specialist" in (result["failure_reason"] or "")
     assert "boom" in (result["failure_reason"] or "")
 
 

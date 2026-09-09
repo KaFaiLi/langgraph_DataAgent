@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 import polars as pl
 
-from data_agent.review.domain.analysis import AnalysisResult
+from data_agent.review.domain.analysis import AnalysisExecution, AnalysisResult, AnalysisStatus
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.evidence import EvidenceReference, Locator, format_locator
 from data_agent.review.domain.overview import (
@@ -587,7 +587,7 @@ def run_income_attribution_analyses(
             continue
         rows_read += view.frame.height
         rows_processed += len(_rows(view))
-    return attach_execution(
+    enriched = attach_execution(
         results,
         ctx,
         source_paths,
@@ -598,3 +598,32 @@ def run_income_attribution_analyses(
         issue_codes=issues,
         calculation_basis="legacy attribution rows with numeric P&L values",
     )
+    by_name = {result.name: result for result in enriched}
+    for name in ("risk_consistency", "risk_pnl_mismatch"):
+        result = by_name[name]
+        observations = sum(
+            int(table.get("observations", table.get("rows", 0))) for table in result.tables
+        )
+        if observations:
+            execution = result.execution.model_copy(
+                update={
+                    "population": result.execution.population.model_copy(
+                        update={"observations_produced": observations}
+                    )
+                }
+            )
+        else:
+            code = (
+                "insufficient_var_pairs"
+                if name == "risk_consistency"
+                else "insufficient_numeric_attribution_rows"
+            )
+            execution = AnalysisExecution(
+                status=AnalysisStatus.UNAVAILABLE,
+                population=result.execution.population.model_copy(
+                    update={"observations_produced": 0, "issues": [code]}
+                ),
+                issue_codes=[code],
+            )
+        by_name[name] = result.model_copy(update={"execution": execution})
+    return [by_name[result.name] for result in enriched]

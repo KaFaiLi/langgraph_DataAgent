@@ -96,3 +96,23 @@ def test_composite_pnl_skill_preserves_legacy_attribution_flags(
     assert shift_drivers == {"carry", "vol"}
     assert mismatch[0]["date"] == _day(_MISMATCH_INDEX)
     assert float(mismatch[0]["pnl"]) == pytest.approx(_MISMATCH_PNL)
+
+
+def test_legacy_attribution_does_not_claim_unmet_risk_prerequisites(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    workspace = tmp_path / "workspace"
+    path = source / ATTRIBUTION_PATH
+    path.parent.mkdir(parents=True)
+    workspace.mkdir()
+    make_csv(path, [{"date": "2025-01-01", "driver": "Fees", "pnl_musd": 10}])
+    ctx = ToolContext(
+        source_root=source,
+        workspace_root=workspace,
+        manifest=build_catalog(source),
+    )
+
+    results = {result.name: result for result in _legacy_results(ctx)}
+
+    assert results["risk_consistency"].execution.status.value == "unavailable"
+    assert "insufficient_var_pairs" in results["risk_consistency"].execution.issue_codes
+    assert results["risk_pnl_mismatch"].execution.status.value == "unavailable"

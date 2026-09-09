@@ -25,7 +25,15 @@ def _source(domain: SpecialistDomain) -> Source:
             "amountineur",
             "exchangerate",
         ],
-        SpecialistDomain.RISK_METRICS: ["metric"],
+        SpecialistDomain.RISK_METRICS: [
+            "limid",
+            "rmriskindicator",
+            "rmriskmetricname",
+            "consovalue",
+            "consovaluedate",
+            "limmaxvalue",
+            "limminvalue",
+        ],
     }.get(domain, [])
     return Source(
         source_id=f"SRC-{domain.value}",
@@ -63,7 +71,7 @@ def test_missing_playbook_sources_are_blocked_not_inapplicable() -> None:
     result = _plan(SpecialistDomain.PNL_ADJUSTMENTS)
     plan = ReviewPlan.model_validate(result["review_plan"])
     assert (
-        next(check for check in plan.checks if check.check_id == "CHECK-RISK_METRICS").applicability
+        next(check for check in plan.checks if check.check_id == "CHECK-RISK-SGMR").applicability
         is CheckApplicability.BLOCKED
     )
 
@@ -81,7 +89,7 @@ def test_coverage_gate_rejects_missing_planned_check_records() -> None:
     result["coverage"][0]["status"] = "reviewed"
     result["specialist_reports"] = {"risk_metrics": {"check_coverage": []}}
     failure = coverage_gate(result, {})
-    assert "CHECK-RISK_METRICS" in failure["failure_reason"]
+    assert "CHECK-RISK-SGMR" in failure["failure_reason"]
 
 
 def test_legacy_checkpoint_node_name_remains_registered() -> None:
@@ -93,7 +101,7 @@ def test_partial_or_wrong_owner_receipts_cannot_pass() -> None:
     result = _plan(SpecialistDomain.RISK_METRICS)
     result["coverage"][0]["status"] = "reviewed"
     check = next(
-        item for item in result["review_plan"]["checks"] if item["check_id"] == "CHECK-RISK_METRICS"
+        item for item in result["review_plan"]["checks"] if item["check_id"] == "CHECK-RISK-SGMR"
     )
     record = {
         "check_id": check["check_id"],
@@ -117,7 +125,7 @@ def test_duplicate_results_fail_independently_of_order() -> None:
     result = _plan(SpecialistDomain.RISK_METRICS)
     result["coverage"][0]["status"] = "reviewed"
     check = next(
-        item for item in result["review_plan"]["checks"] if item["check_id"] == "CHECK-RISK_METRICS"
+        item for item in result["review_plan"]["checks"] if item["check_id"] == "CHECK-RISK-SGMR"
     )
     record = {
         "check_id": check["check_id"],
@@ -148,7 +156,7 @@ def test_forged_result_digest_and_wrong_population_are_rejected() -> None:
     result = _plan(SpecialistDomain.RISK_METRICS)
     result["coverage"][0]["status"] = "reviewed"
     check = next(
-        item for item in result["review_plan"]["checks"] if item["check_id"] == "CHECK-RISK_METRICS"
+        item for item in result["review_plan"]["checks"] if item["check_id"] == "CHECK-RISK-SGMR"
     )
     population = {
         "source_bindings": [
@@ -165,7 +173,7 @@ def test_forged_result_digest_and_wrong_population_are_rejected() -> None:
         "rows_rejected": 0,
         "rows_excluded": 0,
         "exclusion_reasons": {},
-        "actual_date_range": None,
+        "actual_date_range": PERIOD.model_dump(mode="json"),
         "calculation_basis": "synthetic empty population",
         "observations_produced": 1,
         "issues": [],

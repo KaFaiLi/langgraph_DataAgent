@@ -28,3 +28,30 @@ def pnl_source_role(
     if allow_legacy_pnl and {"date", "pnlmusd", "comment"} <= normalized:
         return SpecialistDomain.PNL
     return None
+
+
+def risk_metrics_source_role(columns: Iterable[str]) -> str | None:
+    """Recognize the two risk-metric dataset variants from their stable signatures."""
+    normalized = {str(column).strip().lower().replace("_", "") for column in columns}
+    sgmr = {
+        "limid",
+        "rmriskindicator",
+        "rmriskmetricname",
+        "consovalue",
+        "consovaluedate",
+        "limmaxvalue",
+        "limminvalue",
+    }
+    colibris = {
+        "excessid",
+        "excesscreationdate",
+        "riskindicator",
+        "excesslastconsovalue",
+        "limitvalue",
+        "excessworkflowstatus",
+    }
+    if sgmr <= normalized:
+        return "sgmr"
+    if colibris <= normalized:
+        return "colibris"
+    return None

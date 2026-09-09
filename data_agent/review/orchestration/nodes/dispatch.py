@@ -11,7 +11,12 @@ from langchain_core.runnables.config import RunnableConfig
 from pydantic import BaseModel
 
 from data_agent.review.domain.domains import SOURCE_DOMAINS, SpecialistDomain
-from data_agent.review.domain.plan import CheckApplicability, PlannedCheck, ReviewPlan
+from data_agent.review.domain.plan import (
+    AnalysisRequirement,
+    CheckApplicability,
+    PlannedCheck,
+    ReviewPlan,
+)
 from data_agent.review.domain.review import ReviewTask, SourceCoverage
 from data_agent.review.domain.source import DateRange, SourceManifest
 from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
@@ -19,7 +24,7 @@ from data_agent.review.llm.models import ModelTier
 from data_agent.review.llm.structured import invoke_structured
 from data_agent.review.orchestration.state import ParentState
 from data_agent.skills.registry import SPECIALISTS
-from data_agent.tools.source_roles import pnl_source_role
+from data_agent.tools.source_roles import pnl_source_role, risk_metrics_source_role
 
 REGISTERED_DOMAINS = tuple(SPECIALISTS)
 _CLASSIFY_SYSTEM = "Classify trading-desk source files into these domains: " + ", ".join(
@@ -40,6 +45,7 @@ class _CheckDefinition:
     analyses: tuple[str, ...]
     implemented: bool = True
     source_variant: str | None = None
+    analysis_roles: dict[str, tuple[str, ...]] | None = None
 
 
 # Independent calculations are separate checks. Cross-source checks are blocked
@@ -66,6 +72,7 @@ _PNL_CHECKS = (
             "income_attribution_driver_profile",
             "income_attribution_persistence",
             "income_attribution_status",
+            "income_attribution_reconciliation",
         ),
         source_variant="wide_attribution",
     ),
@@ -130,6 +137,15 @@ _DOMAIN_ANALYSES = {
     ),
 }
 
+_RISK_ANALYSIS_ROLES = {
+    "risk_metrics_input_contract": ("sgmr", "colibris"),
+    "risk_metrics_data_integrity": ("sgmr", "colibris"),
+    "risk_limit_consumption": ("sgmr",),
+    "risk_metric_dynamics": ("sgmr",),
+    "risk_excess_workflow": ("colibris",),
+    "risk_cross_source_consistency": ("sgmr", "colibris"),
+}
+
 
 def _provider(config: RunnableConfig) -> ReviewLLMProvider:
     return (config or {}).get("configurable", {}).get("llm_provider") or DEFAULT_LLM_PROVIDER
@@ -159,12 +175,43 @@ def _definitions(
 ) -> tuple[_CheckDefinition, ...]:
     if domain is SpecialistDomain.PNL:
         return _PNL_CHECKS
+    if domain is SpecialistDomain.RISK_METRICS:
+        required = (SpecialistDomain.RISK_METRICS,)
+        return (
+            _CheckDefinition(
+                "RISK-SGMR",
+                "Risk limit consumption and dynamics",
+                required,
+                ("risk_limit_consumption", "risk_metric_dynamics"),
+                source_variant="sgmr",
+                analysis_roles=_RISK_ANALYSIS_ROLES,
+            ),
+            _CheckDefinition(
+                "RISK-EXCESS",
+                "Risk excess workflow",
+                required,
+                ("risk_excess_workflow",),
+                source_variant="colibris",
+                analysis_roles=_RISK_ANALYSIS_ROLES,
+            ),
+            _CheckDefinition(
+                "RISK-CROSS-SOURCE",
+                "Risk cross-source consistency",
+                required,
+                ("risk_cross_source_consistency",),
+                source_variant="risk_both",
+                analysis_roles=_RISK_ANALYSIS_ROLES,
+            ),
+        )
     return (
         _CheckDefinition(
             domain.value.upper(),
             f"{domain.value} core review",
             source_domains,
             _DOMAIN_ANALYSES[domain],
+            analysis_roles=_RISK_ANALYSIS_ROLES
+            if domain is SpecialistDomain.RISK_METRICS
+            else None,
         ),
     )
 
@@ -183,6 +230,11 @@ def _matches_definition(source: object, definition: _CheckDefinition) -> bool:
         return {"asofdate", "gop", "final result acc dtd"} <= columns
     if definition.source_variant == "legacy_attribution":
         return {"driver", "pnl_musd"} <= columns
+    if definition.source_variant in {"sgmr", "colibris", "risk_both"}:
+        role = risk_metrics_source_role(source.column_names)
+        return role == definition.source_variant or (
+            definition.source_variant == "risk_both" and role in {"sgmr", "colibris"}
+        )
     return True
 
 
@@ -227,7 +279,13 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
             missing = [
                 required.value for required in definition.required if required not in present
             ]
-            if definition.source_variant and not matched:
+            if definition.source_variant == "risk_both":
+                risk_roles = {
+                    risk_metrics_source_role(source.column_names) for source in manifest.sources
+                }
+                if not {"sgmr", "colibris"} <= risk_roles:
+                    missing = sorted({"sgmr", "colibris"} - risk_roles)
+            elif definition.source_variant and not matched:
                 missing = [definition.source_variant]
             analysis_names = definition.analyses
             if domain.value not in selected:
@@ -259,6 +317,31 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
                 required_source_domains=list(definition.required),
                 source_ids=matched,
                 analysis_names=list(analysis_names),
+                analysis_requirements=tuple(
+                    AnalysisRequirement(
+                        name=name,
+                        required_source_ids=tuple(
+                            sorted(
+                                source.source_id
+                                for source in manifest.sources
+                                if (
+                                    risk_metrics_source_role(source.column_names)
+                                    in definition.analysis_roles.get(name, ())
+                                    if definition.analysis_roles
+                                    else any(
+                                        role in source.candidate_domains
+                                        for role in definition.required
+                                    )
+                                )
+                            )
+                        ),
+                        minimum_observations=(
+                            1 if definition.analysis_roles is _RISK_ANALYSIS_ROLES else 0
+                        ),
+                        date_range_required=definition.analysis_roles is _RISK_ANALYSIS_ROLES,
+                    )
+                    for name in analysis_names
+                ),
                 applicability=applicability,
                 applicability_reason=reason,
                 completion_criteria=[

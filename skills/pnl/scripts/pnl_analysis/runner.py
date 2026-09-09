@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import date
 
 from pydantic import BaseModel
 
@@ -47,6 +48,7 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseMode
         "validation": len(validation),
         "income_attribution": len(income_attribution),
     }
+    calculation_pnl = pnl
     if ctx.review_period is not None:
         start, end = ctx.review_period.start, ctx.review_period.end
         pnl = [row for row in pnl if start <= row.day <= end]
@@ -70,11 +72,27 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseMode
             income_attribution,
             income_issues,
         ),
-        _pnl_integrity(pnl),
+        _pnl_integrity(calculation_pnl),
         _pnl_patterns(pnl),
         _adjustment_controls(adjustments, pnl),
         _validation_and_reconciliation(validation, pnl, adjustments),
     ]
+    if ctx.review_period is not None:
+        integrity = results[1]
+
+        def _reportable(candidate: dict[str, object]) -> bool:
+            raw = candidate.get("date") or candidate.get("day")
+            try:
+                day = date.fromisoformat(str(raw)[:10])
+            except ValueError:
+                return True
+            return ctx.review_period.start <= day <= ctx.review_period.end
+
+        results[1] = integrity.model_copy(
+            update={
+                "flag_candidates": [item for item in integrity.flag_candidates if _reportable(item)]
+            }
+        )
     if any(table.role == "income_attribution" for table in tables):
         results.extend(
             [

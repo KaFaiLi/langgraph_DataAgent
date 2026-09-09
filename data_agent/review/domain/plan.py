@@ -31,6 +31,25 @@ class CheckStatus(StrEnum):
     UNRESOLVED = "unresolved"
 
 
+class AnalysisRequirement(StrictPlanModel):
+    """Immutable, analysis-level input and population contract."""
+
+    name: str = Field(min_length=1)
+    required_source_ids: tuple[str, ...] = ()
+    supporting_source_ids: tuple[str, ...] = ()
+    minimum_observations: int = Field(default=0, ge=0)
+    date_range_required: bool = False
+    empty_population_allowed: bool = False
+
+    @model_validator(mode="after")
+    def _unique_bindings(self) -> AnalysisRequirement:
+        if len(self.required_source_ids) != len(set(self.required_source_ids)):
+            raise ValueError(f"{self.name}: required source ids must be unique")
+        if set(self.required_source_ids) & set(self.supporting_source_ids):
+            raise ValueError(f"{self.name}: a source cannot be both required and supporting")
+        return self
+
+
 class PlannedCheck(StrictPlanModel):
     check_id: str = Field(pattern=r"^CHECK-[A-Z0-9_-]+$")
     domain: SpecialistDomain
@@ -40,6 +59,7 @@ class PlannedCheck(StrictPlanModel):
     required_source_domains: list[SpecialistDomain] = Field(min_length=1)
     source_ids: list[str] = Field(default_factory=list)
     analysis_names: list[str] = Field(min_length=1)
+    analysis_requirements: tuple[AnalysisRequirement, ...] = ()
     applicability: CheckApplicability
     applicability_reason: str = Field(min_length=1)
     completion_criteria: list[str] = Field(min_length=1)
@@ -59,11 +79,17 @@ class PlannedCheck(StrictPlanModel):
                 raise ValueError(f"{self.check_id}: {label} must be unique")
         if self.applicability is CheckApplicability.APPLICABLE and not self.source_ids:
             raise ValueError(f"{self.check_id}: applicable check requires sources")
+        if self.analysis_requirements:
+            requirement_names = [item.name for item in self.analysis_requirements]
+            if requirement_names != self.analysis_names:
+                raise ValueError(
+                    f"{self.check_id}: analysis requirements must match declared analyses in order"
+                )
         return self
 
 
 class ReviewPlan(StrictPlanModel):
-    schema_version: Literal[1] = 1
+    schema_version: Literal[2] = 2
     plan_id: str = Field(pattern=r"^PLAN-[A-F0-9]{16}$")
     review_period: DateRange
     checks: list[PlannedCheck]
