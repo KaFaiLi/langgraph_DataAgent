@@ -11,8 +11,9 @@ from collections.abc import Callable, Sequence
 from functools import cache
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Literal, cast
+from typing import Any, Literal, Protocol, cast
 
+import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from data_agent.review.domain.domains import SpecialistDomain
@@ -26,7 +27,17 @@ _ENTRYPOINT_PATTERN = re.compile(
     r"^(?P<path>[A-Za-z0-9_.\-/]+\.py):(?P<function>[A-Za-z_][A-Za-z0-9_]*)$"
 )
 
-AnalysisRunner = Callable[[ToolContext, list[str]], Sequence[BaseModel]]
+
+class AnalysisRunner(Protocol):
+    def __call__(
+        self,
+        ctx: ToolContext,
+        source_paths: list[str],
+        *,
+        analysis_names: tuple[str, ...],
+    ) -> Sequence[BaseModel]: ...
+
+
 LeadAnalysisRunner = Callable[[list[SpecialistReport]], CrossSpecialistAnalysis]
 
 _MODULE_LOAD_LOCK = threading.RLock()
@@ -47,6 +58,35 @@ class SkillMetadata(BaseModel):
     report_id: str = Field(pattern=r"^[A-Z][A-Z0-9_]{1,31}$")
     label: str = Field(min_length=1, max_length=80)
     analysis_entrypoint: str = Field(min_length=1)
+    checks_file: str = Field(min_length=1)
+
+
+class AnalysisDeclaration(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    name: str = Field(min_length=1)
+    required_roles: tuple[str, ...]
+    supporting_roles: tuple[str, ...] = ()
+    population_rule_id: str = Field(min_length=1)
+    prerequisite_rule_id: str = Field(min_length=1)
+    empty_population_allowed: bool = False
+    minimum_observations: int = Field(default=0, ge=0)
+    date_range_required: bool = False
+
+
+class CheckDeclaration(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    check_id: str = Field(pattern=r"^CHECK-[A-Z0-9_-]+$")
+    title: str = Field(min_length=1)
+    analyses: tuple[AnalysisDeclaration, ...]
+    implemented: bool = True
+
+
+class CheckManifest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    checks: tuple[CheckDeclaration, ...]
 
 
 class SkillFrontMatter(BaseModel):
@@ -77,6 +117,7 @@ class SkillDefinition(BaseModel):
     instructions: str
     dataset_reference: str = ""
     verifier_policy: str
+    checks: tuple[CheckDeclaration, ...]
 
     @property
     def analyst_guidance(self) -> str:
@@ -206,6 +247,19 @@ def load_skill(skill_file: Path, *, skills_root: Path | None = None) -> SkillDef
     )
     if not analysis_file.is_file():
         raise SkillLoadError(f"analysis entrypoint is not a file: {analysis_file}")
+    checks_file = _contained_path(
+        skill_root, front_matter.metadata.checks_file, label="checks_file"
+    )
+    try:
+        checks = CheckManifest.model_validate(yaml.safe_load(checks_file.read_text())).checks
+    except (ValidationError, yaml.YAMLError) as exc:
+        raise SkillLoadError(f"{checks_file}: invalid check declarations: {exc}") from exc
+    check_ids = [check.check_id for check in checks]
+    analysis_names = [analysis.name for check in checks for analysis in check.analyses]
+    if len(check_ids) != len(set(check_ids)):
+        raise SkillLoadError(f"{checks_file}: check ids must be unique")
+    if len(analysis_names) != len(set(analysis_names)):
+        raise SkillLoadError(f"{checks_file}: every analysis must have exactly one owner")
 
     policy_reference = _reference_text(skill_root, "policy.md")
     verifier_policy = (
@@ -227,6 +281,7 @@ def load_skill(skill_file: Path, *, skills_root: Path | None = None) -> SkillDef
         instructions=instructions,
         dataset_reference=_reference_text(skill_root, "dataset.md"),
         verifier_policy=verifier_policy,
+        checks=checks,
     )
 
 

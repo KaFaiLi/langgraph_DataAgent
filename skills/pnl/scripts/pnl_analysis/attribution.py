@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 import polars as pl
 
-from data_agent.review.domain.analysis import AnalysisResult
+from data_agent.review.domain.analysis import AnalysisExecution, AnalysisResult, AnalysisStatus
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.evidence import EvidenceReference, Locator, format_locator
 from data_agent.review.domain.overview import (
@@ -25,6 +25,7 @@ from data_agent.review.domain.overview import (
 )
 from data_agent.review.domain.source import SourceType
 from data_agent.tools.analysis_helpers import tabular_row_offset
+from data_agent.tools.analysis_receipts import attach_execution
 from data_agent.tools.review_context import ToolContext
 from data_agent.tools.statistics_tools import pearson_correlation, rolling_std
 from data_agent.tools.tabular_helpers import (
@@ -569,10 +570,60 @@ def run_income_attribution_analyses(
     ctx: ToolContext, source_paths: list[str]
 ) -> list[AnalysisResult]:
     """Run the full deterministic income-attribution battery (spec section 17)."""
-    return [
+    results = [
         driver_concentration(ctx, source_paths),
         unexpected_drivers(ctx, source_paths),
         income_source_shifts(ctx, source_paths),
         risk_consistency(ctx, source_paths),
         risk_pnl_mismatch(ctx, source_paths),
     ]
+    rows_read = 0
+    rows_processed = 0
+    issues: list[str] = []
+    for path in source_paths:
+        view = _view(ctx, path)
+        if view is None:
+            issues.append(f"unrecognized_legacy_attribution:{path}")
+            continue
+        rows_read += view.frame.height
+        rows_processed += len(_rows(view))
+    enriched = attach_execution(
+        results,
+        ctx,
+        source_paths,
+        dataset_id="income_attribution:legacy_rows",
+        rows_read=rows_read,
+        rows_processed=rows_processed,
+        rows_rejected=rows_read - rows_processed,
+        issue_codes=issues,
+        calculation_basis="legacy attribution rows with numeric P&L values",
+    )
+    by_name = {result.name: result for result in enriched}
+    for name in ("risk_consistency", "risk_pnl_mismatch"):
+        result = by_name[name]
+        observations = sum(
+            int(table.get("observations", table.get("rows", 0))) for table in result.tables
+        )
+        if observations:
+            execution = result.execution.model_copy(
+                update={
+                    "population": result.execution.population.model_copy(
+                        update={"observations_produced": observations}
+                    )
+                }
+            )
+        else:
+            code = (
+                "insufficient_var_pairs"
+                if name == "risk_consistency"
+                else "insufficient_numeric_attribution_rows"
+            )
+            execution = AnalysisExecution(
+                status=AnalysisStatus.UNAVAILABLE,
+                population=result.execution.population.model_copy(
+                    update={"observations_produced": 0, "issues": [code]}
+                ),
+                issue_codes=[code],
+            )
+        by_name[name] = result.model_copy(update={"execution": execution})
+    return [by_name[result.name] for result in enriched]

@@ -46,6 +46,9 @@ def preflight(state: ParentState, config: RunnableConfig) -> dict:
             "start": period.start.isoformat(),
             "end": period.end.isoformat(),
         },
+        "selected_review_domains": (config or {})
+        .get("configurable", {})
+        .get("selected_review_domains"),
         "status": "running",
         "failure_reason": None,
     }

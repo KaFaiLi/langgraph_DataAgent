@@ -1,0 +1,41 @@
+checks:
+  - check_id: CHECK-PNL-CUMULATIVE
+    title: P&L cumulative consistency
+    analyses:
+      - {name: pnl_input_contract, required_roles: [pnl], supporting_roles: [adjustment, validation, wide_attribution, legacy_attribution], population_rule_id: supplied-pnl-bundle, prerequisite_rule_id: recognized-pnl-schema}
+      - {name: pnl_cumulative_integrity, required_roles: [pnl], population_rule_id: pnl-reporting-with-prefix, prerequisite_rule_id: cumulative-opening-basis}
+      - {name: pnl_statistical_patterns, required_roles: [pnl], population_rule_id: pnl-reporting-period, prerequisite_rule_id: numeric-pnl-observations}
+  - check_id: CHECK-ADJUSTMENT-CURRENCY
+    title: Adjustment currency conversion
+    analyses:
+      - {name: pnl_adjustment_controls, required_roles: [adjustment], supporting_roles: [pnl], population_rule_id: overlapping-adjustments, prerequisite_rule_id: parsed-adjustments}
+  - check_id: CHECK-ATTRIBUTION-WIDE-INTERNAL-CONSISTENCY
+    title: Wide income attribution consistency
+    analyses:
+      - {name: income_attribution_schema, required_roles: [wide_attribution], population_rule_id: wide-attribution-period, prerequisite_rule_id: recognized-wide-schema}
+      - {name: income_attribution_driver_profile, required_roles: [wide_attribution], population_rule_id: wide-attribution-period, prerequisite_rule_id: parsed-wide-attribution}
+      - {name: income_attribution_persistence, required_roles: [wide_attribution], population_rule_id: wide-attribution-period, prerequisite_rule_id: parsed-wide-attribution}
+      - {name: income_attribution_status, required_roles: [wide_attribution], population_rule_id: wide-attribution-period, prerequisite_rule_id: parsed-wide-attribution}
+      - {name: income_attribution_reconciliation, required_roles: [wide_attribution], population_rule_id: wide-attribution-period, prerequisite_rule_id: internal-attribution-totals}
+  - check_id: CHECK-ATTRIBUTION-LEGACY-INTERNAL-CONSISTENCY
+    title: Legacy income attribution consistency
+    analyses:
+      - {name: driver_concentration, required_roles: [legacy_attribution], population_rule_id: legacy-attribution-period, prerequisite_rule_id: numeric-attribution}
+      - {name: unexpected_drivers, required_roles: [legacy_attribution], population_rule_id: legacy-attribution-period, prerequisite_rule_id: numeric-attribution}
+      - {name: income_source_shifts, required_roles: [legacy_attribution], population_rule_id: legacy-attribution-period, prerequisite_rule_id: sufficient-temporal-halves}
+      - {name: risk_consistency, required_roles: [legacy_attribution], population_rule_id: legacy-attribution-period, prerequisite_rule_id: aligned-var-pairs}
+      - {name: risk_pnl_mismatch, required_roles: [legacy_attribution], population_rule_id: legacy-attribution-period, prerequisite_rule_id: sufficient-numeric-attribution}
+  - check_id: CHECK-PNL-VALIDATION-WORKFLOW
+    title: P&L validation workflow consistency
+    analyses:
+      - {name: pnl_validation_and_reconciliation, required_roles: [validation], supporting_roles: [pnl, adjustment], population_rule_id: validation-reporting-period, prerequisite_rule_id: parsed-validation}
+  - check_id: CHECK-ADJUSTMENT-RECONCILIATION
+    title: Adjustment/P&L reconciliation
+    implemented: false
+    analyses:
+      - {name: adjustment_to_pnl_reconciliation, required_roles: [pnl, adjustment], population_rule_id: comparable-pnl-adjustments, prerequisite_rule_id: compatible-entity-currency-basis}
+  - check_id: CHECK-ATTRIBUTION-RECONCILIATION
+    title: Attribution/P&L reconciliation
+    implemented: false
+    analyses:
+      - {name: pnl_to_attribution_reconciliation, required_roles: [pnl, wide_attribution], population_rule_id: comparable-pnl-attribution, prerequisite_rule_id: compatible-entity-currency-basis}

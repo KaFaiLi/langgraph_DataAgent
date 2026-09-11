@@ -61,7 +61,16 @@ def test_skill_runner_profiles_commentary_and_retains_exact_locators(
     registration = get_specialist(SpecialistDomain.RISK_COMMENTARY)
     runner = load_analysis_runner(registration.skill)
 
-    results = {result.name: result for result in runner(ctx, [path])}
+    results = {
+        result.name: result
+        for result in runner(
+            ctx,
+            [path],
+            analysis_names=tuple(
+                analysis.name for check in registration.skill.checks for analysis in check.analyses
+            ),
+        )
+    }
 
     assert set(results) == {
         "commentary_extract_population",
@@ -98,7 +107,25 @@ def test_skill_runner_is_deterministic(tmp_path: Path) -> None:
     assert registration.skill is not None
     runner = load_analysis_runner(registration.skill)
 
-    first = [result.model_dump(mode="json") for result in runner(ctx, [path])]
-    second = [result.model_dump(mode="json") for result in runner(ctx, [path])]
+    first = [
+        result.model_dump(mode="json")
+        for result in runner(
+            ctx,
+            [path],
+            analysis_names=tuple(
+                analysis.name for check in registration.skill.checks for analysis in check.analyses
+            ),
+        )
+    ]
+    second = [
+        result.model_dump(mode="json")
+        for result in runner(
+            ctx,
+            [path],
+            analysis_names=tuple(
+                analysis.name for check in registration.skill.checks for analysis in check.analyses
+            ),
+        )
+    ]
 
     assert first == second

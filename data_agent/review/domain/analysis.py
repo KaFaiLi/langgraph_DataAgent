@@ -2,9 +2,58 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from enum import StrEnum
+
+from pydantic import BaseModel, Field, model_validator
 
 from data_agent.review.domain.overview import DataOverview
+from data_agent.review.domain.source import DateRange
+
+
+class AnalysisStatus(StrEnum):
+    """Whether an analysis produced a usable population-level result."""
+
+    SUCCEEDED = "succeeded"
+    EMPTY = "empty"
+    UNAVAILABLE = "unavailable"
+    FAILED = "failed"
+
+
+class SourceBinding(BaseModel):
+    source_id: str
+    path: str
+    sha256: str
+
+
+class PopulationReceipt(BaseModel):
+    """Auditable accounting for the population actually processed."""
+
+    source_bindings: list[SourceBinding] = Field(default_factory=list)
+    dataset_id: str = Field(min_length=1)
+    rows_read: int = Field(ge=0)
+    rows_in_scope: int = Field(ge=0)
+    rows_processed: int = Field(ge=0)
+    rows_rejected: int = Field(ge=0)
+    rows_excluded: int = Field(ge=0)
+    exclusion_reasons: dict[str, int] = Field(default_factory=dict)
+    actual_date_range: DateRange | None = None
+    calculation_basis: str
+    observations_produced: int = Field(default=0, ge=0)
+    issues: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _reconcile_rows(self) -> PopulationReceipt:
+        if self.rows_read != self.rows_processed + self.rows_rejected + self.rows_excluded:
+            raise ValueError("rows_read must equal rows_processed + rows_rejected + rows_excluded")
+        if self.rows_in_scope != self.rows_processed + self.rows_rejected:
+            raise ValueError("rows_in_scope must equal rows_processed + rows_rejected")
+        return self
+
+
+class AnalysisExecution(BaseModel):
+    status: AnalysisStatus
+    population: PopulationReceipt
+    issue_codes: list[str] = Field(default_factory=list)
 
 
 class AnalysisResult(BaseModel):
@@ -17,3 +66,4 @@ class AnalysisResult(BaseModel):
     """Code-flagged candidates the analyst must interpret (never auto-findings)."""
     overviews: list[DataOverview] = Field(default_factory=list)
     """Code-owned report/deck views; never reconstructed by an LLM."""
+    execution: AnalysisExecution | None = None

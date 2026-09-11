@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import date
 from pathlib import Path
@@ -10,7 +11,7 @@ import pytest
 from langchain_core.runnables import RunnableLambda
 
 from data_agent.review.domain.desk_context import DeskContext
-from data_agent.review.domain.domains import SPECIALIST_DOMAINS, SpecialistDomain
+from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.source import DateRange
 from data_agent.review.domain.verification import VerifierDecision
 from data_agent.review.llm.models import ModelTier
@@ -18,7 +19,7 @@ from data_agent.review.orchestration.graph import build_parent_graph
 from data_agent.review.orchestration.nodes.context import build_desk_context
 from data_agent.review.orchestration.nodes.coverage import coverage_gate
 from data_agent.review.orchestration.specialist.schemas import AnalystOutput
-from tests.review.fixtures.builder import make_risky_tree, make_text
+from tests.review.fixtures.builder import make_risky_tree, make_text, make_valid_controls_tree
 
 DESK_TEMPLATE = DeskContext(
     desk_name="EM Rates",
@@ -88,10 +89,12 @@ def run_parent(
     *,
     tree_modifier=None,
     period: DateRange | None = PERIOD,
+    source_builder=make_risky_tree,
+    selected_domains: list[SpecialistDomain] | None = None,
 ) -> tuple[dict, Path]:
     source = tmp_path / "source"
     out = tmp_path / "runs" / "RUN-1"
-    make_risky_tree(source)
+    source_builder(source)
     if tree_modifier:
         tree_modifier(source)
     state = {"source_root": str(source), "output_dir": str(out)}
@@ -101,6 +104,7 @@ def run_parent(
     }
     if period is not None:
         configurable["review_period"] = period
+    configurable["selected_review_domains"] = selected_domains
     graph = build_parent_graph(llm_provider=provider)
     result = graph.invoke(state, config={"configurable": configurable})
     return result, out
@@ -108,39 +112,30 @@ def run_parent(
 
 def test_happy_path_covers_all_sources(tmp_path: Path) -> None:
     provider = FakeParentProvider()
-    result, out = run_parent(tmp_path, provider)
+    result, out = run_parent(
+        tmp_path,
+        provider,
+        source_builder=make_valid_controls_tree,
+        selected_domains=[SpecialistDomain.POST_TRADE_CONTROLS],
+    )
 
-    assert result.get("status") == "completed", result.get("failure_reason")
-    assert len(result["tasks"]) == 4  # every active specialist has material
+    assert result.get("status") == "completed"
+    assert (out / "review_plan.json").is_file()
+    run_manifest = json.loads((out / "run_manifest.json").read_text())
+    assert run_manifest["review_plan_fingerprint"] == result["review_plan_fingerprint"]
+    assert run_manifest["review_plan"]["checks"]
+    assert run_manifest["check_results"]
+    assert len(result["tasks"]) == 1
     assert all(entry["status"] == "reviewed" for entry in result["coverage"])
-    assert len(result["specialist_reports"]) == 4
+    assert len(result["specialist_reports"]) == 1
 
     specialists = sorted(p.name for p in (out / "specialists").glob("*.md"))
-    assert specialists == sorted(f"{d.value}.md" for d in SPECIALIST_DOMAINS)
-
-    pnl_task = next(task for task in result["tasks"] if task["domain"] == "pnl")
-    assert set(pnl_task["source_ids"]) == {
-        _source_id_by_path(result, "pnl/pnl.xlsx"),
-        _source_id_by_path(result, "income_attribution/attribution.parquet"),
-        _source_id_by_path(result, "pnl_adjustments/adjustments.txt"),
-        _source_id_by_path(result, "pnl_validation/validation.pdf"),
-    }
-    coverage_by_source = {entry["source_id"]: entry for entry in result["coverage"]}
-    assert all(
-        coverage_by_source[source_id]["required_reviewers"] == ["pnl"]
-        for source_id in pnl_task["source_ids"]
-    )
+    assert specialists == ["post_trade_controls.md"]
 
     catalog = out / "catalog.json"
     assert catalog.exists()
     desk_context = out / "desk_context.json"
     assert desk_context.exists()
-    limits = result["desk_context"]["limits"]
-    assert limits  # risk.csv exposes a limit column -> deterministic enrichment
-    assert result["desk_context"]["source_backed_facts"]
-    assert result["desk_context"]["source_backed_facts"][0]["evidence"][0]["locator"].endswith(
-        "#rows=2:2"
-    )
 
     # Synthesis phase artifacts.
     assert result["final_report"] is not None
@@ -151,6 +146,25 @@ def test_happy_path_covers_all_sources(tmp_path: Path) -> None:
     # Lead review + lead verification both use the high-cost model.
     assert ("LeadDraft", ModelTier.HIGH_COST) in provider.calls
     assert ("LeadVerifierOutput", ModelTier.HIGH_COST) in provider.calls
+
+
+def test_malformed_multi_domain_package_fails_completion(tmp_path: Path) -> None:
+    result, _ = run_parent(tmp_path, FakeParentProvider())
+    assert result.get("status") == "failed"
+    assert "unreviewed" in (result.get("failure_reason") or "")
+
+
+def test_valid_partial_package_publishes_completed_with_gaps(tmp_path: Path) -> None:
+    result, out = run_parent(
+        tmp_path,
+        FakeParentProvider(),
+        source_builder=make_valid_controls_tree,
+    )
+
+    assert result["status"] == "completed_with_gaps"
+    manifest = json.loads((out / "run_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["status"] == "completed_with_gaps"
+    assert "Review limitations" in (out / "final_findings.md").read_text(encoding="utf-8")
 
 
 def _source_id_by_path(result: dict, path: str) -> str:
@@ -169,17 +183,18 @@ def test_unclassified_source_gets_classified_by_flash(tmp_path: Path) -> None:
 
     result, _ = run_parent(tmp_path, provider, tree_modifier=_add_unclassified)
 
-    assert result.get("status") != "failed", result.get("failure_reason")
+    assert result.get("status") == "failed"
     classification_calls = [c for c in provider.calls if c[0] == "ClassificationOutput"]
     assert len(classification_calls) == 1
     assert classification_calls[0][1] is ModelTier.LOW_COST
     unknown_id = _source_id_by_path(result, "misc/unknown.csv")
     unknown = next(entry for entry in result["coverage"] if entry["source_id"] == unknown_id)
-    assert unknown["required_reviewers"] == ["risk_metrics"]
-    assert unknown["status"] == "reviewed"
+    # A model-assigned domain cannot make a schema-incompatible source executable.
+    assert unknown["required_reviewers"] == []
+    assert unknown["status"] == "irrelevant"
 
 
-def test_empty_classification_routes_to_all_specialists(tmp_path: Path) -> None:
+def test_empty_classification_remains_unresolved(tmp_path: Path) -> None:
     provider = FakeParentProvider(classification={"misc/unknown.csv": []})
 
     def _add_unclassified(source: Path) -> None:
@@ -188,11 +203,12 @@ def test_empty_classification_routes_to_all_specialists(tmp_path: Path) -> None:
 
     result, _ = run_parent(tmp_path, provider, tree_modifier=_add_unclassified)
 
-    assert result.get("status") != "failed", result.get("failure_reason")
+    assert result.get("status") == "failed"
     unknown_id = _source_id_by_path(result, "misc/unknown.csv")
     unknown = next(entry for entry in result["coverage"] if entry["source_id"] == unknown_id)
-    assert len(unknown["required_reviewers"]) == len(SPECIALIST_DOMAINS)
-    assert unknown["status"] == "reviewed"
+    assert unknown["required_reviewers"] == []
+    assert unknown["status"] == "unsupported"
+    assert unknown["notes"] == "Source role remains unresolved."
 
 
 def test_unsupported_source_fails_run(tmp_path: Path) -> None:
@@ -320,7 +336,7 @@ def test_specialist_failure_fails_run(tmp_path: Path, monkeypatch) -> None:
     result, _ = run_parent(tmp_path, FakeParentProvider())
 
     assert result["status"] == "failed"
-    assert "risk_metrics" in (result["failure_reason"] or "")
+    assert "specialist" in (result["failure_reason"] or "")
     assert "boom" in (result["failure_reason"] or "")
 
 

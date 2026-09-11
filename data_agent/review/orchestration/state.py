@@ -13,9 +13,13 @@ class ParentState(TypedDict, total=False):
     source_root: str
     output_dir: str
     review_period: dict[str, str]
+    selected_review_domains: list[str] | None
 
     manifest: dict | None
     desk_context: dict | None
+    review_plan: dict | None
+    review_plan_fingerprint: str
+    check_results: dict[str, dict]
     tasks: list[dict]
     active_task: dict
     specialist_outcomes: Annotated[list[dict], operator.add]

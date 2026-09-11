@@ -12,6 +12,7 @@ metadata:
   report_id: PNL
   label: PnL
   analysis_entrypoint: scripts/analysis.py:run_analysis
+  checks_file: references/checks.yaml
 ---
 
 # PnL Review

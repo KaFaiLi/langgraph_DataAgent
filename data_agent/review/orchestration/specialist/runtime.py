@@ -9,7 +9,6 @@ from pydantic import BaseModel
 
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
-from data_agent.tools.review_context import ToolContext
 
 
 @dataclass(frozen=True)
@@ -20,7 +19,8 @@ class SpecialistSpec:
     report_id: str
     domain_label: str
     policy_text: str
-    analyses_runner: Callable[[ToolContext, list[str]], Sequence[BaseModel]]
+    analyses_runner: Callable[..., Sequence[BaseModel]]
+    analysis_names: tuple[str, ...] = ()
     research_guidance: str = ""
 
 

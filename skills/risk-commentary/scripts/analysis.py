@@ -18,6 +18,7 @@ from data_agent.review.domain.overview import (
     OverviewStatus,
     TableVisual,
 )
+from data_agent.tools.analysis_receipts import attach_execution
 from data_agent.tools.review_context import ToolContext, source_file
 
 MAX_FLAGS: Final = 50
@@ -485,7 +486,9 @@ def _normalized_reassurance_claims(records: list[_Record]) -> AnalysisResult:
     )
 
 
-def run_analysis(ctx: ToolContext, source_paths: list[str]) -> list[BaseModel]:
+def run_analysis(
+    ctx: ToolContext, source_paths: list[str], *, analysis_names: tuple[str, ...]
+) -> list[BaseModel]:
     """Run every deterministic screen over the scoped final Markdown extracts."""
     extracts: list[tuple[str, list[str], list[_Record]]] = []
     records: list[_Record] = []
@@ -495,10 +498,33 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> list[BaseModel]:
             continue
         extracts.append((path, lines, source_records))
         records.extend(source_records)
-    return [
+    results = [
         _population_profile(extracts),
         _validation_gaps(records),
         _internal_consistency(records),
         _repeated_explanations(records),
         _normalized_reassurance_claims(records),
     ]
+    available = {result.name for result in results}
+    unknown = set(analysis_names) - available
+    if unknown:
+        raise ValueError(f"unknown commentary analyses requested: {sorted(unknown)}")
+    selected = [result for result in results if result.name in analysis_names]
+    return attach_execution(
+        selected,
+        ctx,
+        source_paths,
+        dataset_id="risk_commentary:source_records",
+        rows_read=sum(len(lines) for _, lines, _ in extracts),
+        rows_processed=len(records),
+        rows_excluded=sum(len(lines) for _, lines, _ in extracts) - len(records),
+        exclusion_reasons={
+            "non_source_record_lines": sum(len(lines) for _, lines, _ in extracts) - len(records)
+        },
+        issue_codes=(
+            ["unreadable_or_unsupported_commentary_source"]
+            if len(extracts) != len(source_paths)
+            else []
+        ),
+        calculation_basis="parsed dated commentary records",
+    )

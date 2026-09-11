@@ -7,6 +7,9 @@ import json
 from fastmcp.exceptions import ToolError
 from langchain_core.runnables.config import RunnableConfig
 
+from data_agent.review.completion import evaluate_check
+from data_agent.review.domain.analysis import AnalysisResult
+from data_agent.review.domain.plan import PlannedCheck
 from data_agent.review.orchestration.specialist.runtime import SpecialistRuntime
 from data_agent.review.orchestration.specialist.state import (
     SpecialistState,
@@ -113,7 +116,21 @@ def run_deterministic_analysis(
 ) -> dict:
     """Execute the trusted skill runner against assigned source paths."""
     ctx = context_from_config(config)
-    analyses = runtime.spec.analyses_runner(ctx, list(state.get("source_paths", [])))
+    planned_checks = list(state.get("planned_checks", []))
+    analysis_names = tuple(
+        dict.fromkeys(
+            name
+            for check in planned_checks
+            for name in PlannedCheck.model_validate(check).analysis_names
+        )
+    )
+    if not analysis_names:
+        analysis_names = runtime.spec.analysis_names
+    analyses = runtime.spec.analyses_runner(
+        ctx,
+        list(state.get("source_paths", [])),
+        analysis_names=analysis_names,
+    )
     serialized: list[dict] = []
     checks_by_id: dict[str, dict] = dict(state.get("checks_by_id", {}))
     candidates_by_id: dict[str, dict] = dict(state.get("candidates_by_id", {}))
@@ -143,22 +160,45 @@ def run_deterministic_analysis(
                         }
                     )
                     queued_ids.add(work_id)
-        check_id = f"analysis:{data.get('name') or 'analysis'}"
-        checks_by_id[check_id] = {
-            "check_id": check_id,
-            "source_ids": list(state.get("source_ids", [])),
-            "check_type": str(data.get("name") or "analysis"),
-            "performed": True,
-            "population_definition": "Assigned specialist source population",
-            "result": str(data.get("summary") or "")[:4_000],
-            "limitations": [],
+        serialized.append(data)
+    typed_outputs = [AnalysisResult.model_validate(data) for data in serialized]
+    check_results_by_id: dict[str, dict] = {}
+    for check_data in planned_checks:
+        check = PlannedCheck.model_validate(check_data)
+        result = evaluate_check(
+            check,
+            typed_outputs,
+            ctx.manifest,
+            state.get("plan_fingerprint", ""),
+            attempt_id=f"{state.get('task_id', 'task')}:{check.check_id}",
+        )
+        check_results_by_id[check.check_id] = result.model_dump(mode="json")
+        summaries = [
+            f"{output.name}: {output.summary}"
+            for output in typed_outputs
+            if output.name in check.analysis_names
+        ]
+        checks_by_id[check.check_id] = {
+            "check_id": check.check_id,
+            "source_ids": check.source_ids,
+            "check_type": check.title,
+            "performed": result.completion_rule_passed,
+            "population_definition": "Parser-owned populations in analysis receipts",
+            "result": "\n".join(summaries)[:4_000],
+            "limitations": result.limitations,
             "evidence": [],
             "issue_ids": [],
+            "plan_fingerprint": result.plan_fingerprint,
+            "owner_domain": result.domain.value,
+            "analysis_receipts": [receipt.model_dump(mode="json") for receipt in result.receipts],
+            "population_start": state["review_period"]["start"],
+            "population_end": state["review_period"]["end"],
+            "completion_rule_passed": result.completion_rule_passed,
         }
-        serialized.append(data)
     return {
         "analyses": serialized,
         "checks_by_id": checks_by_id,
+        "check_results_by_id": check_results_by_id,
         "candidates_by_id": candidates_by_id,
         "pending_work": pending_work,
     }

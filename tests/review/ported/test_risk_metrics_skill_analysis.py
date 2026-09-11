@@ -9,8 +9,10 @@ from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from types import ModuleType
 
+from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.review.ingestion.evidence_reader import validate_locator
+from data_agent.skills.registry import get_specialist
 from data_agent.tools.review_context import ToolContext
 from tests.review.fixtures.builder import make_csv, make_parquet
 
@@ -213,7 +215,15 @@ def _context(
 
 def _results(ctx: ToolContext) -> dict[str, object]:
     paths = [source.path for source in ctx.manifest.sources]
-    return {result.name: result for result in RISK_METRICS_SKILL.run_analysis(ctx, paths)}
+    names = tuple(
+        analysis.name
+        for check in get_specialist(SpecialistDomain.RISK_METRICS).skill.checks
+        for analysis in check.analyses
+    )
+    return {
+        result.name: result
+        for result in RISK_METRICS_SKILL.run_analysis(ctx, paths, analysis_names=names)
+    }
 
 
 def test_finalized_two_file_contract_runs_as_one_skill(tmp_path: Path) -> None:
@@ -231,6 +241,20 @@ def test_finalized_two_file_contract_runs_as_one_skill(tmp_path: Path) -> None:
     reconciliation = results["risk_cross_source_consistency"].tables[0]
     assert reconciliation["event_to_sgmr_row_reconciliation"] == "UNRESOLVED"
     assert reconciliation["semantic_date_matches"] == 1
+
+
+def test_runner_emits_only_explicitly_requested_analysis(tmp_path: Path) -> None:
+    day = date(2025, 1, 2)
+    ctx = _context(tmp_path, [_sgmr_row(day)], [_colibris_row(1, day)])
+    paths = [source.path for source in ctx.manifest.sources]
+
+    results = RISK_METRICS_SKILL.run_analysis(
+        ctx,
+        paths,
+        analysis_names=("risk_limit_consumption",),
+    )
+
+    assert [result.name for result in results] == ["risk_limit_consumption"]
 
 
 def test_directional_limit_breach_and_proximity_have_valid_locators(

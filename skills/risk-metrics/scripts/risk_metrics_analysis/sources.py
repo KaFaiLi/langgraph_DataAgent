@@ -57,6 +57,7 @@ def _load_sources(
                         sheet,
                         1,
                         columns=list(frame.columns),
+                        rows_read=frame.height,
                     )
                 )
                 continue

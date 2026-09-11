@@ -18,6 +18,7 @@ CoverageStatus = Literal["pending", "reviewed", "irrelevant", "unsupported"]
 
 class RunStatus(StrEnum):
     COMPLETED = "completed"
+    COMPLETED_WITH_GAPS = "completed_with_gaps"
     FAILED = "failed"
 
 
@@ -42,6 +43,7 @@ class ReviewTask(BaseModel):
     task_id: str
     domain: SpecialistDomain
     source_ids: list[str] = Field(default_factory=list)
+    check_ids: list[str] = Field(default_factory=list)
     scope: DateRange | None = None
 
 
@@ -59,6 +61,7 @@ class RunContext(BaseModel):
     output_dir: str
     desk_template: DeskContext
     review_period: DateRange
+    selected_review_domains: list[SpecialistDomain] | None = None
 
 
 class ReviewRun(BaseModel):
@@ -73,5 +76,8 @@ class ReviewRun(BaseModel):
     manifest: SourceManifest
     coverage: list[SourceCoverage] = Field(default_factory=list)
     tasks: list[ReviewTask] = Field(default_factory=list)
+    review_plan: dict | None = None
+    review_plan_fingerprint: str | None = None
+    check_results: list[CheckCoverageRecord] = Field(default_factory=list)
 
     failure_reason: str | None = None

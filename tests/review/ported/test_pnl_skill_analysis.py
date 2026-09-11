@@ -9,8 +9,10 @@ from types import ModuleType
 
 import pytest
 
+from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.review.ingestion.evidence_reader import validate_locator
+from data_agent.skills.registry import get_specialist
 from data_agent.tools.review_context import ToolContext
 from tests.review.fixtures.builder import make_csv, make_xlsx
 
@@ -226,7 +228,15 @@ def _context(tmp_path: Path, *, bad_wtd: bool = False, bad_fx: bool = False) -> 
 
 def _results(ctx: ToolContext) -> dict:
     paths = [source.path for source in ctx.manifest.sources]
-    return {result.name: result for result in PNL_SKILL.run_analysis(ctx, paths)}
+    names = tuple(
+        analysis.name
+        for check in get_specialist(SpecialistDomain.PNL).skill.checks
+        for analysis in check.analyses
+        if check.implemented
+    )
+    return {
+        result.name: result for result in PNL_SKILL.run_analysis(ctx, paths, analysis_names=names)
+    }
 
 
 def test_finalized_three_file_contract_runs_as_one_skill(tmp_path: Path) -> None:
@@ -584,3 +594,25 @@ def test_wide_income_attribution_export_runs_inside_the_pnl_skill(
     status_flags = results["income_attribution_status"].flag_candidates
     assert status_flags[0]["kind"] == "income_attribution_processing_state"
     assert status_flags[0]["status"] == "IA process is running"
+
+
+def test_missing_required_pnl_column_is_unavailable_without_suppressing_adjustments(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source"
+    (source / "pnl").mkdir(parents=True)
+    (source / "pnl_adjustments").mkdir()
+    pnl_row = _pnl_row("2025-07-02")
+    pnl_row.pop("WTD")
+    make_csv(source / "pnl" / "malformed.csv", [pnl_row])
+    make_csv(source / "pnl_adjustments" / "adjustments.csv", [_adjustment_row()])
+    manifest = build_catalog(source)
+    ctx = ToolContext(source_root=source, workspace_root=tmp_path / "workspace", manifest=manifest)
+
+    results = _results(ctx)
+
+    assert results["pnl_input_contract"].execution.status.value == "unavailable"
+    assert results["pnl_input_contract"].execution.population.rows_processed == 1
+    assert "unrecognized_pnl_table" in results["pnl_input_contract"].execution.issue_codes
+    assert results["pnl_adjustment_controls"].execution.status.value == "succeeded"
+    assert results["pnl_adjustment_controls"].execution.population.rows_processed == 1

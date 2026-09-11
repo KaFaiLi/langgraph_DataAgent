@@ -7,7 +7,8 @@ from pathlib import Path
 
 from data_agent.review import ReviewRequest, ReviewService, ReviewStatus
 from data_agent.review.domain.desk_context import DeskContext
-from tests.review.fixtures.builder import make_risky_tree
+from data_agent.review.domain.domains import SpecialistDomain
+from tests.review.fixtures.builder import make_valid_controls_tree
 from tests.review.ported_graph.test_orchestration import (
     DESK_TEMPLATE,
     FakeParentProvider,
@@ -20,7 +21,7 @@ def _desk() -> DeskContext:
 
 def test_resume_returns_checkpointed_state(tmp_path: Path) -> None:
     source = tmp_path / "source"
-    make_risky_tree(source)
+    make_valid_controls_tree(source)
     run_dir = tmp_path / "runs" / "RUN-1"
 
     provider = FakeParentProvider()
@@ -33,6 +34,7 @@ def test_resume_returns_checkpointed_state(tmp_path: Path) -> None:
             review_start=date(2025, 1, 1),
             review_end=date(2026, 6, 30),
             desk_context=_desk().model_dump(mode="json"),
+            selected_review_domains=[SpecialistDomain.POST_TRADE_CONTROLS],
         )
     )
     assert first.status is ReviewStatus.COMPLETED, first.failure_reason

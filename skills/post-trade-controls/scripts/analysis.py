@@ -15,7 +15,7 @@ from typing import NamedTuple
 
 import polars as pl
 
-from data_agent.review.domain.analysis import AnalysisResult
+from data_agent.review.domain.analysis import AnalysisExecution, AnalysisResult, AnalysisStatus
 from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.evidence import EvidenceReference, Locator, format_locator
 from data_agent.review.domain.overview import (
@@ -29,6 +29,7 @@ from data_agent.review.domain.overview import (
 )
 from data_agent.review.domain.source import SourceType
 from data_agent.tools.analysis_helpers import tabular_row_offset
+from data_agent.tools.analysis_receipts import attach_execution, population_receipt
 from data_agent.tools.review_context import ToolContext
 from data_agent.tools.statistics_tools import trend_analysis
 from data_agent.tools.tabular_helpers import (
@@ -872,17 +873,79 @@ def severity_changes(ctx: ToolContext, source_paths: list[str]) -> AnalysisResul
 
 
 def run_post_trade_controls_analyses(
-    ctx: ToolContext, source_paths: list[str]
+    ctx: ToolContext, source_paths: list[str], *, analysis_names: tuple[str, ...]
 ) -> list[AnalysisResult]:
     """Run the full deterministic post-trade controls battery (spec section 17)."""
-    return [
-        repeated_breaches(ctx, source_paths),
-        product_recurrence(ctx, source_paths),
-        resolution_time(ctx, source_paths),
-        approval_gaps(ctx, source_paths),
-        override_patterns(ctx, source_paths),
-        severity_changes(ctx, source_paths),
-    ]
+    analyses = (
+        ("repeated_breaches", repeated_breaches),
+        ("product_recurrence", product_recurrence),
+        ("resolution_time", resolution_time),
+        ("approval_gaps", approval_gaps),
+        ("override_patterns", override_patterns),
+        ("severity_changes", severity_changes),
+    )
+    available = {name for name, _ in analyses}
+    unknown = set(analysis_names) - available
+    if unknown:
+        raise ValueError(f"unknown post-trade analyses requested: {sorted(unknown)}")
+    analyses = tuple(item for item in analyses if item[0] in analysis_names)
+    recognized_paths: list[str] = []
+    parsed_records = 0
+    rejected_records = 0
+    population_issues: list[str] = []
+    for path in source_paths:
+        try:
+            view = _view(ctx, path)
+        except (KeyError, TypeError, ValueError) as exc:
+            population_issues.append(f"parse_failure:{path}:{type(exc).__name__}")
+            continue
+        if view is None:
+            frame = load_frame(ctx, path)
+            rejected_records += 0 if frame is None else frame.height
+            population_issues.append(f"unrecognized_control_schema:{path}")
+            continue
+        recognized_paths.append(path)
+        parsed_records += len(_records(view))
+    rows_read = parsed_records + rejected_records
+    results: list[AnalysisResult] = []
+    for name, analysis in analyses:
+        try:
+            result = analysis(ctx, recognized_paths)
+            results.extend(
+                attach_execution(
+                    [result],
+                    ctx,
+                    source_paths,
+                    dataset_id="post_trade_controls:breach_records",
+                    rows_read=rows_read,
+                    rows_processed=parsed_records,
+                    rows_rejected=rejected_records,
+                    issue_codes=population_issues,
+                    calculation_basis="parsed post-trade control records",
+                )
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            results.append(
+                AnalysisResult(
+                    name=name,
+                    summary=f"Analysis unavailable: {type(exc).__name__}: {exc}",
+                    execution=AnalysisExecution(
+                        status=AnalysisStatus.UNAVAILABLE,
+                        population=population_receipt(
+                            ctx,
+                            source_paths,
+                            dataset_id="post_trade_controls:breach_records",
+                            rows_read=rows_read,
+                            rows_processed=0,
+                            rows_rejected=rows_read,
+                            calculation_basis="post-trade parser rejected the assigned population",
+                            issues=["parse_failure"],
+                        ),
+                        issue_codes=["parse_failure"],
+                    ),
+                )
+            )
+    return results
 
 
 run_analysis = run_post_trade_controls_analyses
