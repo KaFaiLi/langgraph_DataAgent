@@ -106,6 +106,8 @@ validated entrypoint shape:
 def run_analysis(
     ctx: ToolContext,
     source_paths: list[str],
+    *,
+    analysis_names: tuple[str, ...],
 ) -> Sequence[BaseModel]: ...
 ```
 

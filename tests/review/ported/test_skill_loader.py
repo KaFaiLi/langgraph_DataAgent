@@ -18,6 +18,17 @@ from data_agent.skills.review import (
 )
 
 
+def _write_test_checks(skill_root: Path) -> None:
+    references = skill_root / "references"
+    references.mkdir(parents=True, exist_ok=True)
+    (references / "checks.yaml").write_text(
+        "checks:\n  - check_id: CHECK-TEST\n    title: Test\n    analyses:\n"
+        "      - name: test_analysis\n        required_roles: [pnl]\n"
+        "        population_rule_id: test\n        prerequisite_rule_id: test\n",
+        encoding="utf-8",
+    )
+
+
 def test_repository_analytical_skills_are_discovered() -> None:
     definitions = discover_skills()
 
@@ -61,6 +72,7 @@ def test_lead_review_loader_rejects_missing_verifier_policy(tmp_path: Path) -> N
     scripts = skill_root / "scripts"
     scripts.mkdir(parents=True)
     (scripts / "analysis.py").write_text("def run_analysis(reports): return {}\n", encoding="utf-8")
+    _write_test_checks(skill_root)
     skill_file = skill_root / "SKILL.md"
     skill_file.write_text(
         """---
@@ -102,11 +114,30 @@ def test_registry_uses_one_composite_pnl_specialist() -> None:
     assert specialist_domain_for(SpecialistDomain.INCOME_ATTRIBUTION) is SpecialistDomain.PNL
 
 
+def test_skill_check_manifests_own_every_analysis_exactly_once() -> None:
+    owners: dict[tuple[SpecialistDomain, str], str] = {}
+    for domain, registration in SPECIALISTS.items():
+        assert registration.skill.checks
+        for check in registration.skill.checks:
+            for analysis in check.analyses:
+                key = (domain, analysis.name)
+                assert key not in owners
+                owners[key] = check.check_id
+
+    assert owners[(SpecialistDomain.RISK_METRICS, "risk_metrics_input_contract")] == (
+        "CHECK-RISK-QUALITY"
+    )
+    assert owners[(SpecialistDomain.PNL, "income_attribution_reconciliation")] == (
+        "CHECK-ATTRIBUTION-WIDE-INTERNAL-CONSISTENCY"
+    )
+
+
 def test_loader_rejects_entrypoint_escape(tmp_path: Path) -> None:
     skills_root = tmp_path / "skills"
     skill_root = skills_root / "bad-skill"
     skill_root.mkdir(parents=True)
     (tmp_path / "outside.py").write_text("def run_analysis(ctx, paths): return []\n")
+    _write_test_checks(skill_root)
     skill_file = skill_root / "SKILL.md"
     skill_file.write_text(
         """---
@@ -118,6 +149,7 @@ metadata:
   report_id: BAD
   label: Bad Skill
   analysis_entrypoint: ../../outside.py:run_analysis
+  checks_file: references/checks.yaml
 ---
 # Invalid
 """,
@@ -133,6 +165,10 @@ def test_loader_rejects_duplicate_domain(tmp_path: Path) -> None:
     for name in ("first", "second"):
         skill_root = skills_root / name
         (skill_root / "scripts").mkdir(parents=True)
+        (skill_root / "references").mkdir(parents=True)
+        (skill_root / "references" / "checks.yaml").write_text(
+            "checks:\n  - check_id: CHECK-TEST\n    title: Test\n    analyses:\n      - name: test_analysis\n        required_roles: [pnl]\n        population_rule_id: test\n        prerequisite_rule_id: test\n"
+        )
         (skill_root / "scripts" / "analysis.py").write_text(
             "def run_analysis(ctx, paths): return []\n", encoding="utf-8"
         )
@@ -146,6 +182,7 @@ metadata:
   report_id: {name.upper()}
   label: {name.title()}
   analysis_entrypoint: scripts/analysis.py:run_analysis
+  checks_file: references/checks.yaml
 ---
 # Test
 """,
@@ -161,6 +198,10 @@ def test_loader_rejects_duplicate_source_domain_owner(tmp_path: Path) -> None:
     for name, domain in (("first", "pnl"), ("second", "risk_metrics")):
         skill_root = skills_root / name
         (skill_root / "scripts").mkdir(parents=True)
+        (skill_root / "references").mkdir(parents=True)
+        (skill_root / "references" / "checks.yaml").write_text(
+            "checks:\n  - check_id: CHECK-TEST\n    title: Test\n    analyses:\n      - name: test_analysis\n        required_roles: [pnl]\n        population_rule_id: test\n        prerequisite_rule_id: test\n"
+        )
         (skill_root / "scripts" / "analysis.py").write_text(
             "def run_analysis(ctx, paths): return []\n", encoding="utf-8"
         )
@@ -177,6 +218,7 @@ metadata:
   report_id: {name.upper()}
   label: {name.title()}
   analysis_entrypoint: scripts/analysis.py:run_analysis
+  checks_file: references/checks.yaml
 ---
 # Test
 """,
@@ -200,6 +242,7 @@ def test_loader_supports_contained_relative_imports(tmp_path: Path) -> None:
         "    return [result()]\n",
         encoding="utf-8",
     )
+    _write_test_checks(skill_root)
     skill_file = skill_root / "SKILL.md"
     skill_file.write_text(
         """---
@@ -211,6 +254,7 @@ metadata:
   report_id: RELATIVE
   label: Relative Skill
   analysis_entrypoint: scripts/analysis.py:run_analysis
+  checks_file: references/checks.yaml
 ---
 # Relative imports
 """,
@@ -233,6 +277,7 @@ def test_loader_caches_relative_runner_when_loaded_in_parallel(tmp_path: Path) -
         "from .value import VALUE\n\ndef run_analysis(ctx, source_paths):\n    return [VALUE]\n",
         encoding="utf-8",
     )
+    _write_test_checks(skill_root)
     skill_file = skill_root / "SKILL.md"
     skill_file.write_text(
         """---
@@ -244,6 +289,7 @@ metadata:
   report_id: PARALLEL
   label: Parallel Skill
   analysis_entrypoint: scripts/analysis.py:run_analysis
+  checks_file: references/checks.yaml
 ---
 # Parallel relative imports
 """,
@@ -275,6 +321,7 @@ def test_loader_rejects_symlinked_relative_import_escape(tmp_path: Path) -> None
         "from .payload import VALUE\n\ndef run_analysis(ctx, source_paths):\n    return [VALUE]\n",
         encoding="utf-8",
     )
+    _write_test_checks(skill_root)
     skill_file = skill_root / "SKILL.md"
     skill_file.write_text(
         """---
@@ -286,6 +333,7 @@ metadata:
   report_id: LINKED
   label: Linked Skill
   analysis_entrypoint: scripts/analysis.py:run_analysis
+  checks_file: references/checks.yaml
 ---
 # Linked import
 """,

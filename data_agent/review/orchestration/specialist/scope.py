@@ -116,10 +116,23 @@ def run_deterministic_analysis(
 ) -> dict:
     """Execute the trusted skill runner against assigned source paths."""
     ctx = context_from_config(config)
-    analyses = runtime.spec.analyses_runner(ctx, list(state.get("source_paths", [])))
+    planned_checks = list(state.get("planned_checks", []))
+    analysis_names = tuple(
+        dict.fromkeys(
+            name
+            for check in planned_checks
+            for name in PlannedCheck.model_validate(check).analysis_names
+        )
+    )
+    if not analysis_names:
+        analysis_names = runtime.spec.analysis_names
+    analyses = runtime.spec.analyses_runner(
+        ctx,
+        list(state.get("source_paths", [])),
+        analysis_names=analysis_names,
+    )
     serialized: list[dict] = []
     checks_by_id: dict[str, dict] = dict(state.get("checks_by_id", {}))
-    planned_checks = list(state.get("planned_checks", []))
     candidates_by_id: dict[str, dict] = dict(state.get("candidates_by_id", {}))
     pending_work = list(state.get("pending_work", []))
     queued_ids = {str(item.get("work_id")) for item in pending_work}

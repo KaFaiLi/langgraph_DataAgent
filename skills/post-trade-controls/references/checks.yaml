@@ -1,0 +1,10 @@
+checks:
+  - check_id: CHECK-POST_TRADE_CONTROLS
+    title: Post-trade controls review
+    analyses:
+      - {name: repeated_breaches, required_roles: [post_trade_controls], population_rule_id: control-events, prerequisite_rule_id: parsed-controls}
+      - {name: product_recurrence, required_roles: [post_trade_controls], population_rule_id: control-events, prerequisite_rule_id: parsed-controls}
+      - {name: resolution_time, required_roles: [post_trade_controls], population_rule_id: control-events, prerequisite_rule_id: parsed-controls}
+      - {name: approval_gaps, required_roles: [post_trade_controls], population_rule_id: control-events, prerequisite_rule_id: parsed-controls}
+      - {name: override_patterns, required_roles: [post_trade_controls], population_rule_id: control-events, prerequisite_rule_id: parsed-controls}
+      - {name: severity_changes, required_roles: [post_trade_controls], population_rule_id: control-events, prerequisite_rule_id: parsed-controls}

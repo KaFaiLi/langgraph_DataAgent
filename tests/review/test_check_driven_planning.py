@@ -103,6 +103,8 @@ def test_partial_or_wrong_owner_receipts_cannot_pass() -> None:
     check = next(
         item for item in result["review_plan"]["checks"] if item["check_id"] == "CHECK-RISK-SGMR"
     )
+    result["review_plan"]["checks"] = [check]
+    result["review_plan_fingerprint"] = ReviewPlan.model_validate(result["review_plan"]).fingerprint
     record = {
         "check_id": check["check_id"],
         "source_ids": check["source_ids"],
@@ -158,6 +160,8 @@ def test_forged_result_digest_and_wrong_population_are_rejected() -> None:
     check = next(
         item for item in result["review_plan"]["checks"] if item["check_id"] == "CHECK-RISK-SGMR"
     )
+    result["review_plan"]["checks"] = [check]
+    result["review_plan_fingerprint"] = ReviewPlan.model_validate(result["review_plan"]).fingerprint
     population = {
         "source_bindings": [
             {
@@ -187,7 +191,7 @@ def test_forged_result_digest_and_wrong_population_are_rejected() -> None:
             "overviews": [],
             "execution": {"status": "succeeded", "population": population, "issue_codes": []},
         }
-        for name in check["analysis_names"]
+        for name in [item["name"] for item in check["analysis_requirements"]]
     ]
     receipts = [
         {

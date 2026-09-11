@@ -9,8 +9,10 @@ from types import ModuleType
 
 import pytest
 
+from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.review.ingestion.evidence_reader import validate_locator
+from data_agent.skills.registry import get_specialist
 from data_agent.tools.review_context import ToolContext
 from tests.review.fixtures.builder import make_csv, make_xlsx
 
@@ -226,7 +228,15 @@ def _context(tmp_path: Path, *, bad_wtd: bool = False, bad_fx: bool = False) -> 
 
 def _results(ctx: ToolContext) -> dict:
     paths = [source.path for source in ctx.manifest.sources]
-    return {result.name: result for result in PNL_SKILL.run_analysis(ctx, paths)}
+    names = tuple(
+        analysis.name
+        for check in get_specialist(SpecialistDomain.PNL).skill.checks
+        for analysis in check.analyses
+        if check.implemented
+    )
+    return {
+        result.name: result for result in PNL_SKILL.run_analysis(ctx, paths, analysis_names=names)
+    }
 
 
 def test_finalized_three_file_contract_runs_as_one_skill(tmp_path: Path) -> None:

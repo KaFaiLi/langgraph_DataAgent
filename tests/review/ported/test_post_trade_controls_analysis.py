@@ -14,9 +14,16 @@ from data_agent.skills.review import load_analysis_runner
 from data_agent.tools.review_context import ToolContext
 from tests.review.fixtures.builder import make_csv, make_xlsx
 
-run_post_trade_controls_analyses = load_analysis_runner(
-    get_specialist(SpecialistDomain.POST_TRADE_CONTROLS).skill
+_CONTROL_SKILL = get_specialist(SpecialistDomain.POST_TRADE_CONTROLS).skill
+run_post_trade_controls_analyses = load_analysis_runner(_CONTROL_SKILL)
+_CONTROL_ANALYSES = tuple(
+    analysis.name for check in _CONTROL_SKILL.checks for analysis in check.analyses
 )
+
+
+def _run(ctx: ToolContext, paths: list[str]):
+    return run_post_trade_controls_analyses(ctx, paths, analysis_names=_CONTROL_ANALYSES)
+
 
 BREACH_PATH = "post_trade_controls/breaches.csv"
 NO_APPROVAL_PATH = "post_trade_controls/breaches_no_approval.csv"
@@ -87,11 +94,11 @@ def ctx(tmp_path: Path) -> ToolContext:
 
 
 def _results(ctx: ToolContext, path: str = BREACH_PATH) -> dict:
-    return {analysis.name: analysis for analysis in run_post_trade_controls_analyses(ctx, [path])}
+    return {analysis.name: analysis for analysis in _run(ctx, [path])}
 
 
 def test_full_battery_runs(ctx: ToolContext) -> None:
-    results = run_post_trade_controls_analyses(ctx, [BREACH_PATH])
+    results = _run(ctx, [BREACH_PATH])
     assert [analysis.name for analysis in results] == [
         "repeated_breaches",
         "product_recurrence",
@@ -105,8 +112,8 @@ def test_full_battery_runs(ctx: ToolContext) -> None:
 
 
 def test_all_analyses_deterministic(ctx: ToolContext) -> None:
-    first = run_post_trade_controls_analyses(ctx, [BREACH_PATH])
-    second = run_post_trade_controls_analyses(ctx, [BREACH_PATH])
+    first = _run(ctx, [BREACH_PATH])
+    second = _run(ctx, [BREACH_PATH])
     assert [a.model_dump(mode="json") for a in first] == [a.model_dump(mode="json") for a in second]
 
 
@@ -245,7 +252,7 @@ def test_severity_mix_shift_flagged(ctx: ToolContext) -> None:
 
 
 def test_file_without_control_columns_is_unavailable(ctx: ToolContext) -> None:
-    results = run_post_trade_controls_analyses(ctx, [MISC_PATH])
+    results = _run(ctx, [MISC_PATH])
     assert len(results) == 6
     assert all(not analysis.tables for analysis in results)
     assert all(not analysis.flag_candidates for analysis in results)

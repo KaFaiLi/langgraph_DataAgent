@@ -17,7 +17,7 @@ from data_agent.review.domain.source import DateRange
 class StrictPlanModel(BaseModel):
     """Fail closed when a persisted plan contains unknown fields."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
 
 class CheckApplicability(StrEnum):
@@ -56,13 +56,12 @@ class PlannedCheck(StrictPlanModel):
     title: str = Field(min_length=1)
     playbook: str = Field(min_length=1)
     playbook_version: str = Field(pattern=r"^[0-9]+(?:\.[0-9]+){0,2}(?:\+[a-f0-9]{12})?$")
-    required_source_domains: list[SpecialistDomain] = Field(min_length=1)
-    source_ids: list[str] = Field(default_factory=list)
-    analysis_names: list[str] = Field(min_length=1)
-    analysis_requirements: tuple[AnalysisRequirement, ...] = ()
+    required_source_domains: tuple[SpecialistDomain, ...] = Field(min_length=1)
+    source_ids: tuple[str, ...] = ()
+    analysis_requirements: tuple[AnalysisRequirement, ...] = Field(min_length=1)
     applicability: CheckApplicability
     applicability_reason: str = Field(min_length=1)
-    completion_criteria: list[str] = Field(min_length=1)
+    completion_criteria: tuple[str, ...] = Field(min_length=1)
     empty_population_allowed: bool = False
     partial_rejection_allowed: bool = False
     policy_fingerprint: str = Field(pattern=r"^[a-f0-9]{64}$")
@@ -72,27 +71,27 @@ class PlannedCheck(StrictPlanModel):
         for label, values in (
             ("required source domains", self.required_source_domains),
             ("source ids", self.source_ids),
-            ("analysis names", self.analysis_names),
             ("completion criteria", self.completion_criteria),
         ):
             if len(values) != len(set(values)):
                 raise ValueError(f"{self.check_id}: {label} must be unique")
         if self.applicability is CheckApplicability.APPLICABLE and not self.source_ids:
             raise ValueError(f"{self.check_id}: applicable check requires sources")
-        if self.analysis_requirements:
-            requirement_names = [item.name for item in self.analysis_requirements]
-            if requirement_names != self.analysis_names:
-                raise ValueError(
-                    f"{self.check_id}: analysis requirements must match declared analyses in order"
-                )
+        if len(self.analysis_names) != len(set(self.analysis_names)):
+            raise ValueError(f"{self.check_id}: analysis requirements must have unique names")
         return self
+
+    @property
+    def analysis_names(self) -> tuple[str, ...]:
+        """Derive the required output set from its single authoritative declaration."""
+        return tuple(requirement.name for requirement in self.analysis_requirements)
 
 
 class ReviewPlan(StrictPlanModel):
     schema_version: Literal[2] = 2
     plan_id: str = Field(pattern=r"^PLAN-[A-F0-9]{16}$")
     review_period: DateRange
-    checks: list[PlannedCheck]
+    checks: tuple[PlannedCheck, ...]
 
     @model_validator(mode="after")
     def _unique_checks(self) -> ReviewPlan:
@@ -114,7 +113,7 @@ class AnalysisReceipt(StrictPlanModel):
     status: AnalysisStatus
     population: PopulationReceipt
     result_digest: str = Field(pattern=r"^[a-f0-9]{64}$")
-    issue_codes: list[str] = Field(default_factory=list)
+    issue_codes: tuple[str, ...] = ()
 
 
 class CheckResult(StrictPlanModel):
@@ -125,7 +124,7 @@ class CheckResult(StrictPlanModel):
     attempt_id: str
     domain: SpecialistDomain
     status: CheckStatus
-    source_ids: list[str]
-    receipts: list[AnalysisReceipt]
+    source_ids: tuple[str, ...]
+    receipts: tuple[AnalysisReceipt, ...]
     completion_rule_passed: bool = False
-    limitations: list[str] = Field(default_factory=list)
+    limitations: tuple[str, ...] = ()

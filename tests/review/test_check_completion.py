@@ -11,7 +11,12 @@ from data_agent.review.domain.analysis import (
     SourceBinding,
 )
 from data_agent.review.domain.domains import SpecialistDomain
-from data_agent.review.domain.plan import CheckApplicability, CheckStatus, PlannedCheck
+from data_agent.review.domain.plan import (
+    AnalysisRequirement,
+    CheckApplicability,
+    CheckStatus,
+    PlannedCheck,
+)
 from data_agent.review.domain.source import Source, SourceManifest, SourceType
 
 SOURCE = Source(
@@ -31,7 +36,9 @@ CHECK = PlannedCheck(
     playbook_version="1.0",
     required_source_domains=[SpecialistDomain.RISK_METRICS],
     source_ids=[SOURCE.source_id],
-    analysis_names=["risk_analysis"],
+    analysis_requirements=(
+        AnalysisRequirement(name="risk_analysis", required_source_ids=(SOURCE.source_id,)),
+    ),
     applicability=CheckApplicability.APPLICABLE,
     applicability_reason="input available",
     completion_criteria=["analysis succeeds"],

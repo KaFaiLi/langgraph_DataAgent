@@ -486,7 +486,9 @@ def _normalized_reassurance_claims(records: list[_Record]) -> AnalysisResult:
     )
 
 
-def run_analysis(ctx: ToolContext, source_paths: list[str]) -> list[BaseModel]:
+def run_analysis(
+    ctx: ToolContext, source_paths: list[str], *, analysis_names: tuple[str, ...]
+) -> list[BaseModel]:
     """Run every deterministic screen over the scoped final Markdown extracts."""
     extracts: list[tuple[str, list[str], list[_Record]]] = []
     records: list[_Record] = []
@@ -503,8 +505,13 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> list[BaseModel]:
         _repeated_explanations(records),
         _normalized_reassurance_claims(records),
     ]
+    available = {result.name for result in results}
+    unknown = set(analysis_names) - available
+    if unknown:
+        raise ValueError(f"unknown commentary analyses requested: {sorted(unknown)}")
+    selected = [result for result in results if result.name in analysis_names]
     return attach_execution(
-        results,
+        selected,
         ctx,
         source_paths,
         dataset_id="risk_commentary:source_records",

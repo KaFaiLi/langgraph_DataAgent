@@ -35,7 +35,9 @@ from .sources import (
 from .validation import _input_contract, _validation_and_reconciliation
 
 
-def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseModel]:
+def run_analysis(
+    ctx: ToolContext, source_paths: list[str], *, analysis_names: tuple[str, ...]
+) -> Sequence[BaseModel]:
     """Run every deterministic check for the finalized PnL review bundle."""
     tables, load_issues = _load_sources(ctx, source_paths)
     pnl, pnl_issues = _pnl_rows(tables)
@@ -189,4 +191,24 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseMode
             issue_codes=relevant_issues,
         )
         enriched.append(result.model_copy(update={"execution": execution}))
-    return enriched
+    supported = {
+        "pnl_input_contract",
+        "pnl_cumulative_integrity",
+        "pnl_statistical_patterns",
+        "pnl_adjustment_controls",
+        "pnl_validation_and_reconciliation",
+        "income_attribution_schema",
+        "income_attribution_driver_profile",
+        "income_attribution_persistence",
+        "income_attribution_reconciliation",
+        "income_attribution_status",
+        "driver_concentration",
+        "unexpected_drivers",
+        "income_source_shifts",
+        "risk_consistency",
+        "risk_pnl_mismatch",
+    }
+    unknown = set(analysis_names) - supported
+    if unknown:
+        raise ValueError(f"unknown P&L analyses requested: {sorted(unknown)}")
+    return [result for result in enriched if result.name in analysis_names]

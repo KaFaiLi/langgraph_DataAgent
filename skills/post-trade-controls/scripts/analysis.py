@@ -873,7 +873,7 @@ def severity_changes(ctx: ToolContext, source_paths: list[str]) -> AnalysisResul
 
 
 def run_post_trade_controls_analyses(
-    ctx: ToolContext, source_paths: list[str]
+    ctx: ToolContext, source_paths: list[str], *, analysis_names: tuple[str, ...]
 ) -> list[AnalysisResult]:
     """Run the full deterministic post-trade controls battery (spec section 17)."""
     analyses = (
@@ -884,6 +884,11 @@ def run_post_trade_controls_analyses(
         ("override_patterns", override_patterns),
         ("severity_changes", severity_changes),
     )
+    available = {name for name, _ in analyses}
+    unknown = set(analysis_names) - available
+    if unknown:
+        raise ValueError(f"unknown post-trade analyses requested: {sorted(unknown)}")
+    analyses = tuple(item for item in analyses if item[0] in analysis_names)
     recognized_paths: list[str] = []
     parsed_records = 0
     rejected_records = 0

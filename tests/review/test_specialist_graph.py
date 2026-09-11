@@ -148,7 +148,7 @@ def test_specialist_researches_with_multiple_tools_before_verification(
         report_id="RISK",
         domain_label="Risk Metrics",
         policy_text="Verify all evidence.",
-        analyses_runner=lambda _ctx, _paths: [],
+        analyses_runner=lambda _ctx, _paths, *, analysis_names: [],
         research_guidance="Inspect the assigned table before drafting.",
     )
     runtime = SpecialistRuntime(

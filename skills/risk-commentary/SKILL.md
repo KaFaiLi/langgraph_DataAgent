@@ -7,6 +7,7 @@ metadata:
   report_id: COMMENTARY
   label: Risk Commentary
   analysis_entrypoint: scripts/analysis.py:run_analysis
+  checks_file: references/checks.yaml
 ---
 
 # Risk Commentary

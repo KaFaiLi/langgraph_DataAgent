@@ -1,0 +1,50 @@
+checks:
+  - check_id: CHECK-RISK-QUALITY
+    title: Risk metrics input quality
+    analyses:
+      - name: risk_metrics_input_contract
+        required_roles: []
+        supporting_roles: [sgmr, colibris]
+        population_rule_id: available-risk-exports
+        prerequisite_rule_id: recognized-risk-schema
+        empty_population_allowed: true
+      - name: risk_metrics_data_integrity
+        required_roles: []
+        supporting_roles: [sgmr, colibris]
+        population_rule_id: available-risk-exports
+        prerequisite_rule_id: parsed-risk-rows
+        empty_population_allowed: true
+  - check_id: CHECK-RISK-SGMR
+    title: Risk limit consumption and dynamics
+    analyses:
+      - name: risk_limit_consumption
+        required_roles: [sgmr]
+        population_rule_id: current-sgmr-observations
+        prerequisite_rule_id: valid-limit-observations
+        minimum_observations: 1
+        date_range_required: true
+      - name: risk_metric_dynamics
+        required_roles: [sgmr]
+        population_rule_id: current-sgmr-observations
+        prerequisite_rule_id: comparable-metric-series
+        minimum_observations: 1
+        date_range_required: true
+  - check_id: CHECK-RISK-EXCESS
+    title: Risk excess workflow
+    analyses:
+      - name: risk_excess_workflow
+        required_roles: [colibris]
+        supporting_roles: [sgmr]
+        population_rule_id: current-excess-events
+        prerequisite_rule_id: valid-excess-observations
+        minimum_observations: 1
+        date_range_required: true
+  - check_id: CHECK-RISK-CROSS-SOURCE
+    title: Risk cross-source consistency
+    analyses:
+      - name: risk_cross_source_consistency
+        required_roles: [sgmr, colibris]
+        population_rule_id: matched-current-risk-populations
+        prerequisite_rule_id: compatible-sgmr-colibris-join
+        minimum_observations: 1
+        date_range_required: true

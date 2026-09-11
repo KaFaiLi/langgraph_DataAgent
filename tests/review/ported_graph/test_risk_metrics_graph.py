@@ -160,7 +160,7 @@ def test_verifier_prompt_receives_python_support_and_reopened_evidence(
         captured.append(text)
         return pass_responder(text)
 
-    analyses_runner = lambda _ctx, _paths: [
+    analyses_runner = lambda _ctx, _paths, *, analysis_names: [
         AnalysisResult(
             name="limit_consumption",
             summary="Population-level limit calculation",
@@ -729,7 +729,7 @@ def test_changed_overview_evidence_fails_specialist_run(tool_ctx: ToolContext) -
         visual=TableVisual(columns=["value"], rows=[["1"]]),
         evidence=[GOOD_EVIDENCE],
     )
-    analyses_runner = lambda _ctx, _paths: [
+    analyses_runner = lambda _ctx, _paths, *, analysis_names: [
         AnalysisResult(name="overview", summary="summary", overviews=[overview])
     ]
     spec = SpecialistSpec(

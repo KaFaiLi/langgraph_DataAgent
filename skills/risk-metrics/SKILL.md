@@ -7,6 +7,7 @@ metadata:
   report_id: RISK
   label: Risk Metrics
   analysis_entrypoint: scripts/analysis.py:run_analysis
+  checks_file: references/checks.yaml
 ---
 
 # Risk Metrics Review

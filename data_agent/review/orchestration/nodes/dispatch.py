@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables.config import RunnableConfig
@@ -37,116 +36,6 @@ class ClassificationOutput(BaseModel):
     domains: list[SpecialistDomain]
 
 
-@dataclass(frozen=True)
-class _CheckDefinition:
-    suffix: str
-    title: str
-    required: tuple[SpecialistDomain, ...]
-    analyses: tuple[str, ...]
-    implemented: bool = True
-    source_variant: str | None = None
-    analysis_roles: dict[str, tuple[str, ...]] | None = None
-
-
-# Independent calculations are separate checks. Cross-source checks are blocked
-# without suppressing checks whose own inputs are available.
-_PNL_CHECKS = (
-    _CheckDefinition(
-        "PNL-CUMULATIVE",
-        "P&L cumulative consistency",
-        (SpecialistDomain.PNL,),
-        ("pnl_input_contract", "pnl_cumulative_integrity", "pnl_statistical_patterns"),
-    ),
-    _CheckDefinition(
-        "ADJUSTMENT-CURRENCY",
-        "Adjustment currency conversion",
-        (SpecialistDomain.PNL_ADJUSTMENTS,),
-        ("pnl_adjustment_controls",),
-    ),
-    _CheckDefinition(
-        "ATTRIBUTION-WIDE-INTERNAL-CONSISTENCY",
-        "Wide income attribution consistency",
-        (SpecialistDomain.INCOME_ATTRIBUTION,),
-        (
-            "income_attribution_schema",
-            "income_attribution_driver_profile",
-            "income_attribution_persistence",
-            "income_attribution_status",
-            "income_attribution_reconciliation",
-        ),
-        source_variant="wide_attribution",
-    ),
-    _CheckDefinition(
-        "ATTRIBUTION-LEGACY-INTERNAL-CONSISTENCY",
-        "Legacy income attribution consistency",
-        (SpecialistDomain.INCOME_ATTRIBUTION,),
-        (
-            "driver_concentration",
-            "unexpected_drivers",
-            "income_source_shifts",
-            "risk_consistency",
-            "risk_pnl_mismatch",
-        ),
-        source_variant="legacy_attribution",
-    ),
-    _CheckDefinition(
-        "PNL-VALIDATION-WORKFLOW",
-        "P&L validation workflow consistency",
-        (SpecialistDomain.PNL_VALIDATION,),
-        ("pnl_validation_and_reconciliation",),
-    ),
-    _CheckDefinition(
-        "ADJUSTMENT-RECONCILIATION",
-        "Adjustment/P&L reconciliation",
-        (SpecialistDomain.PNL, SpecialistDomain.PNL_ADJUSTMENTS),
-        ("pnl_validation_and_reconciliation",),
-        implemented=False,
-    ),
-    _CheckDefinition(
-        "ATTRIBUTION-RECONCILIATION",
-        "Attribution/P&L reconciliation",
-        (SpecialistDomain.PNL, SpecialistDomain.INCOME_ATTRIBUTION),
-        ("pnl_to_attribution_reconciliation",),
-        implemented=False,
-    ),
-)
-
-_DOMAIN_ANALYSES = {
-    SpecialistDomain.RISK_METRICS: (
-        "risk_metrics_input_contract",
-        "risk_metrics_data_integrity",
-        "risk_limit_consumption",
-        "risk_metric_dynamics",
-        "risk_excess_workflow",
-        "risk_cross_source_consistency",
-    ),
-    SpecialistDomain.POST_TRADE_CONTROLS: (
-        "repeated_breaches",
-        "product_recurrence",
-        "resolution_time",
-        "approval_gaps",
-        "override_patterns",
-        "severity_changes",
-    ),
-    SpecialistDomain.RISK_COMMENTARY: (
-        "commentary_extract_population",
-        "commentary_validation_gaps",
-        "commentary_internal_consistency",
-        "commentary_repeated_explanations",
-        "commentary_normalized_reassurance_claims",
-    ),
-}
-
-_RISK_ANALYSIS_ROLES = {
-    "risk_metrics_input_contract": ("sgmr", "colibris"),
-    "risk_metrics_data_integrity": ("sgmr", "colibris"),
-    "risk_limit_consumption": ("sgmr",),
-    "risk_metric_dynamics": ("sgmr",),
-    "risk_excess_workflow": ("colibris",),
-    "risk_cross_source_consistency": ("sgmr", "colibris"),
-}
-
-
 def _provider(config: RunnableConfig) -> ReviewLLMProvider:
     return (config or {}).get("configurable", {}).get("llm_provider") or DEFAULT_LLM_PROVIDER
 
@@ -170,72 +59,57 @@ def _classify_source(
     return [domain for domain in parsed.domains if domain in SOURCE_DOMAINS]
 
 
-def _definitions(
-    domain: SpecialistDomain, source_domains: tuple[SpecialistDomain, ...]
-) -> tuple[_CheckDefinition, ...]:
-    if domain is SpecialistDomain.PNL:
-        return _PNL_CHECKS
-    if domain is SpecialistDomain.RISK_METRICS:
-        required = (SpecialistDomain.RISK_METRICS,)
-        return (
-            _CheckDefinition(
-                "RISK-SGMR",
-                "Risk limit consumption and dynamics",
-                required,
-                ("risk_limit_consumption", "risk_metric_dynamics"),
-                source_variant="sgmr",
-                analysis_roles=_RISK_ANALYSIS_ROLES,
-            ),
-            _CheckDefinition(
-                "RISK-EXCESS",
-                "Risk excess workflow",
-                required,
-                ("risk_excess_workflow",),
-                source_variant="colibris",
-                analysis_roles=_RISK_ANALYSIS_ROLES,
-            ),
-            _CheckDefinition(
-                "RISK-CROSS-SOURCE",
-                "Risk cross-source consistency",
-                required,
-                ("risk_cross_source_consistency",),
-                source_variant="risk_both",
-                analysis_roles=_RISK_ANALYSIS_ROLES,
-            ),
-        )
-    return (
-        _CheckDefinition(
-            domain.value.upper(),
-            f"{domain.value} core review",
-            source_domains,
-            _DOMAIN_ANALYSES[domain],
-            analysis_roles=_RISK_ANALYSIS_ROLES
-            if domain is SpecialistDomain.RISK_METRICS
-            else None,
-        ),
-    )
-
-
 def _policy_fingerprint(registration: object) -> str:
     skill = registration.skill
-    payload = f"{skill.instructions}\n{skill.verifier_policy}\n{skill.dataset_reference}"
-    return hashlib.sha256(payload.encode()).hexdigest()
+    payload = {
+        "instructions": skill.instructions,
+        "verifier_policy": skill.verifier_policy,
+        "dataset_reference": skill.dataset_reference,
+        "checks": [check.model_dump(mode="json") for check in skill.checks],
+    }
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
 
 
-def _matches_definition(source: object, definition: _CheckDefinition) -> bool:
-    if not any(role in source.candidate_domains for role in definition.required):
-        return False
-    columns = {column.casefold() for column in source.column_names}
-    if definition.source_variant == "wide_attribution":
-        return {"asofdate", "gop", "final result acc dtd"} <= columns
-    if definition.source_variant == "legacy_attribution":
-        return {"driver", "pnl_musd"} <= columns
-    if definition.source_variant in {"sgmr", "colibris", "risk_both"}:
-        role = risk_metrics_source_role(source.column_names)
-        return role == definition.source_variant or (
-            definition.source_variant == "risk_both" and role in {"sgmr", "colibris"}
+def _source_role(source: object) -> str | None:
+    risk_role = risk_metrics_source_role(source.column_names)
+    if risk_role is not None:
+        return risk_role
+    pnl_role = pnl_source_role(source.column_names, allow_legacy_pnl=True)
+    if pnl_role is SpecialistDomain.PNL:
+        return "pnl"
+    if pnl_role is SpecialistDomain.PNL_ADJUSTMENTS:
+        return "adjustment"
+    if pnl_role is SpecialistDomain.PNL_VALIDATION:
+        return "validation"
+    if pnl_role is SpecialistDomain.INCOME_ATTRIBUTION:
+        normalized = {
+            str(column).strip().lower().replace("_", "") for column in source.column_names
+        }
+        return (
+            "legacy_attribution"
+            if {"date", "driver", "pnlmusd"} <= normalized
+            else "wide_attribution"
         )
-    return True
+    for domain in (SpecialistDomain.POST_TRADE_CONTROLS, SpecialistDomain.RISK_COMMENTARY):
+        if domain in source.candidate_domains:
+            return domain.value
+    return None
+
+
+def _source_domain(role: str) -> SpecialistDomain:
+    return {
+        "pnl": SpecialistDomain.PNL,
+        "adjustment": SpecialistDomain.PNL_ADJUSTMENTS,
+        "validation": SpecialistDomain.PNL_VALIDATION,
+        "wide_attribution": SpecialistDomain.INCOME_ATTRIBUTION,
+        "legacy_attribution": SpecialistDomain.INCOME_ATTRIBUTION,
+        "sgmr": SpecialistDomain.RISK_METRICS,
+        "colibris": SpecialistDomain.RISK_METRICS,
+        "post_trade_controls": SpecialistDomain.POST_TRADE_CONTROLS,
+        "risk_commentary": SpecialistDomain.RISK_COMMENTARY,
+    }[role]
 
 
 def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
@@ -264,88 +138,80 @@ def create_review_tasks(state: ParentState, config: RunnableConfig) -> dict:
         source.source_id: [] for source in manifest.sources
     }
     period = DateRange.model_validate(state["review_period"])
+    roles_by_source = {source.source_id: _source_role(source) for source in manifest.sources}
     for domain, registration in SPECIALISTS.items():
         domain_checks: list[PlannedCheck] = []
-        for definition in _definitions(domain, registration.source_domains):
-            policy_fingerprint = _policy_fingerprint(registration)
-            matched = sorted(
-                source.source_id
-                for source in manifest.sources
-                if _matches_definition(source, definition)
-            )
-            present = {
-                candidate for source in manifest.sources for candidate in source.candidate_domains
+        policy_fingerprint = _policy_fingerprint(registration)
+        for declaration in registration.skill.checks:
+            all_roles = {
+                role
+                for analysis in declaration.analyses
+                for role in (*analysis.required_roles, *analysis.supporting_roles)
             }
-            missing = [
-                required.value for required in definition.required if required not in present
-            ]
-            if definition.source_variant == "risk_both":
-                risk_roles = {
-                    risk_metrics_source_role(source.column_names) for source in manifest.sources
-                }
-                if not {"sgmr", "colibris"} <= risk_roles:
-                    missing = sorted({"sgmr", "colibris"} - risk_roles)
-            elif definition.source_variant and not matched:
-                missing = [definition.source_variant]
-            analysis_names = definition.analyses
+            required_roles = {
+                role for analysis in declaration.analyses for role in analysis.required_roles
+            }
+            missing = sorted(
+                role for role in required_roles if role not in roles_by_source.values()
+            )
+            matched = sorted(
+                source_id for source_id, role in roles_by_source.items() if role in all_roles
+            )
             if domain.value not in selected:
-                applicability, reason = (
-                    CheckApplicability.INAPPLICABLE,
-                    "Playbook is not required by desk scope.",
+                applicability = CheckApplicability.INAPPLICABLE
+                reason = "Playbook is not required by desk scope."
+            elif not declaration.implemented:
+                applicability = CheckApplicability.BLOCKED
+                reason = (
+                    "No trusted implementation with a compatible entity, date, currency, "
+                    "unit, and inclusion basis is registered."
                 )
-            elif not definition.implemented:
-                applicability, reason = (
-                    CheckApplicability.BLOCKED,
-                    "No trusted cross-source implementation with compatible entity, date, currency, unit, and inclusion basis is registered.",
-                )
-            elif missing:
-                applicability, reason = (
-                    CheckApplicability.BLOCKED,
-                    f"Required source roles unavailable: {', '.join(missing)}.",
-                )
+            elif missing or not matched:
+                applicability = CheckApplicability.BLOCKED
+                unavailable = missing or sorted(all_roles)
+                reason = f"Required source roles unavailable: {', '.join(unavailable)}."
             else:
-                applicability, reason = (
-                    CheckApplicability.APPLICABLE,
-                    "Required source roles are available.",
+                applicability = CheckApplicability.APPLICABLE
+                reason = "Required source roles are available."
+            requirements = tuple(
+                AnalysisRequirement(
+                    name=analysis.name,
+                    required_source_ids=tuple(
+                        sorted(
+                            source_id
+                            for source_id, role in roles_by_source.items()
+                            if role in analysis.required_roles
+                        )
+                    ),
+                    supporting_source_ids=tuple(
+                        sorted(
+                            source_id
+                            for source_id, role in roles_by_source.items()
+                            if role in analysis.supporting_roles
+                        )
+                    ),
+                    minimum_observations=analysis.minimum_observations,
+                    date_range_required=analysis.date_range_required,
+                    empty_population_allowed=analysis.empty_population_allowed,
                 )
+                for analysis in declaration.analyses
+            )
+            source_domains = sorted(
+                {_source_domain(role) for role in required_roles}, key=lambda item: item.value
+            ) or [domain]
             check = PlannedCheck(
-                check_id=f"CHECK-{definition.suffix}",
+                check_id=declaration.check_id,
                 domain=domain,
-                title=definition.title,
+                title=declaration.title,
                 playbook=registration.skill.name,
-                playbook_version=f"1.0+{policy_fingerprint[:12]}",
-                required_source_domains=list(definition.required),
+                playbook_version=f"2.0+{policy_fingerprint[:12]}",
+                required_source_domains=source_domains,
                 source_ids=matched,
-                analysis_names=list(analysis_names),
-                analysis_requirements=tuple(
-                    AnalysisRequirement(
-                        name=name,
-                        required_source_ids=tuple(
-                            sorted(
-                                source.source_id
-                                for source in manifest.sources
-                                if (
-                                    risk_metrics_source_role(source.column_names)
-                                    in definition.analysis_roles.get(name, ())
-                                    if definition.analysis_roles
-                                    else any(
-                                        role in source.candidate_domains
-                                        for role in definition.required
-                                    )
-                                )
-                            )
-                        ),
-                        minimum_observations=(
-                            1 if definition.analysis_roles is _RISK_ANALYSIS_ROLES else 0
-                        ),
-                        date_range_required=definition.analysis_roles is _RISK_ANALYSIS_ROLES,
-                    )
-                    for name in analysis_names
-                ),
+                analysis_requirements=requirements,
                 applicability=applicability,
                 applicability_reason=reason,
                 completion_criteria=[
-                    "All declared deterministic analyses are recorded with population, result, evidence, and limitations."
+                    "Every declared analysis satisfies its source and population contract."
                 ],
                 policy_fingerprint=policy_fingerprint,
             )

@@ -68,7 +68,13 @@ def legacy_context(tmp_path: Path) -> ToolContext:
 def _legacy_results(ctx: ToolContext) -> list[object]:
     definition = next(skill for skill in discover_skills() if skill.domain is SpecialistDomain.PNL)
     runner = load_analysis_runner(definition)
-    results = runner(ctx, [ATTRIBUTION_PATH])
+    names = tuple(
+        analysis.name
+        for check in definition.checks
+        for analysis in check.analyses
+        if check.implemented
+    )
+    results = runner(ctx, [ATTRIBUTION_PATH], analysis_names=names)
     return [result for result in results if result.name in _LEGACY_NAMES]
 
 

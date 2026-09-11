@@ -1,0 +1,9 @@
+checks:
+  - check_id: CHECK-RISK_COMMENTARY
+    title: Risk commentary review
+    analyses:
+      - {name: commentary_extract_population, required_roles: [risk_commentary], population_rule_id: commentary-records, prerequisite_rule_id: readable-extracts}
+      - {name: commentary_validation_gaps, required_roles: [risk_commentary], population_rule_id: commentary-records, prerequisite_rule_id: parsed-commentary}
+      - {name: commentary_internal_consistency, required_roles: [risk_commentary], population_rule_id: commentary-records, prerequisite_rule_id: parsed-commentary}
+      - {name: commentary_repeated_explanations, required_roles: [risk_commentary], population_rule_id: commentary-records, prerequisite_rule_id: parsed-commentary}
+      - {name: commentary_normalized_reassurance_claims, required_roles: [risk_commentary], population_rule_id: commentary-records, prerequisite_rule_id: parsed-commentary}

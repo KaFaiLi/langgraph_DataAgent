@@ -19,7 +19,9 @@ from .sources import _excess_rows, _input_contract, _load_sources, _sgmr_rows
 from .workflow import _excess_workflow
 
 
-def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseModel]:
+def run_analysis(
+    ctx: ToolContext, source_paths: list[str], *, analysis_names: tuple[str, ...]
+) -> Sequence[BaseModel]:
     """Run the complete deterministic finalized risk-metrics analysis battery."""
     tables, load_issues = _load_sources(ctx, source_paths)
     sgmr, sgmr_issues = _sgmr_rows(tables)
@@ -106,4 +108,8 @@ def run_analysis(ctx: ToolContext, source_paths: list[str]) -> Sequence[BaseMode
                 }
             )
         )
-    return enriched
+    available = {result.name for result in enriched}
+    unknown = set(analysis_names) - available
+    if unknown:
+        raise ValueError(f"unknown risk-metrics analyses requested: {sorted(unknown)}")
+    return [result for result in enriched if result.name in analysis_names]

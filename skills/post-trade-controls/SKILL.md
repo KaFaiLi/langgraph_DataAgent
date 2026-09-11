@@ -9,6 +9,7 @@ metadata:
   report_id: CONTROLS
   label: Post-trade Controls
   analysis_entrypoint: scripts/analysis.py:run_analysis
+  checks_file: references/checks.yaml
 ---
 
 # Post-trade Controls Review

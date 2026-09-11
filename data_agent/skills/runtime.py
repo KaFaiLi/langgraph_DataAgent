@@ -25,6 +25,12 @@ def build_skill_graph(
         domain_label=definition.label,
         policy_text=definition.verifier_policy,
         analyses_runner=load_analysis_runner(definition),
+        analysis_names=tuple(
+            analysis.name
+            for check in definition.checks
+            if check.implemented
+            for analysis in check.analyses
+        ),
         research_guidance=definition.analyst_guidance,
     )
     runtime = SpecialistRuntime(
