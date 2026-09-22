@@ -16,6 +16,7 @@ from langgraph.graph.state import CompiledStateGraph
 
 from data_agent.config import get_settings
 from data_agent.review.application.run_bundle import (
+    RunBundleError,
     load_completed_run,
     load_resume_context,
     write_run_context,
@@ -109,13 +110,23 @@ class ReviewService:
         context = self._read_json(root / "run_context.json")
         run_id = str(context.get("run_id") or root.name)
         if completed.is_file():
-            manifest = self._read_json(completed)
             trace_path, last_event_at = self._trace_status(root)
+            try:
+                bundle = load_completed_run(root)
+            except RunBundleError as exc:
+                return ReviewRunStatus(
+                    status=ReviewStatus.FAILED,
+                    run_id=run_id,
+                    output_dir=root,
+                    failure_reason=exc.code,
+                    trace_path=trace_path,
+                    last_event_at=last_event_at,
+                )
             return ReviewRunStatus(
                 status=ReviewStatus.COMPLETED,
-                run_id=str(manifest.get("run_id") or run_id),
+                run_id=bundle.run.run_id,
                 output_dir=root,
-                completed_specialists=self._completed_specialists(root),
+                completed_specialists=[d.value for d in bundle.specialist_reports],
                 trace_path=trace_path,
                 last_event_at=last_event_at,
             )

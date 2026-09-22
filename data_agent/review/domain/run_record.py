@@ -60,6 +60,10 @@ class ReviewRecord(BaseModel):
     child_runs: dict[str, dict] = Field(default_factory=dict)
     lead_state: dict = Field(default_factory=dict)
     lead_history: list[dict] = Field(default_factory=list)
+    delegations: dict[str, dict] = Field(default_factory=dict)
+    budget_limits: dict[str, float] = Field(default_factory=dict)
+    budget_used: dict[str, float] = Field(default_factory=dict)
+    invocation: dict = Field(default_factory=dict)
     tool_calls: int = 0
     max_tool_calls: int = 400
     max_verifier_rounds: int = Field(default=2, ge=1, le=2)

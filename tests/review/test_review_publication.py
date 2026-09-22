@@ -133,8 +133,16 @@ def test_completed_bundle_is_compatible_sealed_and_idempotent(ready):
     assert capabilities.publish() == result
     assert not list(access.store.output_dir.glob(".bundle-*"))
     assert access.store.read().status == "completed"
+    from data_agent.review.agent_service import AgentReviewService
+
+    status = AgentReviewService().status(access.store.output_dir)
+    assert status.schema_version == 2 and status.status == "completed"
+    assert status.unresolved_items > 0
     load_sealed_bundle(path, result["seal"])
     (path / "final_findings.md").write_text("Corrupted markdown")
+    status = AgentReviewService().status(access.store.output_dir)
+    assert status.status == "failed" and status.failure_reason == "bundle_integrity_invalid"
+    assert AgentReviewService().status(path).status == "failed"
     with pytest.raises(RuntimeError, match="hash changed"):
         capabilities.publish()
 
@@ -228,3 +236,37 @@ def test_each_derived_finding_must_contribute_its_own_evidence(ready):
     report.key_findings[0].derived_from.append("RISK-F2")
     blockers = validate_final_report(capabilities._request(record, reports, []), report)
     assert any("RISK-F2 requires its own copied evidence" in b for b in blockers)
+
+
+@pytest.mark.asyncio
+async def test_resume_adopts_atomic_bundle_after_crash_before_completion_record(ready):
+    from data_agent.review.agent_service import AgentReviewService
+
+    access, *_ = ready
+    capabilities = PublicationCapabilities(access)
+    capabilities.prepare(_lead(ready))
+    capabilities.apply(_verify(ready))
+    receipt = capabilities.publish()
+
+    def before_commit(record):
+        record.status = "interrupted"
+        record.artifacts = {}
+
+    access.store.update(before_commit)
+    service = AgentReviewService()
+    result = await service.resume(access.store.output_dir)
+    assert result.status == "completed" and str(result.bundle_path) == receipt["bundle_path"]
+    assert access.store.read().artifacts["bundle_seal"] == receipt["seal"]
+    assert (await service.resume(access.store.output_dir)).model_dump() == result.model_dump()
+
+
+@pytest.mark.asyncio
+async def test_resume_rejects_partial_existing_bundle_without_executing_model(ready):
+    from data_agent.review.agent_service import AgentReviewService
+
+    access, *_ = ready
+    target = access.store.output_dir / "bundle"
+    target.mkdir()
+    (target / "run_manifest.json").write_text('{"status":"completed"}')
+    result = await AgentReviewService().resume(access.store.output_dir)
+    assert result.status == "failed" and result.failure_reason == "bundle_integrity_invalid"

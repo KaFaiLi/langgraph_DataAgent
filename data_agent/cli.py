@@ -28,16 +28,41 @@ def _console_sink(mode: TraceMode, *, review: bool = False) -> ConsoleTraceSink:
 
 
 async def _chat_once(message: str, trace_mode: TraceMode) -> None:
+    settings = get_settings()
+    if settings.review_run_id and not settings.review_assignment_id:
+        from data_agent.review.agent_service import AgentReviewService
+
+        root = (
+            Path(settings.review_output_dir)
+            if settings.review_output_dir
+            else (settings.review_workspace_path / "runs" / settings.review_run_id)
+        )
+        result = await AgentReviewService(settings, trace_sinks=[_console_sink(trace_mode)]).resume(
+            root, message=message
+        )
+        if result.message:
+            typer.echo(result.message)
+        _json(result.model_dump(exclude={"message", "final_report", "specialist_reports"}))
+        if result.status == "failed":
+            raise typer.Exit(1)
+        return
     bundle = await build_agent()
     typer.echo(await bundle.ask(message, trace_sinks=[_console_sink(trace_mode)]))
 
 
 async def _chat_repl(trace_mode: TraceMode) -> None:
-    bundle = await build_agent()
-    typer.echo(
-        f"Connected. {len(bundle.mcp_tools)} MCP tool(s), "
-        f"{len(bundle.skills)} skill(s). Type 'exit' to quit.\n"
-    )
+    settings = get_settings()
+    durable = bool(settings.review_run_id and not settings.review_assignment_id)
+    bundle = None if durable else await build_agent()
+    if durable:
+        typer.echo(
+            f"Connected to checkpointed review {settings.review_run_id}. Type 'exit' to quit.\n"
+        )
+    else:
+        typer.echo(
+            f"Connected. {len(bundle.mcp_tools)} MCP tool(s), "
+            f"{len(bundle.skills)} skill(s). Type 'exit' to quit.\n"
+        )
     while True:
         try:
             message = input("you> ").strip()
@@ -48,8 +73,11 @@ async def _chat_repl(trace_mode: TraceMode) -> None:
             return
         if not message:
             continue
-        answer = await bundle.ask(message, trace_sinks=[_console_sink(trace_mode)])
-        typer.echo(f"agent> {answer}\n")
+        if durable:
+            await _chat_once(message, trace_mode)
+        else:
+            answer = await bundle.ask(message, trace_sinks=[_console_sink(trace_mode)])
+            typer.echo(f"agent> {answer}\n")
 
 
 @app.command("chat")

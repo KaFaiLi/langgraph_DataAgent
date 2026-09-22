@@ -165,6 +165,7 @@ class ReviewRoleAdapter:
                 self.run_id,
                 assignment_id,
                 trace_context={"agent_id": child_id, "role": spec.name, "finding_id": finding_id},
+                output_dir=self.workspace.output_dir,
             )
             tools = tuple(t for t in build_review_run_tools(scoped) if t.name in spec.tool_names)
             selected_skills = (assignment.skill_name,) if spec.skill_names else ()
@@ -338,6 +339,7 @@ class ReviewRoleAdapter:
                     raise ValueError("lead draft changed during independent verification")
                 record.role_results[reference] = value
                 record.child_runs[child_id] = {
+                    **record.child_runs.get(child_id, {}),
                     "role": spec.name,
                     "status": "completed",
                     "result_ref": reference,

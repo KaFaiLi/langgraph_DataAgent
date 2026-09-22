@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastmcp import FastMCP
 
 from data_agent.config import Settings
@@ -20,6 +22,7 @@ def register(mcp: FastMCP, settings: Settings) -> None:
         definitions,
         settings.review_run_id or None,
         settings.review_assignment_id or None,
+        output_dir=Path(settings.review_output_dir) if settings.review_output_dir else None,
     )
     for tool in build_review_run_tools(workspace):
         mcp.tool(tool.func, name=tool.name, description=tool.description)

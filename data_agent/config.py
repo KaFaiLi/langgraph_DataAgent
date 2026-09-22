@@ -91,6 +91,11 @@ class Settings(BaseSettings):
     review_child_timeout_seconds: float = Field(default=240.0, gt=0)
     review_child_max_input_chars: int = Field(default=120_000, gt=0)
     review_child_max_result_chars: int = Field(default=64_000, gt=0)
+    review_max_model_calls: int = Field(default=1200, gt=0)
+    review_max_tool_calls: int = Field(default=3000, gt=0)
+    review_max_active_seconds: float = Field(default=7200.0, gt=0, allow_inf_nan=False)
+    review_root_max_iterations: int = Field(default=200, gt=0)
+    review_output_dir: str | None = None
     review_run_id: str | None = None
     review_assignment_id: str | None = None
     review_workspace: str = Field(default=".analysis_workspace/review-skills")

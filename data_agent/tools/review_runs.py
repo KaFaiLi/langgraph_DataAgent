@@ -613,7 +613,11 @@ class RunCapabilities:
             or any(len(item) > 500 for item in disclosures[:20]),
             "tool_calls": record.tool_calls,
             "max_tool_calls": record.max_tool_calls,
-            "publication_ready": False,
+            "budget_used": record.budget_used,
+            "budget_limits": record.budget_limits,
+            "run_status": record.status,
+            "last_failure": record.failures[-1] if record.failures else None,
+            "publication_ready": record.status == "completed",
         }
 
 
@@ -629,7 +633,11 @@ class ReviewWorkspace:
         assignment_id: str | None = None,
         *,
         trace_context: dict | None = None,
+        output_dir: Path | None = None,
     ) -> None:
+        if output_dir is not None and (not run_id or output_dir.is_symlink()):
+            raise ValueError("explicit output directory requires a host-bound run and no symlink")
+        self.output_dir = output_dir.resolve() if output_dir is not None else None
         self.trace_context = dict(trace_context or {})
         self.source_root, self.workspace_root = source_root.resolve(), workspace_root.resolve()
         self.definitions, self.bound_run, self.bound_assignment = definitions, run_id, assignment_id
@@ -641,8 +649,10 @@ class ReviewWorkspace:
             raise ValueError("invalid review run ID")
         if self.bound_run is not None and self.bound_run != run_id:
             raise ValueError("run is outside the host-authorized scope")
-        output = self.workspace_root / "runs" / run_id
-        if output.is_symlink() or not output.resolve().is_relative_to(self.workspace_root):
+        output = self.output_dir or self.workspace_root / "runs" / run_id
+        if output.is_symlink() or (
+            self.output_dir is None and not output.resolve().is_relative_to(self.workspace_root)
+        ):
             raise ValueError("run directory escapes the authorized workspace")
         return RunCapabilities(
             RunStore(self.source_root, output, run_id),

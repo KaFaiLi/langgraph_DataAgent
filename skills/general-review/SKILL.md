@@ -93,3 +93,13 @@ a draft reference, successful tool execution or free-form answer with published 
 If capabilities or budgets cannot meet the requested scope, describe the missing work
 and preserve pending results for continuation. Report truncation, failures, interruption
 and unresolved dependencies explicitly; never invent PASS decisions or completed artifacts.
+
+
+The host checkpoints the root conversation and persists aggregate model/tool/child
+budgets across restarts. Inspect the budget and failure fields in `review_coverage`.
+Reuse accepted role references and assignments. A replayed interrupted child returns an
+explicit failure under its original identity; choose a fresh attempt only when useful
+within the remaining budget. Publication is idempotent for the same validated state.
+A `completed` run can still contain disclosed unresolved questions; report their scope.
+An `interrupted` run has pending work and can resume. A hard budget or integrity failure
+is a machine-readable failure and cannot be cleared by claiming completion in prose.

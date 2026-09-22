@@ -19,10 +19,11 @@ if TYPE_CHECKING:
 
 async def invoke_scoped_graph(
     graph: Any,
-    state: dict[str, Any],
+    state: dict[str, Any] | None,
     *,
     config: RunnableConfig,
     context: InvocationContext,
+    checkpoint_thread_id: str | None = None,
 ) -> dict[str, Any]:
     """Run a nested graph without inheriting checkpoint or application configuration.
 
@@ -55,6 +56,10 @@ async def invoke_scoped_graph(
             "__pregel_stream": inherited["__pregel_stream"],
             "__pregel_runtime": Runtime(stream_writer=runtime.stream_writer),
         }
+    if checkpoint_thread_id is not None:
+        if context.depth != 0:
+            raise ValueError("only the root may reconnect to a host checkpoint")
+        clean["configurable"]["thread_id"] = checkpoint_thread_id
     with set_config_context(clean) as isolated_context:
         task = asyncio.create_task(
             graph.ainvoke(state, config=clean, context=context),
@@ -64,7 +69,11 @@ async def invoke_scoped_graph(
 
 
 def build_lifecycle_graph(
-    parent_agent: Any, runner: DelegationRunner, policy: DelegationPolicy
+    parent_agent: Any,
+    runner: DelegationRunner,
+    policy: DelegationPolicy,
+    *,
+    checkpoint_thread_id: str | None = None,
 ) -> Any:
     """Create fresh root scope beneath every public asynchronous entrypoint."""
 
@@ -93,7 +102,13 @@ def build_lifecycle_graph(
         }
         try:
             result = await invoke_scoped_graph(
-                parent_agent, state, config=parent_config, context=context
+                parent_agent,
+                None
+                if checkpoint_thread_id and config.get("configurable", {}).get("resume_pending")
+                else state,
+                config=parent_config,
+                context=context,
+                checkpoint_thread_id=checkpoint_thread_id,
             )
             return {"messages": result["messages"]}
         finally:
@@ -106,8 +121,8 @@ def build_lifecycle_graph(
     graph.add_node("parent", invoke_parent)
     graph.add_edge(START, "parent")
     graph.add_edge("parent", END)
-    # Host checkpointing is permitted at this outer layer. An interrupted node
-    # replays with fresh scope; child execution is deliberately not resumable.
+    # The lifetime wrapper always reconstructs its scope. A host-supplied saver
+    # checkpoints the inner root ReAct loop; children never inherit that saver.
     compiled = graph.compile(name="chat_lifecycle")
     return compiled.with_config(recursion_limit=runner.max_iterations * 3 + 2)
 

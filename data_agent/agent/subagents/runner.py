@@ -32,6 +32,7 @@ from data_agent.agent.subagents.middleware import (
     ChildCallLimitMiddleware,
 )
 from data_agent.agent.subagents.registry import SubagentRegistry, SubagentSpecError
+from data_agent.review.application.execution import PersistentBudgetMiddleware, RunBudgetExceeded
 from data_agent.skills.loader import Skill
 from data_agent.skills.tools import build_skill_tools, render_skills_overview
 
@@ -108,10 +109,12 @@ class DelegationRunner:
         graph_builder: Callable[..., Any] = build_react_graph,
         role_models: Mapping[str, Any] | None = None,
         child_adapter: Any = None,
+        execution: Any = None,
     ) -> None:
         self.model = model
         self.role_models = dict(role_models or {})
         self.child_adapter = child_adapter
+        self.execution = execution
         self.tools = tuple(tools)
         self.tool_by_name = {tool.name: tool for tool in self.tools}
         self.skills = tuple(skills)
@@ -242,8 +245,16 @@ class DelegationRunner:
         if task is not None:
             scope.track(task)
         result: DelegationResult | None = None
+        persisted_key = key or child_id
+        admitted = False
         try:
             try:
+                if self.execution is not None:
+                    child_id, cached = self.execution.begin_child(persisted_key, request, child_id)
+                    admitted = True
+                    if cached is not None:
+                        result = cached
+                        return result
                 async with asyncio.timeout(self.policy.timeout_seconds):
                     async with scope.semaphore:
                         result = await self._execute(
@@ -273,7 +284,7 @@ class DelegationRunner:
                     tool_calls=budget.tool_calls,
                 )
                 raise
-            except ChildBudgetExceeded as exc:
+            except (ChildBudgetExceeded, RunBudgetExceeded) as exc:
                 result = self._result(
                     child_id=child_id,
                     agent_name=spec.name,
@@ -294,6 +305,8 @@ class DelegationRunner:
             return result
         finally:
             if result is not None:
+                if admitted:
+                    self.execution.finish_child(persisted_key, result)
                 await scope.finish_attempt(key, result, future)  # type: ignore[arg-type]
             elif future is not None and not future.done():
                 future.cancel()
@@ -314,7 +327,9 @@ class DelegationRunner:
             self.child_adapter.prepare(spec, request, child_id) if self.child_adapter else None
         )
         graph = (
-            self._build_child_graph(spec, budget, preparation)
+            self._build_child_graph(spec, budget, preparation, child_id=child_id)
+            if self.execution is not None
+            else self._build_child_graph(spec, budget, preparation)
             if preparation
             else self._build_child_graph(spec, budget)
         )
@@ -498,6 +513,8 @@ class DelegationRunner:
         spec: SubagentSpec,
         budget: ChildCallBudget,
         preparation: ChildPreparation | None = None,
+        *,
+        child_id: str | None = None,
     ) -> Any:
         selected_tools = (
             list(preparation.tools)
@@ -539,6 +556,11 @@ class DelegationRunner:
             system_prompt=prompt,
             middleware=(
                 ChildCallLimitMiddleware(budget, structured_result=spec.result_schema is not None),
+                *(
+                    (PersistentBudgetMiddleware(self.execution, child_id),)
+                    if self.execution
+                    else ()
+                ),
             ),
             context_schema=InvocationContext,
             checkpointer=False,

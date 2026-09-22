@@ -18,6 +18,7 @@ import sys
 from collections.abc import Sequence
 from copy import copy
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -72,6 +73,7 @@ def build_mcp_client(settings: Settings | None = None) -> MultiServerMCPClient:
             "REVIEW_WORKSPACE": str(settings.review_workspace_path),
             "REVIEW_RUN_ID": settings.review_run_id or "",
             "REVIEW_ASSIGNMENT_ID": settings.review_assignment_id or "",
+            "REVIEW_OUTPUT_DIR": settings.review_output_dir or "",
         }
         connection: dict[str, Any] = {
             "transport": "stdio",
@@ -116,6 +118,7 @@ class AgentBundle:
     delegation_tool: BaseTool | None = None
     delegation_runner: DelegationRunner | None = None
     delegation_policy: DelegationPolicy | None = None
+    checkpoint_graph: Any = None
 
     @property
     def all_tools(self) -> list[BaseTool]:
@@ -185,6 +188,8 @@ async def build_agent(
     extra_tools: list[BaseTool] | None = None,
     subagent_specs: Sequence[SubagentSpec] | None = None,
     role_models: dict[str, BaseChatModel] | None = None,
+    checkpointer: Any = None,
+    execution: Any = None,
 ) -> AgentBundle:
     """Build the ReAct agent and return an :class:`AgentBundle`.
 
@@ -251,6 +256,7 @@ async def build_agent(
             settings.review_workspace_path,
             definitions,
             settings.review_run_id,
+            output_dir=Path(settings.review_output_dir) if settings.review_output_dir else None,
         )
         child_adapter = ReviewRoleAdapter(workspace, settings.review_run_id)
         subagent_specs = subagent_specs or review_profiles(definitions)
@@ -285,6 +291,7 @@ async def build_agent(
             max_iterations=settings.agent_max_iterations,
             role_models=role_models,
             child_adapter=child_adapter,
+            execution=execution,
         )
         delegation_tool = build_delegation_tool(runner)
         validate_tool_names([*base_tools, delegation_tool])
@@ -312,10 +319,16 @@ async def build_agent(
             tools,
             system_prompt=system_prompt,
             context_schema=InvocationContext,
-            checkpointer=False,
+            checkpointer=checkpointer if checkpointer is not None else False,
+            middleware=(execution_middleware(execution),) if execution else (),
             name="chat_parent",
         )
-        agent = build_lifecycle_graph(parent_agent, runner, policy)
+        agent = build_lifecycle_graph(
+            parent_agent,
+            runner,
+            policy,
+            checkpoint_thread_id=settings.review_run_id if checkpointer is not None else None,
+        )
     else:
         parent_agent = build_react_graph(
             model, tools, system_prompt=system_prompt, name="chat_parent"
@@ -336,4 +349,11 @@ async def build_agent(
         delegation_tool=delegation_tool,
         delegation_runner=runner,
         delegation_policy=policy,
+        checkpoint_graph=parent_agent if checkpointer is not None else None,
     )
+
+
+def execution_middleware(execution):
+    from data_agent.review.application.execution import PersistentBudgetMiddleware
+
+    return PersistentBudgetMiddleware(execution)

@@ -112,7 +112,7 @@ def build_delegation_tool(runner: Any) -> BaseTool:
             "for its bounded result. Use independent calls for independent work."
         ),
         args_schema=_DelegationInput,
-        handle_tool_errors=True,
+        handle_tool_error=True,
     )
 
 

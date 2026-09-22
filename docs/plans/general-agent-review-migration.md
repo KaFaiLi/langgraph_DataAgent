@@ -1,6 +1,6 @@
 # General-agent review migration plan
 
-Status: in progress; M1–M6 implemented and validated.
+Status: in progress; M1–M7 implemented and validated.
 Date: 2026-09-22.
 
 ## Objective and architectural decision
@@ -45,7 +45,7 @@ and adding new document formats are separate work.
 | M4 | Support typed specialist and independent verification roles | M2, M3 | Complete |
 | M5 | Complete all specialist domains and verification parity | M4 | Complete |
 | M6 | Produce validated lead synthesis and compatible artifacts | M5 | Complete |
-| M7 | Add durable resume and reliable terminal status | M3; validates M4-M6 | Pending |
+| M7 | Add durable resume and reliable terminal status | M3; validates M4-M6 | Complete |
 | M8 | Validate packaging, parity, documentation, and entrypoint cutover | M6, M7 | Pending |
 
 ## M0 — Completed foundation and baseline
@@ -236,24 +236,24 @@ Primary sources: [agent lifecycle](../../data_agent/agent/runtime.py),
 [review service](../../data_agent/review/service.py), and
 [run bundles](../../data_agent/review/application/run_bundle.py).
 
-- [ ] Persist assignments, analysis outputs, findings, verification history, coverage,
+- [x] Persist assignments, analysis outputs, findings, verification history, coverage,
   artifact references, and cumulative budgets independently of conversation text.
-- [ ] Add root conversation checkpointing and a resume interface that reconnects the
+- [x] Add root conversation checkpointing and a resume interface that reconnects the
   agent to the authoritative run record and outstanding work.
-- [ ] Use stable task/result identities and idempotent writes so replay does not duplicate
+- [x] Use stable task/result identities and idempotent writes so replay does not duplicate
   accepted work or publish inconsistent artifacts.
-- [ ] Record failures and interrupted execution explicitly; normalize provider and tool errors.
-- [ ] Make terminal status depend on validated artifacts rather than manifest-file existence.
-- [ ] Define machine-readable failure reasons and how disclosed unresolved items affect
+- [x] Record failures and interrupted execution explicitly; normalize provider and tool errors.
+- [x] Make terminal status depend on validated artifacts rather than manifest-file existence.
+- [x] Define machine-readable failure reasons and how disclosed unresolved items affect
   completion; version public/persisted contracts if a warning status is introduced.
-- [ ] Apply bounded retries, deadlines, cancellation, and aggregate run budgets without
+- [x] Apply bounded retries, deadlines, cancellation, and aggregate run budgets without
   reinstating a stage-by-stage deterministic review coordinator.
 
 Acceptance:
 
-- [ ] A process restart resumes unfinished work with prior accepted results and budgets intact.
-- [ ] Corrupt or partially written bundles cannot report successful completion.
-- [ ] Repeated publication/resume attempts preserve stable artifact identities and valid state.
+- [x] A process restart resumes unfinished work with prior accepted results and budgets intact.
+- [x] Corrupt or partially written bundles cannot report successful completion.
+- [x] Repeated publication/resume attempts preserve stable artifact identities and valid state.
 
 ## M8 — Packaging, parity, documentation, and cutover
 
@@ -305,3 +305,5 @@ Add implementation and validation evidence here when completing each later miles
 | 2026-09-23 | M5 | Added version-bound evidence admission, independent challenge sanitization, guarded adjudication, two-round reduction, idempotent acceptance, revision invalidation, bounded omission rescue/disclosure and compatible specialist reports. All four domains run through the general ReAct host; deterministic tables/overviews match direct trusted scripts and composite PnL owns its three inputs. Paginated gates/omission audits and candidate-disposition receipts expose actual coverage. One bounded schema repair retains independent research and closes further research access. `uv run pytest -q`: 438 passed; lint and all changed Python format checks passed. Live M5-LIVE reviewed six synthetic sources and stored 13 pending findings with all four specialist role references; malformed risk evidence references prompted a schema-description fix and successful peer retry. Live M3-LIVE applied guarded verification, exhausted revisions to explicit unresolved outcomes, and constructed report RISK with two unresolved findings, history and seven disclosures. A fresh PnL verification and evidence pagination CLI check also completed. Logs: `/tmp/data-agent-m5-*-cli.log`; artifacts remain local and untracked. |
 
 | 2026-09-23 | M6 | Extracted pure final validation and bounded semantic revision rules; added version-bound lead roles, cross-report analysis, strict derivation/evidence/severity gates, and atomic compatible bundle publication with an integrity seal. Publication, revision, tampering, staging failure and same-domain identity tests pass; existing consumers reopen the live bundle. `uv run pytest -q`: 447 passed; lint and all changed Python format checks passed. Live CLI independently verified and published `/tmp/data-agent-m3-results/runs/M3-LIVE/bundle`, retaining two unresolved specialist findings and 17 disclosures without promoting unsupported conclusions. The live attempt exposed and fixed a missing lead dataset reference and misspelled skill-tool error handling. Logs: `/tmp/data-agent-m6-*-cli.log`. |
+
+| 2026-09-23 | M7 | Added checkpointed root ReAct execution, a process lease, persisted aggregate dispatch/time budgets, stable delegation replay, accepted-role recovery, machine-readable interruption/failure status and validated completion. Bound review chat uses the durable runtime; legacy status now validates complete bundles too. `uv run pytest -q`: 456 passed; lint and changed-file format checks passed. Restart, cancellation, aggregate exhaustion, source changes, malformed/partial bundles and atomic-rename recovery are tested. Two real CLI processes resumed M5-LIVE: PNL-F2 reached its terminal unresolved disposition, then the second process recovered its conversation/result without repeating children (calls 19→25 model, 20→26 tool, child attempts stayed 2). Logs: `/tmp/data-agent-m7-first-cli.log` and `/tmp/data-agent-m7-restart-cli.log`. |

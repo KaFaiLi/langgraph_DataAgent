@@ -277,5 +277,5 @@ def build_research_tools(
         pearson_correlation,
     ]
     return [
-        StructuredTool.from_function(function, handle_tool_errors=True) for function in functions
+        StructuredTool.from_function(function, handle_tool_error=False) for function in functions
     ]
