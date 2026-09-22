@@ -31,7 +31,6 @@ def test_capability_imports_do_not_import_workflows_or_discover_skills():
 import sys
 import data_agent.tools.review_operations
 import data_agent.skills.registry as registry
-import data_agent.skills.runtime
 assert registry._build_registry.cache_info().currsize == 0
 assert registry._build_source_domain_owners.cache_info().currsize == 0
 assert "data_agent.review.service" not in sys.modules

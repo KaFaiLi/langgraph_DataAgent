@@ -31,7 +31,7 @@ uv run data-agent review trace /absolute/path/to/review-run --tail 30
 ```
 
 Review commands enable typed specialist, challenger, adjudicator and lead peers. They use
-`AgentReviewService`, not the legacy controlled graphs. A completed run returns
+`AgentReviewService` and the shared review capabilities. A completed run returns
 `bundle_path`, normally `<output>/bundle`, containing the compatible reviewed JSON/Markdown,
 overviews, verification history and manifest. Give that path to reviewed-output consumers
 such as risk-ppt. Unresolved questions remain explicit; completion does not mean all
@@ -49,8 +49,9 @@ A root conversation checkpoint and authoritative run record persist results acro
 process restarts. Do not edit sources midway through a run; integrity failures require
 a new review. Repeated resume of a completed run validates and reopens its bundle.
 Legacy completed bundles remain readable; legacy graph checkpoints must be rerun through
-the new entrypoint. The old service/graphs remain available only for regression and
-explicit legacy integrations.
+the current entrypoint. The legacy service, graph builders and skill graph adapters
+have been removed. Python callers use async `AgentReviewService.start()`/`resume()`
+and synchronous `status()`; results use `AgentReviewResult` (schema version 2).
 
 ## Installed use and configuration
 

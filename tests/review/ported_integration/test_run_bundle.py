@@ -3,20 +3,15 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
-from langgraph.checkpoint.sqlite import SqliteSaver
 
-from data_agent.review import ReviewService, ReviewStatus
+from data_agent.review import AgentReviewService
 from data_agent.review.application.run_bundle import (
     RunBundleError,
     load_completed_run,
-    load_resume_context,
-    load_run_context,
-    write_run_context,
 )
 from data_agent.review.domain.desk_context import DeskContext
 from data_agent.review.domain.domains import SpecialistDomain
@@ -207,105 +202,8 @@ def test_completed_bundle_rejects_task_source_and_approved_evidence_mismatches(
         load_completed_run(run_dir)
 
 
-def test_run_context_round_trip_is_atomic_and_versioned(tmp_path: Path) -> None:
-    source = tmp_path / "source"
-    source.mkdir()
-    run_dir = tmp_path / "run"
-    desk = DeskContext(
-        desk_name="Desk",
-        business_description="",
-        review_start=date(2025, 1, 1),
-        review_end=date(2025, 1, 31),
-    )
-    written = write_run_context(
-        run_dir,
-        run_id="RUN-1",
-        source_root=source,
-        desk_template=desk,
-        review_period=DateRange(start=desk.review_start, end=desk.review_end),
-    )
-
-    assert load_run_context(run_dir) == written
-    assert not list(run_dir.glob(".run_context.json.*.tmp"))
-
-    raw = json.loads((run_dir / "run_context.json").read_text(encoding="utf-8"))
-    raw["schema_version"] = 2
-    (run_dir / "run_context.json").write_text(json.dumps(raw), encoding="utf-8")
-    with pytest.raises(RunBundleError, match="artifact_invalid_schema"):
-        load_run_context(run_dir)
-
-
-def test_interrupted_resume_requires_context_and_matching_checkpoint_thread(
-    tmp_path: Path,
-) -> None:
-    run_dir = tmp_path / "run"
-    run_dir.mkdir()
-    with pytest.raises(RunBundleError, match="run_context_missing"):
-        load_resume_context(run_dir)
-
-    source = tmp_path / "source"
-    source.mkdir()
-    desk = DeskContext(
-        desk_name="Desk",
-        business_description="",
-        review_start=date(2025, 1, 1),
-        review_end=date(2025, 1, 31),
-    )
-    write_run_context(
-        run_dir,
-        run_id="RUN-1",
-        source_root=source,
-        desk_template=desk,
-        review_period=DateRange(start=desk.review_start, end=desk.review_end),
-    )
-    with sqlite3.connect(run_dir / "checkpoints.sqlite") as connection:
-        connection.execute("CREATE TABLE checkpoints (thread_id TEXT NOT NULL)")
-        connection.execute("INSERT INTO checkpoints (thread_id) VALUES ('OTHER')")
-    with pytest.raises(RunBundleError, match="checkpoint_thread_mismatch"):
-        load_resume_context(run_dir)
-
-
-def test_interrupted_resume_rejects_checkpoint_state_that_disagrees_with_context(
-    tmp_path: Path,
-) -> None:
-    run_dir = tmp_path / "run"
-    source = tmp_path / "source"
-    source.mkdir()
-    desk = DeskContext(
-        desk_name="Desk",
-        business_description="",
-        review_start=date(2025, 1, 1),
-        review_end=date(2025, 1, 31),
-    )
-    context = write_run_context(
-        run_dir,
-        run_id="RUN-1",
-        source_root=source,
-        desk_template=desk,
-        review_period=DateRange(start=desk.review_start, end=desk.review_end),
-    )
-    with SqliteSaver.from_conn_string(str(run_dir / "checkpoints.sqlite")) as saver:
-        saver.put(
-            {"configurable": {"thread_id": "RUN-1", "checkpoint_ns": ""}},
-            {
-                "v": 1,
-                "id": "checkpoint-1",
-                "ts": datetime.now(UTC).isoformat(),
-                "channel_values": {
-                    "run_id": "OTHER-RUN",
-                    "source_root": context.source_root,
-                    "output_dir": context.output_dir,
-                },
-            },
-            {"source": "input", "step": 0, "writes": {}},
-            {},
-        )
-
-    with pytest.raises(RunBundleError, match="checkpoint_context_mismatch"):
-        load_resume_context(run_dir)
-
-
-def test_completed_resume_uses_validated_bundle_without_a_checkpoint_or_model_call(
+@pytest.mark.asyncio
+async def test_completed_resume_uses_validated_bundle_without_a_checkpoint_or_model_call(
     tmp_path: Path,
 ) -> None:
     run_dir = tmp_path / "relocated-legacy-completed"
@@ -314,7 +212,7 @@ def test_completed_resume_uses_validated_bundle_without_a_checkpoint_or_model_ca
     def forbidden_provider(*_args: object, **_kwargs: object) -> object:
         raise AssertionError("completed resume must not invoke a model")
 
-    result = ReviewService(llm_provider=forbidden_provider).resume(run_dir)
+    result = await AgentReviewService(agent_builder=forbidden_provider).resume(run_dir)
 
-    assert result.status is ReviewStatus.COMPLETED
+    assert result.status == "completed"
     assert result.run_id == "ARCHIVED-RUN"

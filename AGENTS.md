@@ -8,9 +8,9 @@ Production code lives in `data_agent/`. Keep conversational ReAct behavior in
 belong in `data_agent/tools` and shared skill loading/registration in `data_agent/skills`;
 do not recreate private tool or skill packages under callers. The canonical review package is `data_agent/review`; the top-level `review/` package
 has been retired. `AgentReviewService` hosts model-directed ReAct reviews through shared
-capabilities. Never invoke `ReviewService`, `build_parent_graph`, or
-`build_specialist_graph` from the new path; those implementations remain regression
-references for existing callers/tests. Domain playbooks and trusted deterministic entrypoints live in
+capabilities. Legacy `ReviewService`, graph builders and graph adapters have been
+removed; do not reintroduce a second review coordinator. Completed legacy bundles
+remain readable through the validated archive loader. Domain playbooks and trusted deterministic entrypoints live in
 top-level `skills/<kebab-case-name>/`, packaged as `data_agent/_bundled_skills` in wheels.
 Use host-configured `SKILLS_DIR` consistently; model arguments cannot select executable code. Tests mirror the code under `tests/`, with
 review-specific suites in `tests/review/`. Treat `evals/` as controlled evaluation

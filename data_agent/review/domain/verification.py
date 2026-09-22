@@ -1,9 +1,8 @@
 """Contracts shared by deterministic and adversarial verification.
 
-The review graph stores these models as JSON-friendly Pydantic data.  The
-models intentionally describe *what* was checked and decided; source access,
-LLM invocation, and graph routing live in the verification/orchestration
-packages respectively.
+These models record what was checked and decided as JSON-compatible data.
+Shared tools enforce source access and validation; the general agent executes
+independent reviewer roles.
 """
 
 from __future__ import annotations

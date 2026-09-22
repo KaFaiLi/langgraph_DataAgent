@@ -5,12 +5,6 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from functools import cache
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from langgraph.graph.state import CompiledStateGraph
-
-    from data_agent.review.llm import ReviewLLMProvider
 
 from data_agent.review.domain.domains import (
     SOURCE_DOMAINS,
@@ -97,12 +91,3 @@ def get_specialist(domain: SpecialistDomain) -> SpecialistRegistration:
 
 def specialist_domain_for(source_domain: SpecialistDomain) -> SpecialistDomain:
     return SOURCE_DOMAIN_OWNERS[source_domain]
-
-
-def build_specialist(
-    domain: SpecialistDomain,
-    llm_provider: ReviewLLMProvider | None = None,
-) -> CompiledStateGraph:
-    from data_agent.skills.runtime import build_skill_graph
-
-    return build_skill_graph(SPECIALISTS[domain].skill, llm_provider=llm_provider)

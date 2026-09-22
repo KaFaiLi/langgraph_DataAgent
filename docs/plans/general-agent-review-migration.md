@@ -1,5 +1,9 @@
 # General-agent review migration plan
 
+> Follow-up (2026-09-23): the retained legacy graph implementations, service and adapters
+> have now been removed. Completed legacy bundles remain readable. See
+> `docs/validation/legacy-review-graph-removal.md` for cleanup validation.
+
 Status: complete; M1–M8 implemented and validated.
 Date: 2026-09-23.
 

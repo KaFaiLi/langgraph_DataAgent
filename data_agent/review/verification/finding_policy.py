@@ -221,7 +221,7 @@ def normalize_findings(
     report_id: str,
     previous: list[Finding] | None = None,
 ) -> tuple[list[Finding], set[str]]:
-    """Apply all deterministic finding policy through one orchestration seam."""
+    """Apply shared deterministic normalization and revision-retention policy."""
     normalized_analyses: list[dict[str, object]] = []
     for raw_analysis in analyses:
         analysis = dict(raw_analysis)

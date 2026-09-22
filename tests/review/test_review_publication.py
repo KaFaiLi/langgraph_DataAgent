@@ -296,3 +296,44 @@ def test_large_lead_verification_context_retains_disclosures_without_duplicate_r
     assert len(prepared.prompt) < 120_000
     # The former duplicated final report overflowed the same bounded contract.
     assert len(prepared.prompt) + len(json.dumps(payload["final_report"])) > 120_000
+
+
+@pytest.mark.parametrize("decision", ["reject", "unresolved"])
+def test_lead_rejection_never_accepts_or_publishes(ready, decision):
+    access, *_ = ready
+    capabilities = PublicationCapabilities(access)
+    capabilities.prepare(_lead(ready))
+    result = capabilities.apply(_verify(ready, decision=decision))
+    assert result["status"] == "failed" and not result["accepted"]
+    assert not capabilities.publish()["published"]
+    assert not (access.store.output_dir / "bundle").exists()
+
+
+def test_report_wide_high_objection_fails_closed_after_revision(ready):
+    access, *_ = ready
+    capabilities = PublicationCapabilities(access)
+    challenge = {
+        "challenge_type": "unsupported_misconduct",
+        "materiality": "high",
+        "explanation": "Report-wide misconduct language lacks verified support.",
+    }
+    capabilities.prepare(_lead(ready))
+    first = capabilities.apply(_verify(ready, challenges=[challenge]))
+    assert first["status"] == "revise"
+    capabilities.prepare(_lead(ready, child="2"))
+    last = capabilities.apply(_verify(ready, challenges=[challenge], child="2"))
+    assert last["status"] == "failed" and not last["accepted"]
+    assert any("ambiguously targeted" in reason for reason in last["blockers"])
+    assert not capabilities.publish()["published"]
+
+
+def test_lead_revision_retains_json_safe_history_and_accepts_independent_pass(ready):
+    access, *_ = ready
+    capabilities = PublicationCapabilities(access)
+    capabilities.prepare(_lead(ready))
+    assert capabilities.apply(_verify(ready, decision="revise"))["status"] == "revise"
+    capabilities.prepare(_lead(ready, child="2"))
+    assert capabilities.apply(_verify(ready, child="2"))["accepted"]
+    history = json.loads(access.store.read().model_dump_json())["lead_history"]
+    assert [entry["decision"] for entry in history] == ["revise", "pass"]
+    assert capabilities.publish()["published"]

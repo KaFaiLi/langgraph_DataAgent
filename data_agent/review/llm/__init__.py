@@ -1,4 +1,4 @@
-"""Cost-tiered LLM providers for the controlled review workflow."""
+"""Cost-tiered LLM providers for the general-agent review roles."""
 
 from __future__ import annotations
 
@@ -12,11 +12,6 @@ from pydantic import BaseModel
 from data_agent.config import Settings, get_settings
 from data_agent.llm import get_chat_model
 from data_agent.review.llm.models import ModelTier
-from data_agent.review.llm.runner import (
-    AgentCapabilityError,
-    run_bounded_agent,
-    run_bounded_structured_agent,
-)
 
 
 class ReviewLLMProvider(Protocol):
@@ -171,17 +166,10 @@ def _json_mode_structured(model: Runnable[Any, Any], schema: type[BaseModel]) ->
     return RunnableLambda(add_schema_instruction) | runnable
 
 
-DEFAULT_LLM_PROVIDER: ReviewLLMProvider = ConfiguredReviewProvider()
-
-
 __all__ = [
-    "DEFAULT_LLM_PROVIDER",
-    "AgentCapabilityError",
     "ConfiguredReviewProvider",
     "DeepSeekReviewProvider",
     "ModelTier",
     "ReviewLLMProvider",
     "SocGenAIReviewProvider",
-    "run_bounded_agent",
-    "run_bounded_structured_agent",
 ]

@@ -1,16 +1,13 @@
-"""Validated, raw-source-free boundaries for completed and resumable runs."""
+"""Validated, raw-source-free boundaries for completed review archives."""
 
 from __future__ import annotations
 
 import json
-import os
-import sqlite3
 from dataclasses import dataclass
 from dataclasses import field as dataclass_field
 from pathlib import Path
 from typing import Any
 
-from langgraph.checkpoint.sqlite import SqliteSaver
 from pydantic import ValidationError
 
 from data_agent.review.domain.desk_context import DeskContext
@@ -18,15 +15,13 @@ from data_agent.review.domain.domains import SpecialistDomain
 from data_agent.review.domain.evidence import EvidenceReference
 from data_agent.review.domain.finding import Finding
 from data_agent.review.domain.reports import FinalReport, SpecialistReport
-from data_agent.review.domain.review import ReviewRun, RunContext, RunStatus
+from data_agent.review.domain.review import ReviewRun, RunStatus
 from data_agent.review.domain.source import DateRange, SourceManifest
 from data_agent.review.domain.verification import OmissionAuditResult
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 
-RUN_CONTEXT_FILE = "run_context.json"
 RUN_MANIFEST_FILE = "run_manifest.json"
 CATALOG_FILE = "catalog.json"
-CHECKPOINT_DB_FILE = "checkpoints.sqlite"
 LEAD_VERIFICATION_FILE = "lead_verification.json"
 
 
@@ -403,126 +398,3 @@ def load_completed_run(run_dir: str | Path) -> CompletedRunBundle:
         research_trace_artifacts=research_traces,
         adversarial_trace_artifacts=adversarial_traces,
     )
-
-
-def write_run_context(
-    output_dir: str | Path,
-    *,
-    run_id: str,
-    source_root: str | Path,
-    desk_template: DeskContext,
-    review_period: Any,
-) -> RunContext:
-    """Atomically persist authoritative fresh-run inputs before graph invocation."""
-    root = Path(output_dir).resolve()
-    root.mkdir(parents=True, exist_ok=True)
-    context = RunContext(
-        run_id=run_id,
-        source_root=str(Path(source_root).resolve()),
-        output_dir=str(root),
-        desk_template=desk_template,
-        review_period=review_period,
-    )
-    target = root / RUN_CONTEXT_FILE
-    temporary = target.with_name(f".{target.name}.{os.getpid()}.tmp")
-    try:
-        temporary.write_text(context.model_dump_json(indent=2), encoding="utf-8")
-        os.replace(temporary, target)
-    except OSError as exc:
-        raise RunBundleError(
-            "run_context_write_failed", f"cannot write {RUN_CONTEXT_FILE}: {exc}"
-        ) from exc
-    finally:
-        if temporary.exists():
-            temporary.unlink(missing_ok=True)
-    return context
-
-
-def _checkpoint_state(db_path: Path, context: RunContext) -> None:
-    try:
-        with sqlite3.connect(str(db_path)) as connection:
-            rows = connection.execute("SELECT DISTINCT thread_id FROM checkpoints").fetchall()
-    except sqlite3.Error as exc:
-        raise RunBundleError(
-            "checkpoint_invalid", f"cannot inspect checkpoint database: {exc}"
-        ) from exc
-    thread_ids = [str(row[0]) for row in rows]
-    if thread_ids != [context.run_id]:
-        raise RunBundleError(
-            "checkpoint_thread_mismatch",
-            f"expected exactly thread {context.run_id!r}; found {sorted(thread_ids)!r}",
-        )
-    try:
-        with SqliteSaver.from_conn_string(str(db_path)) as checkpointer:
-            checkpoint = checkpointer.get_tuple({"configurable": {"thread_id": context.run_id}})
-    except (OSError, sqlite3.Error) as exc:
-        raise RunBundleError("checkpoint_invalid", f"cannot load checkpoint state: {exc}") from exc
-    if checkpoint is None:
-        raise RunBundleError(
-            "checkpoint_missing_state", "checkpoint database has no resumable state"
-        )
-    state = checkpoint.checkpoint.get("channel_values", {})
-    if not isinstance(state, dict):
-        raise RunBundleError("checkpoint_state_invalid", "checkpoint state is not a mapping")
-    expected = {
-        "run_id": context.run_id,
-        "source_root": context.source_root,
-        "output_dir": context.output_dir,
-    }
-    for field, persisted in expected.items():
-        actual = state.get(field)
-        if actual is None:
-            raise RunBundleError(
-                "checkpoint_state_invalid",
-                f"checkpoint state is missing required {field}",
-            )
-        if field in {"source_root", "output_dir"}:
-            matches = Path(str(actual)).resolve() == Path(persisted).resolve()
-        else:
-            matches = actual == persisted
-        if not matches:
-            raise RunBundleError(
-                "checkpoint_context_mismatch",
-                f"checkpoint {field} does not match persisted {RUN_CONTEXT_FILE}",
-            )
-
-
-def load_run_context(run_dir: str | Path) -> RunContext:
-    """Load persisted invocation inputs without inspecting a checkpoint database."""
-    root = _run_directory(run_dir)
-    try:
-        context_path = _artifact_path(root, RUN_CONTEXT_FILE)
-    except RunBundleError as exc:
-        if exc.code != "artifact_missing":
-            raise
-        raise RunBundleError(
-            "run_context_missing",
-            "legacy interrupted run has no run_context.json; supply the original inputs "
-            "to restart it, or start a new review",
-        ) from exc
-    context = _typed(RunContext, _read_json(context_path, RUN_CONTEXT_FILE), RUN_CONTEXT_FILE)
-    return context
-
-
-def load_resume_context(
-    run_dir: str | Path, *, checkpoint_db_name: str = CHECKPOINT_DB_FILE
-) -> RunContext:
-    """Load authoritative persisted inputs and prove the checkpoint is resumable."""
-    root = _run_directory(run_dir)
-    context = load_run_context(root)
-    if Path(context.output_dir).resolve() != root:
-        raise RunBundleError(
-            "run_context_output_mismatch",
-            "run_context.json output_dir does not identify this run directory",
-        )
-    db_path = (root / checkpoint_db_name).resolve()
-    if not db_path.is_relative_to(root):
-        raise RunBundleError(
-            "checkpoint_path_escape", "checkpoint database escapes the run directory"
-        )
-    if not db_path.is_file():
-        raise RunBundleError(
-            "checkpoint_missing", f"checkpoint database missing: {checkpoint_db_name}"
-        )
-    _checkpoint_state(db_path, context)
-    return context

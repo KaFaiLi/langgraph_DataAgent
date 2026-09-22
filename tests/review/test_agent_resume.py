@@ -185,8 +185,6 @@ def test_accepted_role_survives_crash_before_delegation_receipt(tmp_path):
 
 
 def test_legacy_failure_records_remain_resumable_and_bad_legacy_manifest_fails(run):
-    from data_agent.review.service import ReviewService
-
     access, settings = run
     access.store.update(lambda r: r.failures.append({"code": "source_tool_failed"}))
     status = AgentReviewService(settings).status(access.store.output_dir)
@@ -194,7 +192,7 @@ def test_legacy_failure_records_remain_resumable_and_bad_legacy_manifest_fails(r
     target = access.store.output_dir / "old-run"
     target.mkdir()
     (target / "run_manifest.json").write_text("not json")
-    status = ReviewService().status(target)
+    status = AgentReviewService(settings).status(target)
     assert status.status == "failed" and status.failure_reason
 
 

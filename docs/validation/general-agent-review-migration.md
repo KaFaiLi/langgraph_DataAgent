@@ -4,6 +4,10 @@ Validated on 2026-09-23. Each milestone was tested, exercised through the actual
 API/CLI, committed and pushed before the next milestone began. The implementation and
 acceptance checklist are in `docs/plans/general-agent-review-migration.md`.
 
+The results below describe the migration before legacy graph retirement. The subsequent
+cleanup and its retained/migrated coverage are recorded in
+`docs/validation/legacy-review-graph-removal.md`.
+
 ## Automated and deployment checks
 
 - Full suite: **463 tests passed**. Deterministic calculations, candidate identities,

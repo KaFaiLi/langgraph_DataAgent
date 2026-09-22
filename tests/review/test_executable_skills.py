@@ -132,17 +132,6 @@ def test_registered_entrypoint_cannot_escape(tmp_path):
 
 @pytest.mark.asyncio
 async def test_general_agent_executes_slice_without_legacy_workflow(execution, monkeypatch):
-    from data_agent.review import service
-    from data_agent.review.orchestration import graph
-    from data_agent.review.orchestration.specialist import graph as specialist_graph
-
-    def forbidden(*args, **kwargs):
-        raise AssertionError("legacy workflow invoked")
-
-    monkeypatch.setattr(service, "ReviewService", forbidden)
-    monkeypatch.setattr(graph, "build_parent_graph", forbidden)
-    monkeypatch.setattr(specialist_graph, "build_specialist_graph", forbidden)
-
     class SliceModel(_NoopModel):
         def _generate(self, messages, stop=None, run_manager=None, **kwargs):
             from langchain_core.outputs import ChatGeneration, ChatResult

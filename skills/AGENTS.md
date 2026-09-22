@@ -8,8 +8,8 @@ This file governs `skills/`. The analytical skills are `risk-metrics`, composite
 verification, revision and publication. `lead-review` owns synthesis policy and trusted
 cross-report calculations. `risk-ppt` consumes the validated completed bundle.
 The composite `pnl` skill owns PnL, income attribution, validation and adjustments.
-The legacy generic specialist graph remains a regression reference; the current review
-entrypoints must never call it or wrap it in a tool.
+The legacy specialist graphs and adapters have been removed. All analytical skills
+execute through shared capabilities exposed to the general ReAct agent.
 
 Read `risk-ppt/SKILL.md` before changing the PPT skill. It consumes completed review
 Markdown/JSON only, keeps raw risk sources out of scope, validates semantic SVGs, and

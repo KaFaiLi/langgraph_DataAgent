@@ -1,15 +1,11 @@
-"""Evidence-backed review contracts; workflow construction is explicitly opt-in."""
+"""Evidence-backed review contracts and the general-agent review service."""
 
-from data_agent.review.interface import ReviewRequest, ReviewResult, ReviewRunStatus, ReviewStatus
+from data_agent.review.interface import ReviewRequest
 
 __all__ = [
     "AgentReviewResult",
     "AgentReviewService",
     "ReviewRequest",
-    "ReviewResult",
-    "ReviewRunStatus",
-    "ReviewService",
-    "ReviewStatus",
 ]
 
 
@@ -20,8 +16,4 @@ def __getattr__(name: str):
         return {"AgentReviewService": AgentReviewService, "AgentReviewResult": AgentReviewResult}[
             name
         ]
-    if name == "ReviewService":
-        from data_agent.review.service import ReviewService
-
-        return ReviewService
     raise AttributeError(name)

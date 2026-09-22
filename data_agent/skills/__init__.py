@@ -13,7 +13,7 @@ The agent is told (in its system prompt) which skills exist and what they're
 for, then pulls the full instructions on demand via the ``load_skill`` tool.
 This "progressive disclosure" keeps the base prompt small while giving the model
 deep, task-specific know-how when it needs it. Trusted analytical validation,
-registration, and graph adaptation live in sibling modules in this package and
+and registration live in sibling modules in this package and
 are imported explicitly so general chat stays lightweight.
 """
 

@@ -1,4 +1,4 @@
-"""Logical cost roles used by the controlled review workflow."""
+"""Logical cost roles used by the general-agent review roles."""
 
 from enum import StrEnum
 

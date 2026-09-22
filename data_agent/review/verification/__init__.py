@@ -1,10 +1,4 @@
-"""Verification contracts and deterministic helpers.
-
-Provider-facing challenger and adjudicator implementations intentionally are
-not imported from this package. Keeping this namespace pure prevents callers
-that only need candidate IDs or evidence rules from importing orchestration
-runtime contracts and avoids a specialist graph import cycle.
-"""
+"""Shared verification contracts and deterministic evidence and candidate rules."""
 
 from data_agent.review.verification.candidates import (
     assign_candidate_ids,

@@ -45,16 +45,6 @@ def test_repository_lead_review_skill_is_loaded() -> None:
     assert "Do not object to an empty `key_findings` list" in definition.verifier_policy
 
 
-def test_lead_review_prompts_are_loaded_from_the_skill() -> None:
-    from data_agent.review.synthesis.lead_review import LEAD_REVIEW_SYSTEM
-    from data_agent.review.synthesis.lead_verifier import LEAD_VERIFIER_SYSTEM
-
-    definition = load_lead_review_skill()
-
-    assert LEAD_REVIEW_SYSTEM == definition.instructions
-    assert LEAD_VERIFIER_SYSTEM == definition.verifier_policy
-
-
 def test_lead_review_loader_rejects_missing_verifier_policy(tmp_path: Path) -> None:
     skills_root = tmp_path / "skills"
     skill_root = skills_root / "lead-review"

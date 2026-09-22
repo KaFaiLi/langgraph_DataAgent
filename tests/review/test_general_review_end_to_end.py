@@ -1,4 +1,4 @@
-"""Complete model-directed reviews across four domains with legacy entrypoints forbidden."""
+"""Complete model-directed reviews across four domains after retirement of legacy graph entrypoints."""
 
 from __future__ import annotations
 
@@ -24,20 +24,6 @@ from tests.review.fixtures.migration import make_migration_sources
 async def test_all_domains_publish_through_react_and_resume_without_legacy_graphs(
     tmp_path, monkeypatch, reverse
 ):
-    import data_agent.review.orchestration.graph as parent
-    import data_agent.review.orchestration.specialist.graph as specialist
-    import data_agent.review.service as legacy
-    from data_agent.skills import runtime
-
-    def forbidden(*args, **kwargs):
-        pytest.fail("new general review invoked a legacy workflow")
-
-    monkeypatch.setattr(legacy.ReviewService, "__init__", forbidden)
-    monkeypatch.setattr(parent, "build_parent_graph", forbidden)
-    monkeypatch.setattr(legacy, "build_parent_graph", forbidden)
-    monkeypatch.setattr(specialist, "build_specialist_graph", forbidden)
-    monkeypatch.setattr(runtime, "build_skill_graph", forbidden)
-
     source, output = tmp_path / "source", tmp_path / "run"
     families = make_migration_sources(source, tmp_path / "fixtures")
     definitions = {s.name: s for s in discover_skills()}

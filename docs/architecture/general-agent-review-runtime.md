@@ -3,7 +3,9 @@
 `AgentReviewService` owns execution infrastructure around the general ReAct agent.
 It does not select domains, sequence specialists, decide what to investigate, or route
 revisions. The model chooses those operations using the `general-review` playbook.
-The legacy `ReviewService` and graphs remain regression references.
+The legacy `ReviewService`, parent/specialist graphs and graph adapters have been removed.
+`data_agent/review` retains the active service, models, evidence validation, verification
+policy, reporting, persistence and cost-tier provider configuration.
 
 ## Authoritative state and restart
 
@@ -68,9 +70,11 @@ The Python API is async `AgentReviewService.start(ReviewRequest(...))` and
 `AgentReviewService.resume(path)`, with synchronous read-only `status(path)`.
 Legacy completed bundles reopen through the same validated consumer. Old graph checkpoints
 are identified as `legacy_checkpoint_unsupported`; rerun their sources through the current
-entrypoint. Legacy graph builders and `ReviewService` remain explicitly callable for
-compatibility and regression tests, but neither is imported by CLI startup or reachable
-from current review tools/roles.
+entrypoint. Legacy graph builders, `ReviewService`, `skills.runtime.build_skill_graph`,
+`skills.registry.build_specialist` and the v1 result/status contracts are no longer
+exported. The old checkpoint-resume helpers and model runners are also removed.
+Use `AgentReviewResult` for the current result/status contract. Archive reading does
+not execute or deserialize legacy graph checkpoints.
 
 Wheel distributions package `skills/` at `data_agent/_bundled_skills/`. Checkouts retain
 their editable skill tree; an explicit `SKILLS_DIR` selects one trusted deployment tree

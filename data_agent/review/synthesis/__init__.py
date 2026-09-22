@@ -1,1 +1,1 @@
-"""Lead review and verification using the configured high-cost model."""
+"""Shared report collection, validation and lead-verification policy."""
