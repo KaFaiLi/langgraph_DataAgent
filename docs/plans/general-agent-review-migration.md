@@ -1,6 +1,6 @@
 # General-agent review migration plan
 
-Status: in progress; M1 implemented and validated.
+Status: in progress; M1–M2 implemented and validated.
 Date: 2026-09-22.
 
 ## Objective and architectural decision
@@ -40,7 +40,7 @@ and adding new document formats are separate work.
 | --- | --- | --- | --- |
 | M0 | Audit the reusable foundation and record gaps | None | Complete |
 | M1 | Extract graph-independent review capabilities | M0 | Complete |
-| M2 | Make one specialist skill executable through the general agent | M1 | Pending |
+| M2 | Make one specialist skill executable through the general agent | M1 | Complete |
 | M3 | Add persistent review context, coverage, and scoped MCP access | M1; integrates M2 | Pending |
 | M4 | Support typed specialist and independent verification roles | M2, M3 | Pending |
 | M5 | Complete all specialist domains and verification parity | M4 | Pending |
@@ -106,25 +106,25 @@ Primary sources: [skill tools](../../data_agent/skills/tools.py),
 [trusted analysis loader](../../data_agent/skills/review.py), and
 [risk-metrics skill](../../skills/risk-metrics/SKILL.md).
 
-- [ ] Add a contained, bounded way to load a selected skill's dataset and policy references.
-- [ ] Expose trusted analysis execution by registered skill identity; never accept an
+- [x] Add a contained, bounded way to load a selected skill's dataset and policy references.
+- [x] Expose trusted analysis execution by registered skill identity; never accept an
   arbitrary Python module, script path, or callable from model arguments.
-- [ ] Preserve entrypoint validation, containment checks, deterministic calculations,
+- [x] Preserve entrypoint validation, containment checks, deterministic calculations,
   stable candidate IDs, evidence locators, and data overviews.
-- [ ] Return bounded result summaries and references to stored detailed results.
-- [ ] Add an overall review playbook explaining objectives, capability selection,
+- [x] Return bounded result summaries and references to stored detailed results.
+- [x] Add an overall review playbook explaining objectives, capability selection,
   required evidence, coverage obligations, uncertainty, and expected deliverables.
-- [ ] Update specialist instructions to name available tools and reference-loading
+- [x] Update specialist instructions to name available tools and reference-loading
   operations rather than assuming the old runtime has prepared their inputs.
-- [ ] Implement a first vertical slice with `risk-metrics`: load instructions and
+- [x] Implement a first vertical slice with `risk-metrics`: load instructions and
   references, execute analysis, inspect evidence, and submit a typed candidate result.
 
 Acceptance:
 
-- [ ] The general agent completes this slice without invoking a review graph.
-- [ ] Trusted analysis outputs match the existing deterministic skill on the same fixture.
-- [ ] Missing references, unknown skills, and escaped entrypoints return explicit errors.
-- [ ] Truncation remains visible and cannot be interpreted as complete population coverage.
+- [x] The general agent completes this slice without invoking a review graph.
+- [x] Trusted analysis outputs match the existing deterministic skill on the same fixture.
+- [x] Missing references, unknown skills, and escaped entrypoints return explicit errors.
+- [x] Truncation remains visible and cannot be interpreted as complete population coverage.
 
 ## M3 — Run context, coverage, and scoped MCP tools
 
@@ -297,3 +297,4 @@ Acceptance:
 Add implementation and validation evidence here when completing each later milestone.
 
 | 2026-09-22 | M1 | Extracted typed analysis, evidence, omission, cross-report and report operations; legacy adapters reuse them. Lazy registry/workflow imports verified in a fresh process. `uv run pytest -q`: 405 passed; `uv run ruff check .`: passed; all 18 changed Python files pass format checks. Live `data-agent chat` loaded risk-metrics and answered through the configured API (two HTTP 200 model calls). Fixed a pre-existing POSIX sandbox realpath recursion revealed on this host; path, process, credential and symlink restrictions pass. |
+| 2026-09-22 | M2 | Added contained paginated references, registered trusted analysis, hash-bound result storage, evidence reopening, and typed pending candidate submission; general-review playbook and four specialist tool instructions. Guarded ReAct integration invokes no legacy workflow. `uv run pytest -q`: 411 passed; lint and changed-file formatting passed. Live CLI reviewed five synthetic SGMR rows, loaded both references, ran trusted analysis, inspected candidates/overviews, reopened evidence and stored three pending findings, disclosing missing Colibris inputs. Artifacts retained locally at `/tmp/data-agent-m2-results`; no API secrets or run artifacts committed. |

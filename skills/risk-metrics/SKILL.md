@@ -21,6 +21,20 @@ Before analysis, read [references/dataset.md](references/dataset.md) for the exa
 schemas, grains, units, hierarchy, joins, and unresolved assumptions. Before verification
 or severity assignment, read [references/policy.md](references/policy.md).
 
+## General-agent tools
+
+Load these instructions with `load_skill(name="risk-metrics")`. Read both references using
+`load_skill_reference(name="risk-metrics", reference="dataset")` and `reference="policy"`;
+follow `next_offset` on partial results. Inputs are not prepared implicitly by a graph.
+Inspect the source inventory and schemas, then call
+`execute_review_analysis(skill_name="risk-metrics", source_paths=[...])` with all assigned
+paths. The host resolves the trusted entrypoint; do not supply Python modules or scripts.
+Read the stored candidates and overviews with `read_analysis_result`, follow pagination,
+and inspect cited regions with `reopen_analysis_evidence`. Submit the typed analyst draft
+with `submit_candidate_result`, retaining deterministic candidate IDs, contrary evidence
+and unresolved limitations. The submission stays pending until independent verification.
+Tool summaries, truncated references and source previews never establish full coverage.
+
 ## Review objective
 
 Determine what the supplied evidence supports about:
@@ -61,8 +75,7 @@ commentary, and control procedures require their own evidence.
 1. **Establish scope.** Classify tables from required columns, not filenames. Record each
    source, date range, row count, hierarchy, metric, unit, and unusable record. Stop
    dependent conclusions when a source family or material field is missing.
-2. **Run deterministic analysis.** Call the trusted `run_analysis` entrypoint once with
-   the guarded context and all scoped paths. Use its results as calculations and leads;
+2. **Run deterministic analysis.** Call `execute_review_analysis` for `risk-metrics` with all scoped paths. Use its results as calculations and leads;
    never recompute or override them in prose.
 3. **Build the desk risk map.** Identify the reviewed hierarchy and the portfolios and
    metrics attached to each PC. Use the most granular stable source level. Keep changes

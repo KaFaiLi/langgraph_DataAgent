@@ -6,6 +6,7 @@ from langchain_core.tools import BaseTool, StructuredTool, ToolException
 from pydantic import BaseModel, Field
 
 from data_agent.skills.loader import Skill
+from data_agent.skills.references import ReferenceRequest, read_reference
 
 
 class _LoadSkillInput(BaseModel):
@@ -65,4 +66,32 @@ def build_skill_tools(skills: list[Skill]) -> list[BaseTool]:
         ),
         handle_tool_errors=True,
     )
-    return [load_tool]
+
+    def load_skill_reference(
+        name: str, reference: str, offset: int = 0, max_chars: int = 12000
+    ) -> dict:
+        skill = by_name.get(name)
+        if skill is None:
+            raise ToolException(f"Unknown skill {name!r}")
+        try:
+            return read_reference(
+                skill,
+                ReferenceRequest(
+                    name=name,
+                    reference=reference,
+                    offset=offset,
+                    max_chars=max_chars,
+                ),
+            )
+        except (ValueError, OSError) as exc:
+            raise ToolException(str(exc)) from exc
+
+    reference_tool = StructuredTool.from_function(
+        func=load_skill_reference,
+        name="load_skill_reference",
+        args_schema=ReferenceRequest,
+        description="Read a selected skill's dataset or policy reference. Follow next_offset "
+        "to read every page; truncated output is incomplete context.",
+        handle_tool_errors=True,
+    )
+    return [load_tool, reference_tool]

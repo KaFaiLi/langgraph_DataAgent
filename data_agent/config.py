@@ -84,6 +84,14 @@ class Settings(BaseSettings):
     # --- Skills --------------------------------------------------------------
     skills_dir: str = Field(default="skills")
 
+    review_workspace: str = Field(default=".analysis_workspace/review-skills")
+
+    @property
+    def review_workspace_path(self) -> Path:
+        """Host-owned storage for trusted skill results; never selected by model arguments."""
+        path = Path(self.review_workspace)
+        return path if path.is_absolute() else REPO_ROOT / path
+
     # --- Agent ---------------------------------------------------------------
     agent_max_iterations: int = Field(
         default=10,

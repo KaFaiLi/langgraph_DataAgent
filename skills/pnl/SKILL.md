@@ -30,6 +30,20 @@ Before reviewing, read [references/dataset.md](references/dataset.md) for the ex
 schemas, grains, joins, date semantics, and unresolved unit assumptions. Read
 [references/policy.md](references/policy.md) before verifying or assigning severity.
 
+## General-agent tools
+
+Load these instructions with `load_skill(name="pnl")`. Read both references using
+`load_skill_reference(name="pnl", reference="dataset")` and `reference="policy"`;
+follow `next_offset` on partial results. Inputs are not prepared implicitly by a graph.
+Inspect the source inventory and schemas, then call
+`execute_review_analysis(skill_name="pnl", source_paths=[...])` with all assigned
+paths. The host resolves the trusted entrypoint; do not supply Python modules or scripts.
+Read the stored candidates and overviews with `read_analysis_result`, follow pagination,
+and inspect cited regions with `reopen_analysis_evidence`. Submit the typed analyst draft
+with `submit_candidate_result`, retaining deterministic candidate IDs, contrary evidence
+and unresolved limitations. The submission stays pending until independent verification.
+Tool summaries, truncated references and source previews never establish full coverage.
+
 ## Review objective
 
 Determine whether the supplied records support evidence-backed observations about:

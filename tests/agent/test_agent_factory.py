@@ -233,8 +233,12 @@ async def test_child_graph_exposes_only_named_skill() -> None:
     assert isinstance(result, DelegationResult)
     assert result.status == "completed"
     child_tools = captured["tools"]
-    assert [tool.name for tool in child_tools] == ["read_lines", "load_skill"]
-    skill_loader = child_tools[-1]
+    assert [tool.name for tool in child_tools] == [
+        "read_lines",
+        "load_skill",
+        "load_skill_reference",
+    ]
+    skill_loader = next(tool for tool in child_tools if tool.name == "load_skill")
     assert "NAMED_INSTRUCTIONS" in skill_loader.invoke({"name": "named"})
     with pytest.raises(ToolException, match="Unknown skill 'other'"):
         skill_loader.invoke({"name": "other"})

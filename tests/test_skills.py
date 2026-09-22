@@ -12,6 +12,7 @@ def test_discovers_bundled_skills():
     skills = discover_skills(REPO_ROOT / "skills")
     names = {s.name for s in skills}
     assert names == {
+        "general-review",
         "lead-review",
         "pnl",
         "post-trade-controls",
@@ -42,7 +43,7 @@ def test_skill_tool_roundtrip():
     skills = discover_skills(REPO_ROOT / "skills")
     tools = build_skill_tools(skills)
     names = {t.name for t in tools}
-    assert names == {"load_skill"}
+    assert names == {"load_skill", "load_skill_reference"}
 
     load_skill = next(t for t in tools if t.name == "load_skill")
     out = load_skill.invoke({"name": "risk-metrics"})

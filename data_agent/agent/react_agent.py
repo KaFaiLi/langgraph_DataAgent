@@ -38,6 +38,7 @@ from data_agent.logging_utils import get_logger, setup_logging
 from data_agent.skills.loader import Skill, discover_skills
 from data_agent.skills.tools import build_skill_tools, render_skills_overview
 from data_agent.tools.delegation import build_delegation_tool
+from data_agent.tools.review_skills import build_review_skill_tools
 from data_agent.tracing import ExecutionTraceHandler, TraceSink
 
 logger = get_logger(__name__)
@@ -201,6 +202,11 @@ async def build_agent(
     # 2. Skills -> tools + prompt overview.
     skills = discover_skills(settings.skills_path)
     skill_tools = build_skill_tools(skills)
+    skill_tools += build_review_skill_tools(
+        settings.source_path,
+        settings.review_workspace_path,
+        skills,
+    )
     overview = render_skills_overview(skills)
 
     # 3. Model.

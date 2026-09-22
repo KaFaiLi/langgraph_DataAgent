@@ -22,3 +22,17 @@ Reconcile event dates, owners, approval and closure state, remediation, recurren
 severity and available counter-evidence. Every non-observation conclusion must cite a
 reopenable `source://` locator. Use only PASS, REVISE, REJECT, or UNRESOLVED verification
 outcomes; inaccessible evidence is UNRESOLVED and exhausted revisions remain unresolved.
+
+## General-agent tools
+
+Load these instructions with `load_skill(name="post-trade-controls")`. Read both references using
+`load_skill_reference(name="post-trade-controls", reference="dataset")` and `reference="policy"`;
+follow `next_offset` on partial results. Inputs are not prepared implicitly by a graph.
+Inspect the source inventory and schemas, then call
+`execute_review_analysis(skill_name="post-trade-controls", source_paths=[...])` with all assigned
+paths. The host resolves the trusted entrypoint; do not supply Python modules or scripts.
+Read the stored candidates and overviews with `read_analysis_result`, follow pagination,
+and inspect cited regions with `reopen_analysis_evidence`. Submit the typed analyst draft
+with `submit_candidate_result`, retaining deterministic candidate IDs, contrary evidence
+and unresolved limitations. The submission stays pending until independent verification.
+Tool summaries, truncated references and source previews never establish full coverage.

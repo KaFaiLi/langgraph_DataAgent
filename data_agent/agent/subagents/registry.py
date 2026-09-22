@@ -78,7 +78,7 @@ class SubagentRegistry:
             # The root loader closes over the complete discovered catalog.  A
             # child must request skills through ``skill_names`` so its loader is
             # rebuilt over the explicitly selected subset.
-            if "load_skill" in spec.tool_names:
+            if {"load_skill", "load_skill_reference"}.intersection(spec.tool_names):
                 raise SubagentSpecError(
                     "sub-agent specs must use skill_names instead of root load_skill"
                 )
