@@ -1,4 +1,7 @@
-"""Public checkpointed review interface."""
+"""Legacy controlled-graph service retained for explicit integrations and regression tests.
+
+Current CLI and model-directed reviews use data_agent.review.agent_service instead.
+"""
 
 from __future__ import annotations
 

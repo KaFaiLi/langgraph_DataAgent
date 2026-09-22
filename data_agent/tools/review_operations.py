@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
 
 from data_agent.review.domain.analysis import AnalysisResult
 from data_agent.review.domain.domains import SpecialistDomain
@@ -25,7 +26,11 @@ from data_agent.review.verification.candidates import assign_candidate_ids
 from data_agent.review.verification.evidence import evaluate_evidence_gate
 from data_agent.review.verification.finding_policy import sanitize_finding_references
 from data_agent.review.verification.omission import audit_omissions
-from data_agent.skills.review import AnalysisRunner, load_lead_analysis_runner
+from data_agent.skills.review import (
+    AnalysisRunner,
+    load_lead_analysis_runner,
+    load_lead_review_skill,
+)
 from data_agent.tools.review_context import ToolContext, source_file
 
 
@@ -104,9 +109,14 @@ def audit_candidates(request: OmissionRequest) -> OmissionAuditResult:
     )
 
 
-def analyze_reports(reports: Sequence[SpecialistReport]) -> CrossSpecialistAnalysis:
+def analyze_reports(
+    reports: Sequence[SpecialistReport], *, skills_root: Path | None = None
+) -> CrossSpecialistAnalysis:
     """Execute the lead skill's trusted cross-report calculations on typed reports."""
-    return CrossSpecialistAnalysis.model_validate(load_lead_analysis_runner()(list(reports)))
+    definition = load_lead_review_skill(skills_root=skills_root) if skills_root else None
+    return CrossSpecialistAnalysis.model_validate(
+        load_lead_analysis_runner(definition)(list(reports))
+    )
 
 
 @dataclass(frozen=True)

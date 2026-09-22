@@ -2,16 +2,14 @@
 
 ## Scope and Current Status
 
-This file governs `skills/`. `risk-metrics`, composite `pnl`, and `risk-commentary` are
-implemented analytical skills discovered by `src/risk_analysis_agent/skills/` and
-executed through the generic bounded specialist graph. `risk-ppt` remains the downstream
-presentation skill. The composite `pnl` skill owns PnL, income-attribution, validation,
-and adjustment source domains so these related records are reviewed by one bounded
-specialist. Post-trade controls is also a first-class skill-backed specialist. There
-are no legacy capability adapters or per-domain specialist graphs. `lead-review` owns
-the cross-specialist synthesis policy, verifier policy, and deterministic candidate
-linking; evidence integrity, severity bounds, and graph routing remain shared Python
-responsibilities.
+This file governs `skills/`. The analytical skills are `risk-metrics`, composite `pnl`,
+`post-trade-controls`, and `risk-commentary`, loaded through `data_agent/skills`.
+`general-review` guides the general ReAct agent's model-selected investigation, peer
+verification, revision and publication. `lead-review` owns synthesis policy and trusted
+cross-report calculations. `risk-ppt` consumes the validated completed bundle.
+The composite `pnl` skill owns PnL, income attribution, validation and adjustments.
+The legacy generic specialist graph remains a regression reference; the current review
+entrypoints must never call it or wrap it in a tool.
 
 Read `risk-ppt/SKILL.md` before changing the PPT skill. It consumes completed review
 Markdown/JSON only, keeps raw risk sources out of scope, validates semantic SVGs, and
@@ -25,8 +23,9 @@ uses the project DeepSeek factory through production Python code.
 - Shared Python owns how safe operations work: parsers, guarded file access, locator
   handling, date normalization, tabular reads, generic statistics, sandboxing, and
   search primitives.
-- LangGraph owns when work runs: preparation, deterministic analysis, analyst/verifier
-  routing, retry limits, coverage, aggregation, failure, and checkpointing.
+- The general ReAct model chooses investigations, assignments and revisions. Shared code
+  owns capability boundaries, independent typed results, evidence/coverage gates, bounded
+  retries, cumulative budgets, checkpointing, interruption and atomic publication.
 
 The `lead-review` skill is not a specialist and has no source domain or raw-source
 analysis entrypoint. Its trusted entrypoint consumes completed specialist reports and
@@ -98,8 +97,7 @@ never include planted gold answers or case-specific shortcuts.
 
 ## Deterministic Analysis Contract
 
-Domain-specific numerical logic moves from a temporary
-`capabilities/<domain>/analysis.py` module to the skill's trusted script. Use the
+Domain-specific numerical logic lives in the skill's trusted script. Use the
 validated entrypoint shape:
 
 ```python
@@ -111,7 +109,7 @@ def run_analysis(
 
 The script is authoritative for calculations; the LLM interprets its structured output.
 Keep logic deterministic, independently unit-testable, and source-locator aware. Reuse
-`tools/` and `ingestion/` rather than reimplementing them.
+`data_agent/tools` and `data_agent/review/ingestion` rather than reimplementing them.
 
 The lead-review entrypoint has a separate cross-specialist contract:
 
@@ -125,7 +123,8 @@ It owns deterministic entity extraction, temporal matching, clustering, and
 contradiction-candidate detection over verified and unresolved specialist findings. It
 must not reread raw review sources or turn a candidate into a final conclusion.
 
-Only load version-controlled scripts beneath the expected repository `skills/` root.
+Only load trusted scripts beneath the host-configured skill root: checked-in `skills/`,
+packaged `data_agent/_bundled_skills`, or an explicitly deployed `SKILLS_DIR`.
 Reject absolute paths, `..`, symlink escapes, unrecognized entrypoint formats, and code
 from review source data. Never use `eval()` or arbitrary user-provided imports. Skill
 scripts receive guarded source/workspace access, must not open the network, must not read
@@ -133,15 +132,14 @@ credentials or eval gold, and must not instantiate LLM clients.
 
 ## Generic Runtime and Discovery
 
-The runtime uses one generic bounded specialist workflow, not per-domain graph
-implementations.
-A validated `SkillDefinition` plus loader/registry provides the playbook, deterministic
-runner, identity, report metadata, and classifier description to that workflow. Source
+The runtime exposes shared analysis, research, evidence, omission, report and publication
+capabilities to bounded ReAct roles. A validated `SkillDefinition` plus loader/registry
+provides each role's playbook, deterministic runner, identity and report metadata. Source
 classification consumes registered specialists dynamically. Adding a migrated specialist
 requires a skill folder and tests, not a new graph-builder or parallel label/report-ID
 maps.
 
-Preserve low-cost analyst and high-cost verifier allocation, evidence reopening, PASS/REVISE/
+Preserve low-cost specialist/challenger and high-cost adjudicator/lead allocation, evidence reopening, PASS/REVISE/
 REJECT/UNRESOLVED behavior, exhausted-REVISE handling, report schemas, and verification
 artifacts. `SpecialistDomain` is the typed identity used by manifests and orchestration.
 
@@ -154,7 +152,7 @@ tracing, and domain analysis.
 
 Behavior-oriented tests should prove all analytical skills are discoverable, front
 matter and entrypoints validate, documentation and deterministic runners exist, every
-registered skill runs through the generic graph, model tiers are correct, verifier loops
+registered skill runs through the general-agent capability path, model tiers are correct, verifier loops
 stay bounded, evidence and coverage guards survive, artifacts remain compatible,
 checkpoint/resume works, and provider/sandbox/gold-isolation policies still pass. Move
 domain analysis tests with their implementation; do not delete valuable assertions.

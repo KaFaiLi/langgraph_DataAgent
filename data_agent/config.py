@@ -15,6 +15,8 @@ from pathlib import Path
 from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from data_agent.skills.paths import default_skills_root, runtime_root
+
 # Repo root is the directory containing the data_agent package.
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -23,7 +25,7 @@ class Settings(BaseSettings):
     """Runtime settings, populated from the environment / ``.env``."""
 
     model_config = SettingsConfigDict(
-        env_file=REPO_ROOT / ".env",
+        env_file=runtime_root() / ".env",
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,
@@ -82,7 +84,7 @@ class Settings(BaseSettings):
         return os.fspath(value) if isinstance(value, os.PathLike) else str(value)
 
     # --- Skills --------------------------------------------------------------
-    skills_dir: str = Field(default="skills")
+    skills_dir: str | None = None
 
     review_child_max_runs: int = Field(default=160, gt=0)
     review_child_max_concurrency: int = Field(default=4, gt=0)
@@ -104,7 +106,7 @@ class Settings(BaseSettings):
     def review_workspace_path(self) -> Path:
         """Host-owned storage for trusted skill results; never selected by model arguments."""
         path = Path(self.review_workspace)
-        return path if path.is_absolute() else REPO_ROOT / path
+        return path if path.is_absolute() else runtime_root() / path
 
     # --- Agent ---------------------------------------------------------------
     agent_max_iterations: int = Field(
@@ -193,8 +195,10 @@ class Settings(BaseSettings):
     @property
     def skills_path(self) -> Path:
         """Absolute path to the skills directory."""
+        if self.skills_dir is None:
+            return default_skills_root()
         p = Path(self.skills_dir)
-        return p if p.is_absolute() else (REPO_ROOT / p)
+        return p if p.is_absolute() else (runtime_root() / p)
 
     @property
     def mcp_http_url(self) -> str:
@@ -205,7 +209,7 @@ class Settings(BaseSettings):
     def source_path(self) -> Path:
         """Absolute configured source directory used by source MCP tools."""
         path = Path(self.source_root)
-        return path if path.is_absolute() else (REPO_ROOT / path)
+        return path if path.is_absolute() else (runtime_root() / path)
 
 
 @lru_cache(maxsize=1)

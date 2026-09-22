@@ -94,7 +94,23 @@ class AgentReviewService:
             output_dir=request.output_dir,
         )
         store = workspace.access(request.run_id).store
-        store.initialize(desk, workspace.definitions)
+        try:
+            store.initialize(desk, workspace.definitions)
+        except (OSError, ValueError) as exc:
+            # The output/source separation was validated before any failure artifact write.
+            if store.path.exists():
+                raise ValueError("existing run context cannot be replaced") from exc
+            store.output_dir.mkdir(parents=True, exist_ok=True)
+            result = AgentReviewResult(
+                status="failed",
+                run_id=request.run_id,
+                output_dir=store.output_dir,
+                failure_reason="preflight_source_error",
+            )
+            (store.output_dir / "failure.json").write_text(
+                result.model_dump_json(indent=2), encoding="utf-8"
+            )
+            return result
         return await self.resume(store.output_dir)
 
     def status(self, run_dir: str | Path, *, include_reports: bool = False) -> AgentReviewResult:
@@ -104,6 +120,20 @@ class AgentReviewService:
             return result
         try:
             if not (root / "review_record.sqlite").exists():
+                failure_path = root / "failure.json"
+                if failure_path.is_file() and not failure_path.is_symlink():
+                    failure = json.loads(failure_path.read_text(encoding="utf-8"))
+                    if failure.get("schema_version") == 2:
+                        return AgentReviewResult.model_validate(failure)
+                if (root / "checkpoints.sqlite").exists() and not (
+                    root / "run_manifest.json"
+                ).exists():
+                    return result.model_copy(
+                        update={
+                            "status": "failed",
+                            "failure_reason": "legacy_checkpoint_unsupported",
+                        }
+                    )
                 # Read-only compatibility: legacy bundles may reopen; old checkpoints
                 # are never resumed by invoking the deterministic review service.
                 if root.name == "bundle" and (root.parent / "review_record.sqlite").is_file():

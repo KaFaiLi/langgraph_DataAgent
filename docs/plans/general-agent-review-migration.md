@@ -1,7 +1,7 @@
 # General-agent review migration plan
 
-Status: in progress; M1–M7 implemented and validated.
-Date: 2026-09-22.
+Status: complete; M1–M8 implemented and validated.
+Date: 2026-09-23.
 
 ## Objective and architectural decision
 
@@ -46,7 +46,7 @@ and adding new document formats are separate work.
 | M5 | Complete all specialist domains and verification parity | M4 | Complete |
 | M6 | Produce validated lead synthesis and compatible artifacts | M5 | Complete |
 | M7 | Add durable resume and reliable terminal status | M3; validates M4-M6 | Complete |
-| M8 | Validate packaging, parity, documentation, and entrypoint cutover | M6, M7 | Pending |
+| M8 | Validate packaging, parity, documentation, and entrypoint cutover | M6, M7 | Complete |
 
 ## M0 — Completed foundation and baseline
 
@@ -257,36 +257,36 @@ Acceptance:
 
 ## M8 — Packaging, parity, documentation, and cutover
 
-- [ ] Package trusted skill documents, references, and scripts, or support an explicit
+- [x] Package trusted skill documents, references, and scripts, or support an explicit
   deployable skill location consistently across chat, review capabilities, and MCP.
-- [ ] Verify installed CLI help and tool/skill discovery outside the repository checkout.
-- [ ] Add integration tests for the complete model-directed review, covering all domains,
+- [x] Verify installed CLI help and tool/skill discovery outside the repository checkout.
+- [x] Add integration tests for the complete model-directed review, covering all domains,
   incomplete coverage, bad evidence, failed children, exhausted budgets, and restart/resume.
-- [ ] Add a guard test proving the new path never invokes `ReviewService`,
+- [x] Add a guard test proving the new path never invokes `ReviewService`,
   `build_parent_graph`, or `build_specialist_graph`.
-- [ ] Compare deterministic calculations, candidate accounting, coverage, evidence admission,
+- [x] Compare deterministic calculations, candidate accounting, coverage, evidence admission,
   and artifacts against existing synthetic fixtures; do not require identical prose or tool order.
-- [ ] Run controlled evaluations separately from tests to assess finding quality, omissions,
+- [x] Run controlled evaluations separately from tests to assess finding quality, omissions,
   latency, and cost. Never read or copy evaluation gold data into production or test fixtures.
-- [ ] Switch the intended review entrypoints to the general-agent runtime after parity checks
+- [x] Switch the intended review entrypoints to the general-agent runtime after parity checks
   pass, preserving start/resume/status usability and documenting any compatibility changes.
-- [ ] Update root and skill `AGENTS.md`, usage examples, configuration documentation, and
+- [x] Update root and skill `AGENTS.md`, usage examples, configuration documentation, and
   architecture notes to reflect model-directed execution and current package locations.
-- [ ] Run `uv run pytest -q`, `uv run ruff check .`, `uv run ruff format --check .`,
+- [x] Run `uv run pytest -q`, `uv run ruff check .`, `uv run ruff format --check .`,
   `uv build`, and installed-package smoke checks; resolve or explicitly account for baseline
   formatting debt without mixing unrelated refactoring into migration changes.
-- [ ] Retire unused deterministic graph entrypoints only after callers and compatibility
+- [x] Retire unused deterministic graph entrypoints only after callers and compatibility
   requirements have been checked; retain reusable domain logic and valuable assertions.
 
 ## Completion criteria
 
-- [ ] A user can request a full review through the general agent and receive a validated,
+- [x] A user can request a full review through the general agent and receive a validated,
   reopenable artifact bundle with the same supported analytical scope as the current service.
-- [ ] The model controls investigation, delegation, and revision; no old review graph runs.
-- [ ] Mandatory analysis, source/candidate coverage, independent verification, evidence integrity,
+- [x] The model controls investigation, delegation, and revision; no old review graph runs.
+- [x] Mandatory analysis, source/candidate coverage, independent verification, evidence integrity,
   and publication validity are enforced by capability contracts and authoritative records.
-- [ ] Failure, uncertainty, truncation, interruption, and resume are observable and tested.
-- [ ] Deployment works outside the source checkout, and downstream artifact consumers remain usable.
+- [x] Failure, uncertainty, truncation, interruption, and resume are observable and tested.
+- [x] Deployment works outside the source checkout, and downstream artifact consumers remain usable.
 
 ## Completion log
 
@@ -307,3 +307,5 @@ Add implementation and validation evidence here when completing each later miles
 | 2026-09-23 | M6 | Extracted pure final validation and bounded semantic revision rules; added version-bound lead roles, cross-report analysis, strict derivation/evidence/severity gates, and atomic compatible bundle publication with an integrity seal. Publication, revision, tampering, staging failure and same-domain identity tests pass; existing consumers reopen the live bundle. `uv run pytest -q`: 447 passed; lint and all changed Python format checks passed. Live CLI independently verified and published `/tmp/data-agent-m3-results/runs/M3-LIVE/bundle`, retaining two unresolved specialist findings and 17 disclosures without promoting unsupported conclusions. The live attempt exposed and fixed a missing lead dataset reference and misspelled skill-tool error handling. Logs: `/tmp/data-agent-m6-*-cli.log`. |
 
 | 2026-09-23 | M7 | Added checkpointed root ReAct execution, a process lease, persisted aggregate dispatch/time budgets, stable delegation replay, accepted-role recovery, machine-readable interruption/failure status and validated completion. Bound review chat uses the durable runtime; legacy status now validates complete bundles too. `uv run pytest -q`: 456 passed; lint and changed-file format checks passed. Restart, cancellation, aggregate exhaustion, source changes, malformed/partial bundles and atomic-rename recovery are tested. Two real CLI processes resumed M5-LIVE: PNL-F2 reached its terminal unresolved disposition, then the second process recovered its conversation/result without repeating children (calls 19→25 model, 20→26 tool, child attempts stayed 2). Logs: `/tmp/data-agent-m7-first-cli.log` and `/tmp/data-agent-m7-restart-cli.log`. |
+
+| 2026-09-23 | M8 | Packaged all seven skill trees and consistent deployed-root resolution; switched review CLI to the general-agent service; updated repository/skill guidelines, usage/configuration and architecture. Two complete four-domain ReAct integrations forbid legacy workflow entrypoints and exercise different orders, incomplete publication and failed-child recovery. `uv run pytest -q`: 463 passed; repository lint/format and `uv build` passed. Isolated installed CLI help, 7-skill/4-analytical/50-tool discovery, trusted entrypoints and completed-bundle reopening pass outside the checkout; installed CLI also reproduced 130% SGMR utilization via the real API. Separate real-API four-domain review completed at `/tmp/data-agent-m8-run/bundle` after fixing duplicate lead-verifier context; 6 sources, 26 accounted candidate IDs, 8 overviews, 12 unresolved findings and 65 disclosures, with no unsupported promoted conclusions. Gold-free evaluation recorded latency/token cost and interpretation limitations. Legacy graphs remain explicit regression/compatibility APIs after caller audit, with no current review entrypoint invoking them. Details: [validation report](../validation/general-agent-review-migration.md). |

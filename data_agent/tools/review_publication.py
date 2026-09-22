@@ -80,7 +80,9 @@ class PublicationCapabilities:
         return {
             "reports_version": reports_version(record),
             "finding_identities": identities,
-            "analysis": analyze_reports(reports).model_dump(mode="json"),
+            "analysis": analyze_reports(
+                reports, skills_root=next(iter(self.access.definitions.values())).skill_root.parent
+            ).model_dump(mode="json"),
             "lead_state": record.lead_state,
             "lead_history": record.lead_history,
         }
@@ -98,7 +100,9 @@ class PublicationCapabilities:
         if len(record.lead_history) >= 2 or record.lead_state.get("status") == "failed":
             raise ValueError("lead verification revision budget exhausted")
         reports, _identities = collect_reports(record)
-        analysis = analyze_reports(reports)
+        analysis = analyze_reports(
+            reports, skills_root=next(iter(self.access.definitions.values())).skill_root.parent
+        )
         draft = LeadDraft.model_validate(role["output"])
         report = FinalReport.model_validate(
             {

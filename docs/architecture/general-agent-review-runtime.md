@@ -59,3 +59,20 @@ artifact identities. The bundle retains specialist/final JSON and Markdown, over
 verification/research history, catalog, desk context, lead verification and run manifest
 for existing reviewed-output consumers, including risk-ppt. Additional derived presentation
 files may be created without rewriting sealed review artifacts.
+
+
+## Entry points and installed assets
+
+`data-agent review run/resume/status` and host-bound review chat now use this runtime.
+The Python API is async `AgentReviewService.start(ReviewRequest(...))` and
+`AgentReviewService.resume(path)`, with synchronous read-only `status(path)`.
+Legacy completed bundles reopen through the same validated consumer. Old graph checkpoints
+are identified as `legacy_checkpoint_unsupported`; rerun their sources through the current
+entrypoint. Legacy graph builders and `ReviewService` remain explicitly callable for
+compatibility and regression tests, but neither is imported by CLI startup or reachable
+from current review tools/roles.
+
+Wheel distributions package `skills/` at `data_agent/_bundled_skills/`. Checkouts retain
+their editable skill tree; an explicit `SKILLS_DIR` selects one trusted deployment tree
+for chat discovery, MCP, specialist calculations and lead analysis. Installed writable
+paths and `.env` resolve from the current working directory, never site-packages.

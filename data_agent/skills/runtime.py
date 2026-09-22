@@ -1,4 +1,6 @@
-"""Adapter from a validated analytical skill to the generic specialist graph."""
+"""Legacy regression graph adapter; new review roles use shared capabilities.
+
+Adapter from a validated analytical skill to the generic specialist graph."""
 
 from __future__ import annotations
 

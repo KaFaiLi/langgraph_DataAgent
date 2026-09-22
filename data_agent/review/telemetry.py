@@ -70,8 +70,8 @@ class ReviewTelemetryHandler(BaseCallbackHandler):
         key = str(run_id)
         with _LOCK:
             _START_TIMES[key] = time.monotonic()
-        model_id = _model_id(serialized)
         metadata = metadata or {}
+        model_id = metadata.get("ls_model_name") or _model_id(serialized)
         self._append(
             {
                 "event": "llm_start",
@@ -82,6 +82,7 @@ class ReviewTelemetryHandler(BaseCallbackHandler):
                 "specialist": metadata.get("risk_agent_specialist"),
                 "model_id": model_id,
                 "tier": _tier(model_id),
+                "agent_name": metadata.get("data_agent_name"),
                 "start_time": time.time(),
             }
         )
@@ -119,7 +120,7 @@ class ReviewTelemetryHandler(BaseCallbackHandler):
                 "event": "llm_error",
                 "run_id": key,
                 "duration_seconds": round(time.monotonic() - start, 3) if start else None,
-                "error": f"{type(error).__name__}: {error}",
+                "error": type(error).__name__,
                 "success": False,
             }
         )

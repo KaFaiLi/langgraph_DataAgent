@@ -17,12 +17,16 @@ registration, and graph adaptation live in sibling modules in this package and
 are imported explicitly so general chat stays lightweight.
 """
 
-from data_agent.skills.loader import Skill, discover_skills
-from data_agent.skills.tools import build_skill_tools, render_skills_overview
+__all__ = ["Skill", "build_skill_tools", "discover_skills", "render_skills_overview"]
 
-__all__ = [
-    "Skill",
-    "build_skill_tools",
-    "discover_skills",
-    "render_skills_overview",
-]
+
+def __getattr__(name: str):
+    if name in {"Skill", "discover_skills"}:
+        from data_agent.skills import loader
+
+        return getattr(loader, name)
+    if name in {"build_skill_tools", "render_skills_overview"}:
+        from data_agent.skills import tools
+
+        return getattr(tools, name)
+    raise AttributeError(name)

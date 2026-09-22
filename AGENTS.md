@@ -3,13 +3,16 @@
 ## Project Structure & Module Organization
 
 Production code lives in `data_agent/`. Keep conversational ReAct behavior in
-`data_agent/agent`, controlled risk workflows in `data_agent/review`, model adapters in
+`data_agent/agent`, review models, validation and persistence in `data_agent/review`, model adapters in
 `data_agent/llm`, and MCP transport in `data_agent/mcp_server`. Shared implementations
 belong in `data_agent/tools` and shared skill loading/registration in `data_agent/skills`;
-do not recreate private tool or skill packages under callers. The legacy top-level
-`review/` package is being migrated into `data_agent/` as the canonical home for review
-logic and workflows. Domain playbooks and trusted deterministic entrypoints live in
-top-level `skills/<kebab-case-name>/`. Tests mirror the code under `tests/`, with
+do not recreate private tool or skill packages under callers. The canonical review package is `data_agent/review`; the top-level `review/` package
+has been retired. `AgentReviewService` hosts model-directed ReAct reviews through shared
+capabilities. Never invoke `ReviewService`, `build_parent_graph`, or
+`build_specialist_graph` from the new path; those implementations remain regression
+references for existing callers/tests. Domain playbooks and trusted deterministic entrypoints live in
+top-level `skills/<kebab-case-name>/`, packaged as `data_agent/_bundled_skills` in wheels.
+Use host-configured `SKILLS_DIR` consistently; model arguments cannot select executable code. Tests mirror the code under `tests/`, with
 review-specific suites in `tests/review/`. Treat `evals/` as controlled evaluation
 material, not production fixtures.
 
@@ -17,7 +20,7 @@ material, not production fixtures.
 
 - `uv sync --extra dev` installs locked runtime and development dependencies.
 - `uv run pytest -q` runs the complete test suite.
-- `uv run pytest tests/review/test_review_service.py -q` runs one focused module.
+- `uv run pytest tests/review/test_agent_resume.py -q` validates durable review execution.
 - `uv run ruff format .` formats Python; add `--check` for CI-style verification.
 - `uv run ruff check .` performs static lint checks.
 - `uv build` builds wheel and source distributions.
@@ -36,7 +39,7 @@ mechanical formatting; do not hand-format around it.
 
 Use pytest and `pytest-asyncio`. Name files `test_<behavior>.py` and tests
 `test_<expected_outcome>`. Add focused unit tests for deterministic logic and integration
-tests for graph routing, evidence validation, checkpoint/resume, and CLI behavior. No
+tests for model-directed delegation, evidence validation, checkpoint/resume, and CLI behavior. No
 numeric coverage threshold is configured; every change must keep the full suite passing.
 Never read or copy evaluation gold data into tests.
 
@@ -53,3 +56,11 @@ output changes and sample artifact paths for report changes.
 Copy `.env.example` locally and keep `.env`, credentials, SQLite checkpoints, logs, and
 review workspaces untracked. Preserve source containment and read-only guarantees. Do not
 add arbitrary filesystem, process, Python, or network access to specialist tools.
+
+The model selects investigation, specialist/challenger/adjudicator roles and revisions.
+Code enforces source/candidate coverage, finding versions, independent verification,
+severity/evidence rules, aggregate budgets and sealed publication. Public review results
+use schema version 2; `interrupted` is resumable, and `completed` requires validated
+artifacts even when they contain explicitly disclosed unresolved questions. Keep provider
+credentials in configuration and preserve low-cost research/challenge and high-cost
+adjudication/lead routing. See `docs/architecture/general-agent-review-runtime.md`.

@@ -123,8 +123,10 @@ class LeadReviewSkillDefinition(BaseModel):
 
 
 def repository_skills_root() -> Path:
-    """Return the version-controlled repository ``skills/`` directory."""
-    return Path(__file__).resolve().parents[2] / "skills"
+    """Return the host-configured trusted skill root for checkout or installed use."""
+    from data_agent.config import get_settings
+
+    return get_settings().skills_path
 
 
 def _parse_front_matter(skill_file: Path) -> tuple[dict[str, Any], str]:

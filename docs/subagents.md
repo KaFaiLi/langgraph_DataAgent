@@ -49,7 +49,7 @@ That tool is part of the agent host; it is not exposed by the MCP server.
 | `SUBAGENT_MAX_INPUT_CHARS` | `16000` | Maximum combined task and context length. |
 | `SUBAGENT_MAX_RESULT_CHARS` | `8000` | Maximum child answer length returned to the parent. |
 
-Failed attempts consume the child-attempt budget. Each new invocation gets fresh limits,
+For ordinary unbound chat, failed attempts consume the child-attempt budget. Each new invocation gets fresh limits,
 including concurrent requests through a reused bundle. Limits count logical calls;
 provider-internal retries and token charges are separate. The parent retains its existing
 `AGENT_MAX_ITERATIONS` configuration.
@@ -105,9 +105,14 @@ by default; enabling previews can expose tool-result content and should be delib
 Children inherit trace ancestry and approved tracing fields; arbitrary parent metadata,
 application configuration, and checkpoint identities are excluded from child execution.
 
-Children have no persistent conversation or resumable checkpoint. A host may checkpoint
-the root, but replay can repeat delegated work. There is no background job registry or
-exactly-once execution guarantee. Controlled review commands continue to use their
-existing specialist orchestration and evidence validation.
+Children have no persistent conversation or resumable checkpoint. Ordinary unbound chat
+may repeat delegated work on replay. Review commands use `AgentReviewService`: its root
+ReAct loop is checkpointed, accepted typed role results are reused through durable tool
+identities, and interrupted children return explicit failures. Aggregate model/tool/child
+and elapsed-time limits persist across restarts. Review profiles are specialist (low-cost),
+independent challenger (low-cost), adjudicator (high-cost, no research tools), and lead /
+lead verifier (high-cost, validated reports only). The parent coordinates them through
+capabilities; it never invokes the legacy review graphs. See the
+[runtime contract](architecture/general-agent-review-runtime.md) for status and persistence.
 
 See the [design plan](plans/react-subagents.md) for module ownership and later extensions.

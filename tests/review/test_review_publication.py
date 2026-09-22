@@ -82,6 +82,7 @@ def _verify(context, *, decision="pass", challenges=(), child="1"):
         "final_report" in payload and "verification_history" not in payload["specialist_reports"][0]
     )
     assert {t.name for t in prepared.tools} == {"read_specialist_report"}
+    assert "previous_lead_draft" not in payload
     return prepared.accept(LeadVerifierOutput(decision=decision, challenges=list(challenges)))[
         "result_ref"
     ]
@@ -270,3 +271,28 @@ async def test_resume_rejects_partial_existing_bundle_without_executing_model(re
     (target / "run_manifest.json").write_text('{"status":"completed"}')
     result = await AgentReviewService().resume(access.store.output_dir)
     assert result.status == "failed" and result.failure_reason == "bundle_integrity_invalid"
+
+
+def test_large_lead_verification_context_retains_disclosures_without_duplicate_report(ready):
+    access, assignment, adapter, specs, *_ = ready
+    disclosures = [
+        f"Unresolved scope {i}: " + "bounded source uncertainty " * 14 for i in range(130)
+    ]
+    access.store.update(
+        lambda r: r.assignments[assignment].report["unresolved_items"].extend(disclosures)
+    )
+    capability = PublicationCapabilities(access)
+    capability.prepare(_lead(ready))
+    prepared = adapter.prepare(
+        specs["review-lead-verifier"],
+        DelegationRequest(
+            agent_name="review-lead-verifier", task="Verify all disclosures", context="{}"
+        ),
+        "large-verifier",
+    )
+    payload = json.loads(prepared.prompt.split("\n", 1)[1])
+    assert "previous_lead_draft" not in payload
+    assert all(item in payload["final_report"]["unresolved_questions"] for item in disclosures)
+    assert len(prepared.prompt) < 120_000
+    # The former duplicated final report overflowed the same bounded contract.
+    assert len(prepared.prompt) + len(json.dumps(payload["final_report"])) > 120_000

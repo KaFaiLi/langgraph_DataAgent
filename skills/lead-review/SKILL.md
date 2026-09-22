@@ -14,6 +14,13 @@ findings, deterministic cross-source clusters, contradiction candidates, shared 
 context, and unresolved questions supplied by the runtime. Do not reread raw source
 files or introduce claims that no specialist made.
 
+The initial context supplies every specialist claim, locator and unresolved item. For
+additional report detail, `read_specialist_report` requires an exact `assignment_id`
+from the keys of `finding_identities` (a `task-...` identifier), never report IDs such as
+RISK or PNL. Skill reference names are only `dataset` and `policy`. Follow pagination
+when needed; do not reread complete verification histories merely to duplicate the
+supplied synthesis context.
+
 The trusted analysis entrypoint consumes the completed specialist reports and produces
 deterministic clusters and contradiction candidates. Treat those outputs as review
 leads, not conclusions, and do not recompute them in prose.

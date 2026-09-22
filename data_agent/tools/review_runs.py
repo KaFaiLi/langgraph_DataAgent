@@ -812,7 +812,7 @@ def build_review_run_tools(workspace: ReviewWorkspace) -> list[BaseTool]:
     def read_specialist_report(
         run_id: str, assignment_id: str, offset: int = 0, max_chars: int = 12000
     ) -> dict:
-        """Read a validated stored specialist report in bounded pages; no raw-source access."""
+        """Read a validated report using its exact task-... assignment_id, never report IDs like RISK or PNL."""
         from data_agent.skills.references import text_page
 
         access = workspace.access(run_id)

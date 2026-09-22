@@ -1,4 +1,4 @@
-"""Single command-line interface for DataAgent chat and controlled reviews."""
+"""Single command-line interface for chat and model-directed reviews."""
 
 from __future__ import annotations
 
@@ -14,12 +14,14 @@ import typer
 from data_agent.agent.react_agent import build_agent
 from data_agent.config import get_settings
 from data_agent.logging_utils import setup_logging
-from data_agent.review.interface import ReviewRequest, ReviewStatus
-from data_agent.review.service import ReviewService
+from data_agent.review.agent_service import AgentReviewService
+from data_agent.review.interface import ReviewRequest
 from data_agent.tracing import ConsoleTraceSink, TraceMode, follow_trace, read_trace
 
-app = typer.Typer(no_args_is_help=True, help="Chat with DataAgent or run a controlled review.")
-review_app = typer.Typer(no_args_is_help=True, help="Run, resume, and inspect controlled reviews.")
+app = typer.Typer(no_args_is_help=True, help="Chat with DataAgent or run a model-directed review.")
+review_app = typer.Typer(
+    no_args_is_help=True, help="Run, resume, and inspect model-directed reviews."
+)
 app.add_typer(review_app, name="review")
 
 
@@ -133,18 +135,20 @@ def run_review(
             raise typer.BadParameter(f"desk template {key} differs from CLI review period")
         desk[key] = expected.isoformat()
     identifier = run_id or datetime.now(UTC).strftime("RUN-%Y%m%dT%H%M%SZ")
-    result = ReviewService(trace_sinks=[_console_sink(trace_mode, review=True)]).start(
-        ReviewRequest(
-            source_root=source,
-            output_dir=output,
-            run_id=identifier,
-            review_start=start_date,
-            review_end=end_date,
-            desk_context=desk,
+    result = asyncio.run(
+        AgentReviewService(trace_sinks=[_console_sink(trace_mode, review=True)]).start(
+            ReviewRequest(
+                source_root=source,
+                output_dir=output,
+                run_id=identifier,
+                review_start=start_date,
+                review_end=end_date,
+                desk_context=desk,
+            )
         )
     )
     _json(result)
-    if result.status is ReviewStatus.FAILED:
+    if result.status == "failed":
         raise typer.Exit(1)
 
 
@@ -154,9 +158,11 @@ def resume_review(
     trace_mode: TraceMode = typer.Option(TraceMode.SUMMARY, "--trace"),  # noqa: B008
 ) -> None:
     """Resume an incomplete checkpoint or reopen a completed run."""
-    result = ReviewService(trace_sinks=[_console_sink(trace_mode, review=True)]).resume(run_dir)
+    result = asyncio.run(
+        AgentReviewService(trace_sinks=[_console_sink(trace_mode, review=True)]).resume(run_dir)
+    )
     _json(result)
-    if result.status is ReviewStatus.FAILED:
+    if result.status == "failed":
         raise typer.Exit(1)
 
 
@@ -164,8 +170,8 @@ def resume_review(
 def review_status(
     run_dir: Path = typer.Argument(..., exists=False, file_okay=False),  # noqa: B008 - Typer parameter declaration
 ) -> None:
-    """Read persisted status without running the graph."""
-    _json(ReviewService().status(run_dir))
+    """Validate persisted status without running an agent."""
+    _json(AgentReviewService().status(run_dir))
 
 
 @review_app.command("trace")

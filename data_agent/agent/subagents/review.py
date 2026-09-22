@@ -105,8 +105,8 @@ def review_profiles(definitions: dict[str, SkillDefinition]) -> tuple[SubagentSp
             input_schema=LeadInput,
             result_schema=LeadDraft,
             model_role="high_cost",
-            max_model_calls=6,
-            max_tool_calls=4,
+            max_model_calls=8,
+            max_tool_calls=12,
         ),
         SubagentSpec(
             name="review-lead-verifier",
@@ -118,8 +118,8 @@ def review_profiles(definitions: dict[str, SkillDefinition]) -> tuple[SubagentSp
             input_schema=LeadInput,
             result_schema=LeadVerifierOutput,
             model_role="high_cost",
-            max_model_calls=6,
-            max_tool_calls=4,
+            max_model_calls=8,
+            max_tool_calls=12,
         ),
     )
 
@@ -266,9 +266,23 @@ class ReviewRoleAdapter:
             reports, identities = collect_reports(record)
             payload["specialist_reports"] = report_projection(reports)
             payload["finding_identities"] = identities
-            payload["cross_report_analysis"] = analyze_reports(reports).model_dump(mode="json")
+            payload["report_reading"] = (
+                "The supplied specialist_reports contain every finding and unresolved item. "
+                "Optional read_specialist_report calls require an exact assignment_id from "
+                "the keys of finding_identities (task-...), never a report_id such as RISK or PNL. "
+                "The only load_skill_reference names are dataset and policy."
+            )
+            payload["cross_report_analysis"] = analyze_reports(
+                reports,
+                skills_root=next(iter(self.workspace.definitions.values())).skill_root.parent,
+            ).model_dump(mode="json")
             payload["lead_feedback"] = record.lead_state.get("blockers", [])
-            payload["previous_lead_draft"] = record.lead_state.get("final_report")
+            if spec.name == "review-lead" and record.lead_state.get("lead_ref"):
+                # The previous model draft is enough for revision. Code-attached clusters,
+                # evidence indexes and disclosures are already present in the context.
+                payload["previous_lead_draft"] = record.role_results[record.lead_state["lead_ref"]][
+                    "output"
+                ]
             payload["lead_rounds_remaining"] = 2 - len(record.lead_history)
             tools = tuple(
                 t for t in build_review_run_tools(self.workspace) if t.name in spec.tool_names
