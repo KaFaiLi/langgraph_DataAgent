@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from langchain_core.runnables.config import RunnableConfig
 
-from data_agent.review.domain.reports import CrossSpecialistAnalysis, SpecialistReport
+from data_agent.review.domain.reports import SpecialistReport
 from data_agent.review.orchestration.state import ParentState
-from data_agent.skills.review import load_lead_analysis_runner
-
-_RUN_ANALYSIS = load_lead_analysis_runner()
+from data_agent.tools.review_operations import analyze_reports
 
 
 def correlate(state: ParentState, config: RunnableConfig) -> dict:
@@ -17,7 +15,7 @@ def correlate(state: ParentState, config: RunnableConfig) -> dict:
         SpecialistReport.model_validate(data)
         for data in state.get("specialist_reports", {}).values()
     ]
-    analysis = CrossSpecialistAnalysis.model_validate(_RUN_ANALYSIS(reports))
+    analysis = analyze_reports(reports)
     return {
         "clusters": [cluster.model_dump(mode="json") for cluster in analysis.clusters],
         "contradictions": [

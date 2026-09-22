@@ -2,22 +2,28 @@
 
 from __future__ import annotations
 
-from langgraph.graph.state import CompiledStateGraph
+from typing import TYPE_CHECKING
 
-from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
-from data_agent.review.orchestration.specialist import (
-    SpecialistRuntime,
-    SpecialistSpec,
-    build_specialist_graph,
-)
+if TYPE_CHECKING:
+    from langgraph.graph.state import CompiledStateGraph
+
+    from data_agent.review.llm import ReviewLLMProvider
+
 from data_agent.skills.review import SkillDefinition, load_analysis_runner
 
 
 def build_skill_graph(
     definition: SkillDefinition,
-    llm_provider: ReviewLLMProvider = DEFAULT_LLM_PROVIDER,
+    llm_provider: ReviewLLMProvider | None = None,
 ) -> CompiledStateGraph:
     """Build the bounded analyst/verifier workflow configured by one skill."""
+
+    from data_agent.review.llm import DEFAULT_LLM_PROVIDER
+    from data_agent.review.orchestration.specialist import (
+        SpecialistRuntime,
+        SpecialistSpec,
+        build_specialist_graph,
+    )
 
     specialist = SpecialistSpec(
         domain=definition.domain,
@@ -29,6 +35,6 @@ def build_skill_graph(
     )
     runtime = SpecialistRuntime(
         spec=specialist,
-        llm_provider=llm_provider,
+        llm_provider=llm_provider or DEFAULT_LLM_PROVIDER,
     )
     return build_specialist_graph(runtime)

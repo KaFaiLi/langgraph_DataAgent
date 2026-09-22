@@ -1,6 +1,6 @@
 # General-agent review migration plan
 
-Status: planned; existing foundation audited.
+Status: in progress; M1 implemented and validated.
 Date: 2026-09-22.
 
 ## Objective and architectural decision
@@ -39,7 +39,7 @@ and adding new document formats are separate work.
 | Milestone | Outcome | Depends on | Status |
 | --- | --- | --- | --- |
 | M0 | Audit the reusable foundation and record gaps | None | Complete |
-| M1 | Extract graph-independent review capabilities | M0 | Pending |
+| M1 | Extract graph-independent review capabilities | M0 | Complete |
 | M2 | Make one specialist skill executable through the general agent | M1 | Pending |
 | M3 | Add persistent review context, coverage, and scoped MCP access | M1; integrates M2 | Pending |
 | M4 | Support typed specialist and independent verification roles | M2, M3 | Pending |
@@ -82,23 +82,23 @@ Primary sources: [skill runtime](../../data_agent/skills/runtime.py),
 [verification](../../data_agent/review/verification), and
 [synthesis](../../data_agent/review/synthesis).
 
-- [ ] Define typed operation inputs/results that do not require `ParentState`,
+- [x] Define typed operation inputs/results that do not require `ParentState`,
   `SpecialistState`, or graph-specific `RunnableConfig` values.
-- [ ] Extract reusable analysis preparation, verification, omission auditing,
+- [x] Extract reusable analysis preparation, verification, omission auditing,
   cross-report analysis, and report construction from graph nodes.
-- [ ] Keep domain calculations in trusted skill scripts and reuse existing models
+- [x] Keep domain calculations in trusted skill scripts and reuse existing models
   and validation rules instead of creating parallel implementations.
-- [ ] Remove eager graph/service/registry initialization from imports needed by
+- [x] Remove eager graph/service/registry initialization from imports needed by
   general-agent tools, domain models, and skill loading.
-- [ ] Keep shared tool implementations in `data_agent/tools`, skill loading and
+- [x] Keep shared tool implementations in `data_agent/tools`, skill loading and
   registration in `data_agent/skills`, and transport adapters in `data_agent/mcp_server`.
-- [ ] Preserve existing review-service tests while extracting the shared operations.
+- [x] Preserve existing review-service tests while extracting the shared operations.
 
 Acceptance:
 
-- [ ] Operations can be invoked with typed inputs independently of either review graph.
-- [ ] Importing reusable capabilities does not construct or initialize a review workflow.
-- [ ] Existing behavior tests remain green through the extracted interfaces.
+- [x] Operations can be invoked with typed inputs independently of either review graph.
+- [x] Importing reusable capabilities does not construct or initialize a review workflow.
+- [x] Existing behavior tests remain green through the extracted interfaces.
 
 ## M2 — Executable skills and the first specialist
 
@@ -295,3 +295,5 @@ Acceptance:
 | 2026-09-22 | M0 | Repository audit; 401 passing tests; passing lint; formatting debt recorded; wheel startup and malformed-manifest status defects reproduced. |
 
 Add implementation and validation evidence here when completing each later milestone.
+
+| 2026-09-22 | M1 | Extracted typed analysis, evidence, omission, cross-report and report operations; legacy adapters reuse them. Lazy registry/workflow imports verified in a fresh process. `uv run pytest -q`: 405 passed; `uv run ruff check .`: passed; all 18 changed Python files pass format checks. Live `data-agent chat` loaded risk-metrics and answered through the configured API (two HTTP 200 model calls). Fixed a pre-existing POSIX sandbox realpath recursion revealed on this host; path, process, credential and symlink restrictions pass. |

@@ -169,7 +169,11 @@ def _provider(config: RunnableConfig) -> ReviewLLMProvider:
     return provider
 
 
-LEAD_REVIEW_SYSTEM = load_lead_review_skill().instructions
+def __getattr__(name: str):
+    if name == "LEAD_REVIEW_SYSTEM":
+        return load_lead_review_skill().instructions
+    raise AttributeError(name)
+
 
 LEAD_REVIEW_USER = """\
 DESK CONTEXT (JSON):
@@ -457,7 +461,7 @@ def lead_review(state: ParentState, config: RunnableConfig) -> dict:
     runnable = _provider(config)(ModelTier.HIGH_COST, LeadDraft)
     output = invoke_structured(
         runnable,
-        [SystemMessage(content=LEAD_REVIEW_SYSTEM), HumanMessage(content=user)],
+        [SystemMessage(content=load_lead_review_skill().instructions), HumanMessage(content=user)],
         schema=LeadDraft,
     )
     draft = output if isinstance(output, LeadDraft) else LeadDraft.model_validate(output)

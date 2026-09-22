@@ -15,6 +15,7 @@ import io
 import os
 import pathlib
 import sys
+import threading
 from collections.abc import Sequence
 from importlib.machinery import ModuleSpec
 from pathlib import Path
@@ -98,8 +99,21 @@ def _denied_process(*args: object, **kwargs: object) -> None:
     raise PermissionError("process spawning is blocked in the analysis sandbox")
 
 
+_PATH_RESOLUTION = threading.local()
+
+
 def _norm(path: str | os.PathLike[str]) -> str:
-    return os.path.normcase(os.path.realpath(os.path.abspath(os.fspath(path))))
+    # Coerce caller objects before entering the internal resolution context.
+    # realpath uses lstat/readlink on POSIX; our wrappers must not recursively
+    # check the same path while resolving it. This is thread-local and only
+    # bypasses metadata checks during this trusted, string-only operation.
+    value = str(os.fspath(path))
+    previous = getattr(_PATH_RESOLUTION, "active", False)
+    _PATH_RESOLUTION.active = True
+    try:
+        return os.path.normcase(os.path.realpath(os.path.abspath(value)))
+    finally:
+        _PATH_RESOLUTION.active = previous
 
 
 class _PathGuard:
@@ -191,8 +205,12 @@ def install_path_guard() -> None:
             continue
 
         def checked_read(
-            path: Any, *args: object, _original: Any = original, **kwargs: object
+            path: Any, *args: object, _original: Any = original, _name: str = name, **kwargs: object
         ) -> Any:
+            if _name in {"stat", "lstat", "readlink"} and getattr(
+                _PATH_RESOLUTION, "active", False
+            ):
+                return _original(path, *args, **kwargs)
             guard.check_read(path)
             return _original(path, *args, **kwargs)
 

@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
+from functools import cache
+from typing import TYPE_CHECKING
 
-from langgraph.graph.state import CompiledStateGraph
+if TYPE_CHECKING:
+    from langgraph.graph.state import CompiledStateGraph
+
+    from data_agent.review.llm import ReviewLLMProvider
 
 from data_agent.review.domain.domains import (
     SOURCE_DOMAINS,
     SPECIALIST_DOMAINS,
     SpecialistDomain,
 )
-from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.skills.review import SkillDefinition, discover_skills
-from data_agent.skills.runtime import build_skill_graph
 
 
 @dataclass(frozen=True)
@@ -28,6 +32,7 @@ class SpecialistRegistration:
     skill: SkillDefinition
 
 
+@cache
 def _build_registry() -> dict[SpecialistDomain, SpecialistRegistration]:
     registrations = {
         definition.domain: SpecialistRegistration(
@@ -46,9 +51,26 @@ def _build_registry() -> dict[SpecialistDomain, SpecialistRegistration]:
     return {domain: registrations[domain] for domain in SPECIALIST_DOMAINS}
 
 
-SPECIALISTS = _build_registry()
+class _LazyMapping(Mapping):
+    """Compatibility mapping that discovers trusted resources only on access."""
+
+    def __init__(self, factory):
+        self._factory = factory
+
+    def __getitem__(self, key):
+        return self._factory()[key]
+
+    def __iter__(self) -> Iterator:
+        return iter(self._factory())
+
+    def __len__(self) -> int:
+        return len(self._factory())
 
 
+SPECIALISTS = _LazyMapping(_build_registry)
+
+
+@cache
 def _build_source_domain_owners() -> dict[SpecialistDomain, SpecialistDomain]:
     owners: dict[SpecialistDomain, SpecialistDomain] = {}
     for registration in SPECIALISTS.values():
@@ -66,7 +88,7 @@ def _build_source_domain_owners() -> dict[SpecialistDomain, SpecialistDomain]:
     return {domain: owners[domain] for domain in SOURCE_DOMAINS}
 
 
-SOURCE_DOMAIN_OWNERS = _build_source_domain_owners()
+SOURCE_DOMAIN_OWNERS = _LazyMapping(_build_source_domain_owners)
 
 
 def get_specialist(domain: SpecialistDomain) -> SpecialistRegistration:
@@ -79,6 +101,8 @@ def specialist_domain_for(source_domain: SpecialistDomain) -> SpecialistDomain:
 
 def build_specialist(
     domain: SpecialistDomain,
-    llm_provider: ReviewLLMProvider = DEFAULT_LLM_PROVIDER,
+    llm_provider: ReviewLLMProvider | None = None,
 ) -> CompiledStateGraph:
+    from data_agent.skills.runtime import build_skill_graph
+
     return build_skill_graph(SPECIALISTS[domain].skill, llm_provider=llm_provider)

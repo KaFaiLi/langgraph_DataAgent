@@ -193,3 +193,38 @@ def test_python_registration_does_not_create_missing_source_root(tmp_path: Path)
     register(server, root=missing_root)
 
     assert not missing_root.exists()
+
+
+def test_python_sandbox_resolves_symlinks_without_bypassing_scope(tmp_path: Path):
+    source = tmp_path / "source"
+    source.mkdir()
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    outside = tmp_path / "private.txt"
+    outside.write_text("private", encoding="utf-8")
+    (source / "allowed.txt").write_text("allowed", encoding="utf-8")
+    (source / "inside.txt").symlink_to(source / "allowed.txt")
+    (source / "escape.txt").symlink_to(outside)
+    result = run_python_analysis(
+        source,
+        workspace,
+        f"""
+from pathlib import Path
+import os
+root = Path({str(source)!r})
+assert (root / "inside.txt").read_text() == "allowed"
+assert os.stat(root / "allowed.txt").st_size == 7
+for operation in [lambda: (root / "escape.txt").read_text(),
+                  lambda: os.stat(root / "escape.txt"),
+                  lambda: (root / "escape.txt").write_text("modified")]:
+    try:
+        operation()
+    except PermissionError:
+        continue
+    raise AssertionError("escaped the source scope")
+print("scope preserved")
+""",
+    )
+    assert result["ok"], result
+    assert result["stdout"].strip() == "scope preserved"
+    assert outside.read_text(encoding="utf-8") == "private"

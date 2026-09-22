@@ -12,8 +12,8 @@ from data_agent.review.orchestration.specialist.state import (
     SpecialistState,
     dumps_period,
 )
-from data_agent.review.verification.candidates import assign_candidate_ids
 from data_agent.tools.review_context import ToolContext
+from data_agent.tools.review_operations import AnalysisRequest, prepare_analysis
 from data_agent.tools.tabular_tools import inspect_table
 
 
@@ -108,18 +108,10 @@ def run_deterministic_analysis(
 ) -> dict:
     """Execute the trusted skill runner against assigned source paths."""
     ctx = context_from_config(config)
-    analyses = runtime.spec.analyses_runner(ctx, list(state.get("source_paths", [])))
-    serialized: list[dict] = []
-    for analysis in analyses:
-        data = analysis.model_dump(mode="json")
-        candidates = data.get("flag_candidates", [])
-        if isinstance(candidates, list):
-            data["flag_candidates"] = assign_candidate_ids(
-                str(data.get("name") or "analysis"),
-                [candidate for candidate in candidates if isinstance(candidate, dict)],
-            )
-        serialized.append(data)
-    return {"analyses": serialized}
+    analyses = prepare_analysis(
+        AnalysisRequest(ctx, tuple(state.get("source_paths", []))), runtime.spec.analyses_runner
+    )
+    return {"analyses": [analysis.model_dump(mode="json") for analysis in analyses]}
 
 
 __all__ = [

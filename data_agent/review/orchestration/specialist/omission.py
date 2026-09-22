@@ -7,39 +7,12 @@ from typing import Any
 
 from langchain_core.runnables.config import RunnableConfig
 
-from data_agent.review.domain.evidence import EvidenceReference, parse_locator
+from data_agent.review.domain.analysis import AnalysisResult
 from data_agent.review.domain.verification import CandidateDispositionRecord, OmissionAuditResult
-from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 from data_agent.review.orchestration.specialist.runtime import SpecialistRuntime
 from data_agent.review.orchestration.specialist.scope import context_from_config
 from data_agent.review.orchestration.specialist.state import SpecialistState, loads_finding
-from data_agent.review.verification.omission import audit_omissions
-
-
-def _source_backed_dispositions(
-    state: SpecialistState, validator: EvidenceValidator
-) -> list[dict[str, Any]]:
-    """Retain disposition records, but only valid assigned evidence can cover a signal."""
-
-    assigned = set(state.get("source_paths", []))
-    records: list[dict[str, Any]] = []
-    for raw in state.get("candidate_dispositions", []):
-        try:
-            record = CandidateDispositionRecord.model_validate(raw)
-        except ValueError:
-            continue
-        valid: list[EvidenceReference] = []
-        validation = validator.validate_references(record.evidence)
-        valid_results = {result.locator: result for result in validation.results if result.valid}
-        for reference in record.evidence:
-            try:
-                path = parse_locator(reference.locator).path
-            except ValueError:
-                continue
-            if path in assigned and reference.locator in valid_results:
-                valid.append(reference)
-        records.append(record.model_copy(update={"evidence": valid}).model_dump(mode="json"))
-    return records
+from data_agent.tools.review_operations import OmissionRequest, audit_candidates
 
 
 def _audit_feedback(audit: OmissionAuditResult, *, max_chars: int) -> str:
@@ -68,18 +41,20 @@ def audit_omission_candidates(
     """Audit candidate coverage after settlement and request at most one rescue pass."""
 
     ctx = context_from_config(config)
-    validator = EvidenceValidator.source_backed(ctx.source_root, ctx.manifest)
-    verified = [loads_finding(raw) for raw in state.get("verified_findings", [])]
-    rejected = [loads_finding(raw) for raw in state.get("rejected_findings", [])]
-    unresolved = [loads_finding(raw) for raw in state.get("unresolved_findings", [])]
-    dispositions = _source_backed_dispositions(state, validator)
-    audit = audit_omissions(
-        list(state.get("analyses", [])),
-        verified,
-        rejected_findings=rejected,
-        unresolved_findings=unresolved,
-        candidate_dispositions=dispositions,
-        rescue_used=bool(state.get("omission_rescue_used", False)),
+    audit = audit_candidates(
+        OmissionRequest(
+            context=ctx,
+            source_paths=tuple(state.get("source_paths", [])),
+            analyses=[
+                AnalysisResult.model_validate({"summary": "", **raw})
+                for raw in state.get("analyses", [])
+            ],
+            verified=[loads_finding(raw) for raw in state.get("verified_findings", [])],
+            rejected=[loads_finding(raw) for raw in state.get("rejected_findings", [])],
+            unresolved=[loads_finding(raw) for raw in state.get("unresolved_findings", [])],
+            dispositions=_valid_dispositions(state.get("candidate_dispositions", [])),
+            rescue_used=bool(state.get("omission_rescue_used", False)),
+        )
     )
 
     rescue_available = runtime.max_omission_rescue_rounds > 0
@@ -139,3 +114,13 @@ def route_omission(state: SpecialistState) -> str:
 
 
 __all__ = ["audit_omission_candidates", "route_omission"]
+
+
+def _valid_dispositions(records: list[dict]) -> list[CandidateDispositionRecord]:
+    result = []
+    for record in records:
+        try:
+            result.append(CandidateDispositionRecord.model_validate(record))
+        except ValueError:
+            continue
+    return result

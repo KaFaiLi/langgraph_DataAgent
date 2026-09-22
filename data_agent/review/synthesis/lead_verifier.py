@@ -52,7 +52,11 @@ _MATERIALITY_ORDER = {
 }
 _MATERIAL_OBJECTION_LEVEL = _MATERIALITY_ORDER[ObjectionMateriality.MEDIUM]
 
-LEAD_VERIFIER_SYSTEM = load_lead_review_skill().verifier_policy
+
+def __getattr__(name: str):
+    if name == "LEAD_VERIFIER_SYSTEM":
+        return load_lead_review_skill().verifier_policy
+    raise AttributeError(name)
 
 
 class LeadVerifierOutput(BaseModel):
@@ -629,7 +633,10 @@ def lead_verifier(state: ParentState, config: RunnableConfig) -> dict:
     runnable = _provider(config)(ModelTier.HIGH_COST, LeadVerifierOutput)
     output = invoke_structured(
         runnable,
-        [SystemMessage(content=LEAD_VERIFIER_SYSTEM), HumanMessage(content=user)],
+        [
+            SystemMessage(content=load_lead_review_skill().verifier_policy),
+            HumanMessage(content=user),
+        ],
         schema=LeadVerifierOutput,
     )
     verdict = (
