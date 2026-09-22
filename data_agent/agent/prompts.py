@@ -17,3 +17,26 @@ Operating principles:
 def build_system_prompt(skills_overview: str) -> str:
     """Combine the base prompt with the (cheap) skills catalog."""
     return f"{BASE_SYSTEM_PROMPT}\n{skills_overview}\n"
+
+
+def build_child_system_prompt(system_prompt: str, skills_overview: str) -> str:
+    """Build a fresh, bounded child prompt from a trusted spec.
+
+    The parent conversation is intentionally absent.  The runner supplies only
+    the delegated task and selected context as a user message.
+    """
+
+    trusted = system_prompt.strip()
+    if not trusted:
+        trusted = "You are a focused child assistant. Complete the delegated task carefully."
+    return (
+        f"{BASE_SYSTEM_PROMPT}\n"
+        "You are a one-level child agent. Do not delegate to another agent. "
+        "Use only the tools listed for this task, and cite source paths or locators "
+        "when they support your answer.\n\n"
+        f"Trusted child instructions:\n{trusted}\n\n"
+        f"{skills_overview}\n"
+    )
+
+
+__all__ = ["BASE_SYSTEM_PROMPT", "build_child_system_prompt", "build_system_prompt"]

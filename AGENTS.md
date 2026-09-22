@@ -6,10 +6,12 @@ Production code lives in `data_agent/`. Keep conversational ReAct behavior in
 `data_agent/agent`, controlled risk workflows in `data_agent/review`, model adapters in
 `data_agent/llm`, and MCP transport in `data_agent/mcp_server`. Shared implementations
 belong in `data_agent/tools` and shared skill loading/registration in `data_agent/skills`;
-do not recreate private tool or skill packages under callers. Domain playbooks and trusted
-deterministic entrypoints live in top-level `skills/<kebab-case-name>/`. Tests mirror the
-code under `tests/`, with review-specific suites in `tests/review/`. Treat `evals/` as
-controlled evaluation material, not production fixtures.
+do not recreate private tool or skill packages under callers. The legacy top-level
+`review/` package is being migrated into `data_agent/` as the canonical home for review
+logic and workflows. Domain playbooks and trusted deterministic entrypoints live in
+top-level `skills/<kebab-case-name>/`. Tests mirror the code under `tests/`, with
+review-specific suites in `tests/review/`. Treat `evals/` as controlled evaluation
+material, not production fixtures.
 
 ## Build, Test, and Development Commands
 

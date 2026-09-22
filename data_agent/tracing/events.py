@@ -53,6 +53,13 @@ class ExecutionEvent(BaseModel):
     callback_run_id: UUID
     parent_callback_run_id: UUID | None = None
 
+    # Optional generic agent hierarchy metadata. These fields are intentionally
+    # additive so traces written before sub-agent delegation remain readable.
+    agent_id: str | None = None
+    parent_agent_id: str | None = None
+    agent_name: str | None = None
+    agent_depth: int | None = Field(default=None, ge=0)
+
     graph: str | None = None
     node: str | None = None
     specialist: str | None = None

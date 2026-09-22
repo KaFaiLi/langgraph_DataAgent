@@ -21,18 +21,23 @@ from dataclasses import dataclass, field
 from typing import Any
 from uuid import uuid4
 
-from langchain.agents import create_agent
 from langchain_core.callbacks import BaseCallbackManager
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.tools import BaseTool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
+from data_agent.agent.factory import build_react_graph
 from data_agent.agent.prompts import build_system_prompt
+from data_agent.agent.runtime import build_lifecycle_graph
+from data_agent.agent.subagents.contracts import DelegationPolicy, InvocationContext, SubagentSpec
+from data_agent.agent.subagents.registry import SubagentRegistry, validate_tool_names
+from data_agent.agent.subagents.runner import DelegationRunner
 from data_agent.config import Settings, get_settings
 from data_agent.llm import get_chat_model
 from data_agent.logging_utils import get_logger, setup_logging
 from data_agent.skills.loader import Skill, discover_skills
 from data_agent.skills.tools import build_skill_tools, render_skills_overview
+from data_agent.tools.delegation import build_delegation_tool
 from data_agent.tracing import ExecutionTraceHandler, TraceSink
 
 logger = get_logger(__name__)
@@ -102,9 +107,15 @@ class AgentBundle:
     system_prompt: str = ""
     max_iterations: int = 10  # mirrors Settings.agent_max_iterations
     trace_result_preview_chars: int = 0
+    root_tools: list[BaseTool] = field(default_factory=list)
+    delegation_tool: BaseTool | None = None
+    delegation_runner: DelegationRunner | None = None
+    delegation_policy: DelegationPolicy | None = None
 
     @property
     def all_tools(self) -> list[BaseTool]:
+        if self.root_tools:
+            return list(self.root_tools)
         return [*self.mcp_tools, *self.skill_tools]
 
     def _run_config(self, extra: dict | None = None) -> dict:
@@ -167,6 +178,7 @@ async def build_agent(
     *,
     model: BaseChatModel | None = None,
     extra_tools: list[BaseTool] | None = None,
+    subagent_specs: Sequence[SubagentSpec] | None = None,
 ) -> AgentBundle:
     """Build the ReAct agent and return an :class:`AgentBundle`.
 
@@ -174,6 +186,8 @@ async def build_agent(
         settings: Override settings (defaults to :func:`get_settings`).
         model: Provide a pre-built chat model (skips native model construction).
         extra_tools: Additional LangChain tools to expose to the agent.
+        subagent_specs: Optional trusted child profiles. When omitted and delegation
+            is enabled, the built-in read-only research profile is used.
     """
     settings = settings or get_settings()
     setup_logging(settings.log_level)
@@ -192,10 +206,10 @@ async def build_agent(
     # 3. Model.
     model = model or get_chat_model(settings=settings)
 
-    # 4. Assemble the graph. The skills-first directive is part of the stable
-    #    system prompt because LangChain create_agent supersedes the deprecated
-    #    pre-model-hook ReAct helper.
-    tools: list[BaseTool] = [*mcp_tools, *skill_tools, *(extra_tools or [])]
+    # 4. Assemble the root tool collection. Validate collisions before graph
+    #    construction because ToolNode otherwise silently picks one definition.
+    base_tools: list[BaseTool] = [*mcp_tools, *skill_tools, *(extra_tools or [])]
+    validate_tool_names(base_tools)
     system_prompt = build_system_prompt(overview)
     if skills:
         skill_lines = "\n".join(f"  - {skill.name}: {skill.description}" for skill in skills)
@@ -205,7 +219,55 @@ async def build_agent(
             "If a skill description matches the request, the first tool call must be "
             "load_skill(name=...). Follow its instructions before using another tool."
         )
-    agent = create_agent(model, tools, system_prompt=system_prompt)
+
+    policy = DelegationPolicy.from_settings(settings)
+    delegation_tool: BaseTool | None = None
+    runner: DelegationRunner | None = None
+    tools = base_tools
+    parent_agent: Any
+    registry: SubagentRegistry | None = None
+    if policy.enabled:
+        registry = SubagentRegistry.build(
+            subagent_specs,
+            tools=base_tools,
+            skills=skills,
+        )
+        runner = DelegationRunner(
+            model=model,
+            tools=base_tools,
+            skills=skills,
+            registry=registry,
+            policy=policy,
+            max_iterations=settings.agent_max_iterations,
+        )
+        delegation_tool = build_delegation_tool(runner)
+        validate_tool_names([*base_tools, delegation_tool])
+        tools = [*base_tools, delegation_tool]
+        spec_lines = "\n".join(f"  - {spec.name}: {spec.description}" for spec in registry.specs)
+        system_prompt += (
+            "\n\nDELEGATION — you may delegate one focused task to a trusted child "
+            "agent and wait for its bounded result. Split independent work into "
+            "independent calls, then synthesize the final answer yourself. Children "
+            "cannot delegate further. Available child agents:\n"
+            f"{spec_lines}\n"
+            "Call run_subagent(agent_name=..., task=..., context=...) only when it "
+            "improves the answer. Treat child findings as evidence to assess, and "
+            "disclose failed, incomplete, or truncated work in your final synthesis."
+        )
+        parent_agent = build_react_graph(
+            model,
+            tools,
+            system_prompt=system_prompt,
+            context_schema=InvocationContext,
+            checkpointer=False,
+            name="chat_parent",
+        )
+        agent = build_lifecycle_graph(parent_agent, runner, policy)
+    else:
+        parent_agent = build_react_graph(
+            model, tools, system_prompt=system_prompt, name="chat_parent"
+        )
+        agent = parent_agent
 
     return AgentBundle(
         agent=agent,
@@ -217,4 +279,8 @@ async def build_agent(
         system_prompt=system_prompt,
         max_iterations=settings.agent_max_iterations,
         trace_result_preview_chars=settings.trace_result_preview_chars,
+        root_tools=tools,
+        delegation_tool=delegation_tool,
+        delegation_runner=runner,
+        delegation_policy=policy,
     )

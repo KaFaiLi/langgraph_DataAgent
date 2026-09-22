@@ -26,6 +26,7 @@ _INLINE_SECRET = re.compile(
 )
 _LOCATOR = re.compile(r"source://[^\s\]\[\)\(\"']+")
 _ARGUMENT_LIMIT = 500
+_DELEGATION_TOOL = "run_subagent"
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,10 @@ class _ActiveRun:
     node: str | None
     specialist: str | None
     name: str | None
+    agent_id: str | None
+    parent_agent_id: str | None
+    agent_name: str | None
+    agent_depth: int | None
 
 
 def _redact(value: Any) -> Any:
@@ -68,6 +73,50 @@ def render_arguments(value: Any, *, limit: int = _ARGUMENT_LIMIT) -> str:
     return rendered if len(rendered) <= limit else rendered[:limit] + "…"
 
 
+def _coerce_json(value: Any) -> Any:
+    if isinstance(value, str):
+        try:
+            return json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            return value
+    return value
+
+
+def _text_length(value: Any) -> int:
+    """Return a length without including the value itself in a trace."""
+
+    if value is None:
+        return 0
+    if isinstance(value, str):
+        return len(value)
+    return len(str(value))
+
+
+def render_delegation_arguments(value: Any, *, limit: int = _ARGUMENT_LIMIT) -> str:
+    """Render only safe identifiers and lengths for a ``run_subagent`` call.
+
+    Delegation task and context text can contain private user data.  They are
+    deliberately excluded even when ordinary tool-result previews are enabled.
+    """
+
+    value = _coerce_json(value)
+    if isinstance(value, Mapping):
+        safe: dict[str, Any] = {
+            "agent_name": str(value["agent_name"])[:100]
+            if value.get("agent_name") is not None
+            else None,
+            "task_chars": _text_length(value.get("task")),
+            "context_chars": _text_length(value.get("context")),
+            "input_chars": _text_length(value.get("task")) + _text_length(value.get("context")),
+        }
+        for key in ("agent_id", "parent_agent_id"):
+            if value.get(key) is not None:
+                safe[key] = str(value[key])[:100]
+    else:
+        safe = {"input_chars": _text_length(value)}
+    return render_arguments(safe, limit=limit)
+
+
 def _result_text(output: Any) -> str:
     content = getattr(output, "content", None)
     if content is not None:
@@ -80,13 +129,47 @@ def _result_text(output: Any) -> str:
         return str(output)
 
 
-def _metadata(metadata: dict[str, Any] | None) -> tuple[str | None, str | None, str | None]:
+def _optional_str(value: Any) -> str | None:
+    if value is None:
+        return None
+    return str(value)
+
+
+def _optional_depth(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        depth = int(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return depth if depth >= 0 else None
+
+
+def _metadata(
+    metadata: Mapping[str, Any] | None,
+) -> tuple[
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+    int | None,
+]:
     metadata = metadata or {}
     return (
-        metadata.get("risk_agent_graph"),
+        _optional_str(metadata.get("data_agent_graph") or metadata.get("risk_agent_graph")),
         metadata.get("langgraph_node"),
-        metadata.get("risk_agent_specialist"),
+        _optional_str(metadata.get("risk_agent_specialist")),
+        _optional_str(metadata.get("data_agent_id")),
+        _optional_str(metadata.get("data_agent_parent_id")),
+        _optional_str(metadata.get("data_agent_name")),
+        _optional_depth(metadata.get("data_agent_depth")),
     )
+
+
+def _is_delegation_tool(name: str | None) -> bool:
+    return bool(name) and name.rsplit(".", 1)[-1].lower() == _DELEGATION_TOOL
 
 
 def _serialized_name(serialized: dict[str, Any] | None, fallback: str | None = None) -> str | None:
@@ -136,11 +219,13 @@ class ExecutionTraceHandler(BaseCallbackHandler):
         event_type: EventType,
         run_id: UUID,
         parent_run_id: UUID | None,
-        metadata: dict[str, Any] | None,
+        metadata: Mapping[str, Any] | None,
         name: str | None,
         arguments: str | None = None,
     ) -> None:
-        graph, node, specialist = _metadata(metadata)
+        graph, node, specialist, agent_id, parent_agent_id, agent_name, agent_depth = _metadata(
+            metadata
+        )
         active = _ActiveRun(
             kind=kind,
             started=time.monotonic(),
@@ -149,8 +234,17 @@ class ExecutionTraceHandler(BaseCallbackHandler):
             node=node,
             specialist=specialist,
             name=name,
+            agent_id=agent_id,
+            parent_agent_id=parent_agent_id,
+            agent_name=agent_name,
+            agent_depth=agent_depth,
         )
         with self._lock:
+            # A callback manager can propagate the same lifecycle start more
+            # than once.  Keep one active record so one logical callback run
+            # cannot produce duplicate start events or mismatched durations.
+            if run_id in self._active:
+                return
             self._active[run_id] = active
         self._emit(
             event_type=event_type,
@@ -161,6 +255,10 @@ class ExecutionTraceHandler(BaseCallbackHandler):
             node=node,
             specialist=specialist,
             name=name,
+            agent_id=agent_id,
+            parent_agent_id=parent_agent_id,
+            agent_name=agent_name,
+            agent_depth=agent_depth,
             arguments=arguments,
         )
 
@@ -186,10 +284,24 @@ class ExecutionTraceHandler(BaseCallbackHandler):
             "node": active.node,
             "specialist": active.specialist,
             "name": active.name,
+            "agent_id": active.agent_id,
+            "parent_agent_id": active.parent_agent_id,
+            "agent_name": active.agent_name,
+            "agent_depth": active.agent_depth,
             "duration_ms": max(0.0, (time.monotonic() - active.started) * 1000),
         }
         if error is not None:
-            message = str(_redact(str(error)))
+            if active.kind == "tool" and _is_delegation_tool(active.name):
+                # ToolMessage errors can echo the delegated prompt or child
+                # result.  Keep the failure type while dropping its body.
+                message = f"{active.name or _DELEGATION_TOOL} failed"
+            elif active.agent_depth is not None and active.agent_depth > 0:
+                # Child model/provider and node exceptions can echo the private
+                # delegated prompt.  Preserve the type for diagnosis without
+                # retaining provider-controlled error text.
+                message = f"{active.kind} failed ({type(error).__name__})"
+            else:
+                message = str(_redact(str(error)))
             values.update(
                 error_type=type(error).__name__,
                 error_message=message[:_ARGUMENT_LIMIT]
@@ -216,22 +328,32 @@ class ExecutionTraceHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: UUID | None = None,
-        metadata: dict[str, Any] | None = None,
+        metadata: Mapping[str, Any] | None = None,
         inputs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
+        tool_name = _serialized_name(serialized, kwargs.get("name"))
+        tool_input = inputs if inputs is not None else input_str
+        arguments = (
+            render_delegation_arguments(tool_input)
+            if _is_delegation_tool(tool_name)
+            else render_arguments(tool_input)
+        )
         self._start(
             kind="tool",
             event_type=EventType.TOOL_STARTED,
             run_id=run_id,
             parent_run_id=parent_run_id,
             metadata=metadata,
-            name=_serialized_name(serialized, kwargs.get("name")),
-            arguments=render_arguments(inputs if inputs is not None else input_str),
+            name=tool_name,
+            arguments=arguments,
         )
 
     def on_tool_end(self, output: Any, *, run_id: UUID, **kwargs: Any) -> None:
-        if getattr(output, "status", None) == "error":
+        status = getattr(output, "status", None)
+        if status is None and isinstance(output, Mapping):
+            status = output.get("status")
+        if status == "error":
             self._finish(
                 run_id,
                 success_type=EventType.TOOL_SUCCEEDED,
@@ -261,7 +383,7 @@ class ExecutionTraceHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: UUID | None = None,
-        metadata: dict[str, Any] | None = None,
+        metadata: Mapping[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         del prompts
@@ -296,11 +418,11 @@ class ExecutionTraceHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: UUID | None = None,
-        metadata: dict[str, Any] | None = None,
+        metadata: Mapping[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         del inputs
-        _, node, _ = _metadata(metadata)
+        _, node, _, _, _, _, _ = _metadata(metadata)
         name = _serialized_name(serialized, kwargs.get("name"))
         if not node or name != node:
             return
@@ -330,4 +452,4 @@ class ExecutionTraceHandler(BaseCallbackHandler):
         )
 
 
-__all__ = ["ExecutionTraceHandler", "render_arguments"]
+__all__ = ["ExecutionTraceHandler", "render_arguments", "render_delegation_arguments"]

@@ -7,11 +7,12 @@ cached so the ``.env`` file is only parsed once per process.
 
 from __future__ import annotations
 
+import math
 import os
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Repo root is the directory containing the data_agent package.
@@ -94,6 +95,64 @@ class Settings(BaseSettings):
             "Raise this for multi-step tasks; lower it to cap costs."
         ),
     )
+
+    # --- Conversational sub-agents -----------------------------------------
+    subagents_enabled: bool = Field(
+        default=False,
+        description="Enable model-selected conversational sub-agent delegation.",
+    )
+    subagent_max_runs: int = Field(
+        default=4,
+        gt=0,
+        description="Maximum child attempts admitted during one root invocation.",
+    )
+    subagent_max_concurrency: int = Field(
+        default=2,
+        gt=0,
+        description="Maximum child executions active concurrently in one root invocation.",
+    )
+    subagent_max_model_calls: int = Field(
+        default=6,
+        gt=0,
+        description="Maximum model calls allowed per child execution.",
+    )
+    subagent_max_tool_calls: int = Field(
+        default=12,
+        gt=0,
+        description="Maximum tool calls allowed per child execution.",
+    )
+    subagent_timeout_seconds: float = Field(
+        default=120.0,
+        gt=0,
+        description="Maximum seconds allowed for admission and execution of one child.",
+    )
+    subagent_max_input_chars: int = Field(
+        default=16_000,
+        gt=0,
+        description="Maximum combined task and context characters accepted by a child.",
+    )
+    subagent_max_result_chars: int = Field(
+        default=8_000,
+        gt=0,
+        description="Maximum child answer characters retained in a delegation result.",
+    )
+
+    @field_validator("subagent_timeout_seconds")
+    @classmethod
+    def _validate_subagent_timeout(cls, value: float) -> float:
+        """Reject non-finite deadlines even though infinity is greater than zero."""
+
+        if not math.isfinite(value):
+            raise ValueError("subagent_timeout_seconds must be finite")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_subagent_concurrency(self) -> Settings:
+        """Keep the concurrency budget within the total child-attempt budget."""
+
+        if self.subagent_max_concurrency > self.subagent_max_runs:
+            raise ValueError("subagent_max_concurrency must be <= subagent_max_runs")
+        return self
 
     # --- Execution tracing --------------------------------------------------
     trace_result_preview_chars: int = Field(

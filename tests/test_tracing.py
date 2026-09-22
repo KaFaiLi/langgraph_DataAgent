@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
+from langchain_core.messages import ToolMessage
 from pydantic import ValidationError
 
 from data_agent.config import Settings
@@ -61,6 +62,143 @@ def test_handler_correlates_and_redacts_tool_lifecycle() -> None:
     assert completed.result_sha256
     assert "hidden" not in (completed.result_preview or "")
     assert completed.truncated is True
+
+
+def test_handler_persists_generic_agent_hierarchy_on_start_and_end() -> None:
+    sink = InMemoryTraceSink()
+    handler = ExecutionTraceHandler("RUN-HIERARCHY", [sink], result_preview_chars=20)
+    run_id = uuid4()
+    parent_callback_id = uuid4()
+
+    handler.on_tool_start(
+        {"name": "read_rows"},
+        "",
+        run_id=run_id,
+        parent_run_id=parent_callback_id,
+        metadata={
+            "data_agent_id": "child-7",
+            "data_agent_parent_id": "root-1",
+            "data_agent_name": "research",
+            "data_agent_depth": 1,
+            "data_agent_graph": "chat:child",
+            "langgraph_node": "research_node",
+        },
+        inputs={"path": "risk.csv"},
+    )
+    handler.on_tool_end("ok", run_id=run_id)
+
+    started, completed = sink.events
+    for event in (started, completed):
+        assert event.agent_id == "child-7"
+        assert event.parent_agent_id == "root-1"
+        assert event.agent_name == "research"
+        assert event.agent_depth == 1
+        assert event.graph == "chat:child"
+    assert started.parent_callback_run_id == parent_callback_id
+    assert completed.parent_callback_run_id == parent_callback_id
+
+
+def test_legacy_review_metadata_and_event_shape_still_parse() -> None:
+    sink = InMemoryTraceSink()
+    handler = ExecutionTraceHandler("RUN-LEGACY", [sink])
+    run_id = uuid4()
+    handler.on_tool_start(
+        {"name": "inspect_table"},
+        "{}",
+        run_id=run_id,
+        metadata={
+            "risk_agent_graph": "specialist:legacy",
+            "risk_agent_specialist": "legacy",
+        },
+    )
+    handler.on_tool_end("ok", run_id=run_id)
+
+    assert sink.events[0].graph == "specialist:legacy"
+    assert sink.events[0].specialist == "legacy"
+    assert sink.events[0].agent_id is None
+
+    legacy_payload = sink.events[0].model_dump(mode="json")
+    for key in ("agent_id", "parent_agent_id", "agent_name", "agent_depth"):
+        legacy_payload.pop(key)
+    assert ExecutionEvent.model_validate(legacy_payload).agent_name is None
+
+
+def test_delegation_arguments_and_errors_do_not_capture_prompt_text() -> None:
+    sink = InMemoryTraceSink()
+    handler = ExecutionTraceHandler("RUN-PRIVATE", [sink], result_preview_chars=4_000)
+    run_id = uuid4()
+    task = "PRIVATE_TASK_SHOULD_NOT_APPEAR"
+    context = "PRIVATE_CONTEXT_SHOULD_NOT_APPEAR"
+
+    handler.on_tool_start(
+        {"name": "run_subagent"},
+        "",
+        run_id=run_id,
+        inputs={"agent_name": "research", "task": task, "context": context},
+    )
+    started = sink.events[0]
+    assert task not in (started.arguments or "")
+    assert context not in (started.arguments or "")
+    assert '"agent_name":"research"' in (started.arguments or "")
+    assert '"task_chars":30' in (started.arguments or "")
+    assert '"context_chars":33' in (started.arguments or "")
+
+    handler.on_tool_end(
+        ToolMessage(
+            content=f"delegated failure: {task} {context}",
+            tool_call_id="tool-call-1",
+            status="error",
+        ),
+        run_id=run_id,
+    )
+    failed = sink.events[-1]
+    assert failed.event_type is EventType.TOOL_FAILED
+    assert failed.error_message == "run_subagent failed"
+    assert task not in failed.error_message
+    assert context not in failed.error_message
+
+
+def test_duplicate_callback_start_is_emitted_once() -> None:
+    sink = InMemoryTraceSink()
+    handler = ExecutionTraceHandler("RUN-DUPLICATE", [sink])
+    run_id = uuid4()
+    for _ in range(2):
+        handler.on_tool_start(
+            {"name": "inspect_table"},
+            "{}",
+            run_id=run_id,
+        )
+    handler.on_tool_end("ok", run_id=run_id)
+
+    assert [event.event_type for event in sink.events] == [
+        EventType.TOOL_STARTED,
+        EventType.TOOL_SUCCEEDED,
+    ]
+
+
+def test_child_errors_are_bounded_without_prompt_text() -> None:
+    sink = InMemoryTraceSink()
+    handler = ExecutionTraceHandler("RUN-CHILD-ERROR", [sink])
+    run_id = uuid4()
+    sentinel = "PRIVATE_CHILD_PROMPT_SENTINEL"
+
+    handler.on_llm_start(
+        {"name": "child-model"},
+        [],
+        run_id=run_id,
+        metadata={
+            "data_agent_id": "child-1",
+            "data_agent_parent_id": "root-1",
+            "data_agent_name": "research",
+            "data_agent_depth": 1,
+            "data_agent_graph": "chat:child",
+        },
+    )
+    handler.on_llm_error(RuntimeError(f"provider rejected {sentinel}"), run_id=run_id)
+
+    failed = sink.events[-1]
+    assert failed.error_message == "model failed (RuntimeError)"
+    assert sentinel not in failed.error_message
 
 
 def test_handler_records_tool_error() -> None:
