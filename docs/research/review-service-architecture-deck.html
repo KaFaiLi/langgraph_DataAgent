@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autonomous Review Service Architecture</title>
+  <style>
+    :root {
+      --ink: #051c2c;
+      --muted: #5b6f7c;
+      --paper: #ffffff;
+      --paper-2: #f3f6f8;
+      --line: #cbd6dc;
+      --cyan: #0077c8;
+      --lime: #0b5c8e;
+      --amber: #3f83a8;
+      --coral: #6f8796;
+      --violet: #255f85;
+      --font: "Aptos", "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font);
+    }
+
+    body {
+      overflow: hidden;
+    }
+
+    button { font: inherit; }
+
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--paper);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: clamp(18px, 2.8vh, 30px);
+      padding: clamp(34px, 5.2vh, 58px) clamp(44px, 5.6vw, 90px) clamp(44px, 6.2vh, 68px);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(28px);
+      transition: opacity 210ms ease, transform 260ms ease, visibility 210ms;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+      z-index: 2;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: none;
+    }
+
+    .slide > * { position: relative; z-index: 1; }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--cyan);
+      font-size: clamp(12px, 1.2vw, 17px);
+      font-weight: 750;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      margin-bottom: 18px;
+      max-width: 1100px;
+      font-size: clamp(48px, 6.4vw, 92px);
+      line-height: 0.98;
+      letter-spacing: -0.045em;
+    }
+
+    h2 {
+      margin-bottom: 0;
+      max-width: 1200px;
+      font-size: clamp(36px, 4.1vw, 63px);
+      line-height: 1.02;
+      letter-spacing: -0.035em;
+    }
+
+    h3 {
+      margin-bottom: 9px;
+      font-size: clamp(19px, 1.7vw, 27px);
+      line-height: 1.15;
+    }
+
+    p, li, td, th {
+      font-size: clamp(15px, 1.34vw, 21px);
+      line-height: 1.38;
+    }
+
+    .subtitle {
+      max-width: 980px;
+      color: #385467;
+      font-size: clamp(21px, 2.25vw, 34px);
+      line-height: 1.3;
+    }
+
+    .body-large {
+      max-width: 1120px;
+      font-size: clamp(24px, 2.65vw, 40px);
+      line-height: 1.28;
+      letter-spacing: -0.015em;
+    }
+
+    .muted { color: var(--muted); }
+    .cyan { color: var(--cyan); }
+    .lime { color: var(--lime); }
+    .amber { color: var(--amber); }
+    .coral { color: var(--coral); }
+    .violet { color: var(--violet); }
+
+    .rule {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--cyan), rgba(0,119,200,0));
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #647984;
+      font-size: clamp(11px, 0.92vw, 14px);
+      letter-spacing: 0.02em;
+    }
+
+    .slide-no::after { content: attr(data-current) " / " attr(data-total); }
+
+    .title-slide {
+      background: linear-gradient(110deg, #ffffff 0 68%, #edf4f7 68% 100%);
+    }
+
+    .title-layout {
+      align-self: center;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      align-items: center;
+      gap: 7vw;
+    }
+
+    .title-mark {
+      display: grid;
+      place-items: center;
+      width: min(24vw, 300px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(0,119,200,0.35);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(0,119,200,0.10) 0 23%, transparent 24%),
+        repeating-radial-gradient(circle, transparent 0 24px, rgba(0,119,200,0.15) 25px 26px);
+      color: var(--cyan);
+      font-size: clamp(48px, 7vw, 96px);
+      font-weight: 800;
+      letter-spacing: -0.08em;
+    }
+
+    .meta-line {
+      display: flex;
+      gap: 28px;
+      color: var(--muted);
+      font-size: clamp(13px, 1.1vw, 17px);
+    }
+
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      align-items: stretch;
+      gap: clamp(18px, 2vw, 30px);
+      min-height: 0;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .split-60 { grid-template-columns: 1.45fr 1fr; }
+    .split-40 { grid-template-columns: 0.9fr 1.4fr; }
+
+    .card {
+      position: relative;
+      padding: clamp(18px, 2vw, 30px);
+      border-top: 3px solid var(--line);
+      background: #f4f7f9;
+    }
+
+    .card.cyan-card { border-color: var(--cyan); }
+    .card.lime-card { border-color: var(--lime); }
+    .card.amber-card { border-color: var(--amber); }
+    .card.coral-card { border-color: var(--coral); }
+    .card.violet-card { border-color: var(--violet); }
+
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+
+    .number {
+      display: inline-block;
+      margin-bottom: 18px;
+      color: var(--cyan);
+      font-size: clamp(35px, 4vw, 58px);
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .metric {
+      color: var(--lime);
+      font-size: clamp(40px, 5vw, 76px);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .label {
+      margin-top: 8px;
+      color: #385467;
+      font-size: clamp(14px, 1.28vw, 20px);
+      line-height: 1.3;
+    }
+
+    ul.clean {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    ul.clean li {
+      position: relative;
+      margin: 0 0 14px;
+      padding-left: 20px;
+    }
+
+    ul.clean li::before {
+      content: "";
+      position: absolute;
+      top: 0.62em;
+      left: 0;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--cyan);
+    }
+
+    .callout {
+      align-self: end;
+      padding: 16px 20px;
+      border-left: 4px solid var(--lime);
+      background: #eef5f8;
+      color: var(--ink);
+      font-size: clamp(16px, 1.45vw, 22px);
+      line-height: 1.35;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      align-items: center;
+      gap: 14px;
+    }
+
+    .flow.five { grid-template-columns: repeat(5, 1fr); }
+    .flow.four { grid-template-columns: repeat(4, 1fr); }
+
+    .step {
+      position: relative;
+      min-height: 118px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 18px;
+      border-top: 3px solid var(--cyan);
+      background: #f3f6f8;
+    }
+
+    .step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: 53%;
+      left: calc(100% + 2px);
+      width: 10px;
+      height: 1px;
+      background: #9fb1bc;
+    }
+
+    .step small {
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .step strong {
+      font-size: clamp(15px, 1.25vw, 20px);
+      line-height: 1.2;
+    }
+
+    .architecture-map {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 16px;
+      padding: 26px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    .badge {
+      width: fit-content;
+      padding: 5px 9px;
+      border-radius: 2px;
+      background: #e8f2f7;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .mini-flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 7px;
+      padding: 16px 0;
+    }
+
+    .mini-node {
+      flex: 1;
+      padding: 12px 8px;
+      border-top: 2px solid var(--cyan);
+      background: #eef5f8;
+      text-align: center;
+      font-size: clamp(11px, 0.9vw, 14px);
+      font-weight: 700;
+    }
+
+    .mini-link {
+      width: 12px;
+      height: 1px;
+      background: #9fb1bc;
+    }
+
+    .ledger {
+      display: grid;
+      grid-template-columns: 0.9fr 1.2fr 0.9fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .agent-box {
+      padding: 22px;
+      border: 1px solid var(--line);
+      background: #f4f7f9;
+    }
+
+    .agent-box.supervisor { border-color: var(--violet); }
+    .agent-box.specialist { border-color: var(--cyan); }
+    .agent-box.validator { border-color: var(--lime); }
+
+    .command {
+      margin: 12px 0 0;
+      padding: 12px 14px;
+      border-left: 3px solid var(--violet);
+      background: #eaf0f3;
+      color: #123e59;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: clamp(12px, 1vw, 16px);
+      line-height: 1.35;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stack-item {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 16px;
+      align-items: start;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .stack-item:last-child { border-bottom: 0; }
+
+    .stack-item strong {
+      color: var(--cyan);
+      font-size: clamp(14px, 1.2vw, 18px);
+    }
+
+    .stack-item span {
+      color: #385467;
+      font-size: clamp(14px, 1.16vw, 18px);
+      line-height: 1.32;
+    }
+
+    .capability-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1.6fr 1.5fr 1.25fr;
+      align-content: center;
+      border-top: 1px solid var(--line);
+      border-left: 1px solid var(--line);
+    }
+
+    .capability-grid > div {
+      padding: 12px 14px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      font-size: clamp(12px, 1vw, 15px);
+      line-height: 1.25;
+    }
+
+    .capability-grid .head {
+      color: var(--cyan);
+      background: #eaf3f8;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .capability-grid .role { font-weight: 750; }
+    .capability-grid .no { color: #647984; }
+    .capability-grid .yes { color: #0b5c8e; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      color: var(--cyan);
+      font-size: clamp(11px, 0.98vw, 15px);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    td:first-child { color: #18384e; font-weight: 700; }
+
+    .rating {
+      display: inline-block;
+      min-width: 72px;
+      padding: 4px 8px;
+      text-align: center;
+      border-radius: 2px;
+      font-size: clamp(11px, 0.9vw, 14px);
+      font-weight: 800;
+    }
+
+    .rating.best { background: rgba(183,244,108,0.14); color: var(--lime); }
+    .rating.mid { background: rgba(255,202,103,0.14); color: var(--amber); }
+    .rating.risk { background: rgba(255,125,125,0.14); color: var(--coral); }
+
+    .risk-plot {
+      position: relative;
+      min-height: 390px;
+      margin: 5px 20px 0 60px;
+      border-left: 1px solid #587086;
+      border-bottom: 1px solid #587086;
+      background:
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 25% 25%;
+    }
+
+    .risk-plot::before {
+      content: "Runtime variance";
+      position: absolute;
+      bottom: -35px;
+      left: 40%;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .risk-plot::after {
+      content: "Output risk";
+      position: absolute;
+      top: 42%;
+      left: -72px;
+      color: var(--muted);
+      font-size: 14px;
+      transform: rotate(-90deg);
+    }
+
+    .bubble {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      text-align: center;
+      font-weight: 800;
+      line-height: 1.13;
+    }
+
+    .bubble.static {
+      left: 14%;
+      bottom: 14%;
+      width: 128px;
+      height: 128px;
+      border: 2px solid var(--lime);
+      background: rgba(183,244,108,0.12);
+      color: var(--lime);
+    }
+
+    .bubble.supervisor {
+      left: 46%;
+      bottom: 42%;
+      width: 146px;
+      height: 146px;
+      border: 2px solid var(--amber);
+      background: rgba(255,202,103,0.12);
+      color: var(--amber);
+    }
+
+    .bubble.react {
+      right: 8%;
+      top: 9%;
+      width: 164px;
+      height: 164px;
+      border: 2px solid var(--coral);
+      background: rgba(255,125,125,0.11);
+      color: var(--coral);
+    }
+
+    .roadmap {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .phase {
+      min-height: 260px;
+      padding: 19px;
+      border-top: 4px solid var(--cyan);
+      background: #f4f7f9;
+    }
+
+    .phase strong {
+      display: block;
+      margin-bottom: 12px;
+      font-size: clamp(18px, 1.55vw, 24px);
+    }
+
+    .phase p {
+      color: #385467;
+      font-size: clamp(13px, 1.08vw, 17px);
+    }
+
+    .decision-list {
+      counter-reset: decision;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px 34px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .decision-list li {
+      counter-increment: decision;
+      position: relative;
+      min-height: 110px;
+      padding: 17px 20px 17px 70px;
+      border-top: 2px solid var(--line);
+      background: #f7f9fa;
+    }
+
+    .decision-list li::before {
+      content: counter(decision, decimal-leading-zero);
+      position: absolute;
+      top: 16px;
+      left: 18px;
+      color: var(--cyan);
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .source-list {
+      columns: 2;
+      column-gap: 60px;
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .source-list li {
+      break-inside: avoid;
+      margin-bottom: 12px;
+      color: #385467;
+      font-size: clamp(14px, 1.08vw, 17px);
+    }
+
+    .controls {
+      position: fixed;
+      right: 18px;
+      bottom: 16px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+      opacity: 0.38;
+      transition: opacity 150ms ease;
+    }
+
+    .controls:hover { opacity: 1; }
+
+    .controls button {
+      width: 38px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: rgba(255,255,255,0.94);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .progress {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      z-index: 30;
+      height: 3px;
+      width: 0;
+      background: linear-gradient(90deg, var(--cyan), var(--lime));
+      transition: width 220ms ease;
+    }
+
+    .overview {
+      overflow: auto;
+      padding: 24px;
+    }
+
+    .overview .slide {
+      position: relative;
+      display: grid;
+      visibility: visible;
+      float: left;
+      width: calc(33.333vw - 32px);
+      height: calc((33.333vw - 32px) * 0.5625);
+      min-height: 250px;
+      margin: 0 12px 18px 0;
+      padding: 22px 28px 30px;
+      opacity: 0.72;
+      transform: none;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      zoom: 0.92;
+    }
+
+    .overview .slide:hover,
+    .overview .slide.active { opacity: 1; border-color: var(--cyan); }
+    .overview .slide h1 { font-size: 38px; }
+    .overview .slide h2 { font-size: 28px; }
+    .overview .slide p,
+    .overview .slide li,
+    .overview .slide td,
+    .overview .slide th { font-size: 11px; }
+    .overview .slide .footer { display: none; }
+    .overview .controls { display: none; }
+
+    @media (max-width: 900px) {
+      .slide { overflow-y: auto; }
+      .grid-3, .grid-4, .architecture-map { grid-template-columns: 1fr; }
+      .grid-2, .split-60, .split-40 { grid-template-columns: 1fr; }
+      .flow, .flow.five, .flow.four { grid-template-columns: 1fr 1fr; }
+      .title-layout { grid-template-columns: 1fr; }
+      .title-mark { display: none; }
+      .capability-grid { grid-template-columns: 1fr 1fr; }
+      .roadmap { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media print {
+      @page { size: 13.333in 7.5in; margin: 0; }
+      body { overflow: visible; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .deck { width: auto; height: auto; overflow: visible; }
+      .slide {
+        position: relative;
+        visibility: visible;
+        width: 13.333in;
+        height: 7.5in;
+        page-break-after: always;
+        opacity: 1;
+        transform: none;
+      }
+      .controls, .progress { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" id="deck" aria-live="polite">
+    <section class="slide title-slide active" data-title="Title">
+      <div></div>
+      <div class="title-layout">
+        <div>
+          <p class="eyebrow">Architecture research</p>
+          <h1>Autonomous review service</h1>
+          <p class="subtitle">Three implementation paths for document review, analysis, and evidence-backed results</p>
+          <div class="rule"></div>
+          <p class="meta-line"><span>data_agent</span><span>22 September 2026</span></p>
+        </div>
+        <div class="title-mark" aria-hidden="true">03</div>
+      </div>
+      <div class="footer"><span>Research presentation draft</span><span class="slide-no"></span></div>
+      <aside hidden>Frame the decision as an architecture choice for unattended review runs. The number three introduces the three candidate designs.</aside>
+    </section>
+
+    <section class="slide" data-title="Comparison scope">
+      <header>
+        <p class="eyebrow">Comparison scope</p>
+        <h2>Three plans support the same review outcome</h2>
+      </header>
+      <div class="grid-2 split-60">
+        <p class="body-large">Each plan reviews documents, runs domain analysis, and produces an evidence-backed result. The plans differ in <span class="cyan">who controls the workflow</span>.</p>
+        <div class="card cyan-card">
+          <h3>Comparison dimensions</h3>
+          <ul class="clean">
+            <li>Orchestration and task assignment</li>
+            <li>Tools, skills, and context boundaries</li>
+            <li>Evidence and coverage validation</li>
+            <li>Runtime shape and implementation work</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer"><span>The deck compares designs without selecting one</span><span class="slide-no"></span></div>
+      <aside hidden>Set up a neutral comparison. All plans target the same external service contract and unattended execution requirements.</aside>
+    </section>
+
+    <section class="slide" data-title="What must be proven">
+      <header>
+        <p class="eyebrow">Review invariants</p>
+        <h2>A valid result must prove more than good prose</h2>
+      </header>
+      <div class="grid-4">
+        <div class="card cyan-card"><span class="number">01</span><h3>Coverage</h3><p class="muted">The run settles every file in the immutable manifest.</p></div>
+        <div class="card lime-card"><span class="number">02</span><h3>Analysis</h3><p class="muted">Every mandatory domain check leaves a receipt.</p></div>
+        <div class="card amber-card"><span class="number">03</span><h3>Evidence</h3><p class="muted">Each retained claim can reopen the exact source location.</p></div>
+        <div class="card violet-card"><span class="number">04</span><h3>Completion</h3><p class="muted">The service publishes one validated artifact bundle or fails clearly.</p></div>
+      </div>
+      <div class="callout">These invariants belong in code. A model can propose findings, but it cannot waive a missing source or invalid citation.</div>
+      <div class="footer"><span>Common contract for all three options</span><span class="slide-no"></span></div>
+      <aside hidden>Explain why a document review differs from an open-ended assistant task. Correctness includes evidence and coverage state.</aside>
+    </section>
+
+    <section class="slide" data-title="Current baseline">
+      <header>
+        <p class="eyebrow">Current implementation</p>
+        <h2>The package move is complete, and the architecture is already hybrid</h2>
+      </header>
+      <div class="grid-2 split-40">
+        <div>
+          <div class="metric">8</div>
+          <p class="label">reviewed formats today</p>
+          <p class="muted">CSV, XLSX, XLSM, Parquet, PDF, DOCX, Markdown, and text</p>
+          <div class="metric" style="margin-top:26px">1</div>
+          <p class="label">canonical review package</p>
+          <p class="muted"><code>data_agent/review</code></p>
+        </div>
+        <div class="stack">
+          <div class="stack-item"><strong>Parent graph</strong><span>Builds the manifest, routes specialists, settles coverage, verifies the lead report, and publishes artifacts.</span></div>
+          <div class="stack-item"><strong>Specialist graph</strong><span>Runs deterministic analysis, bounded research, evidence reopening, adversarial review, and omission checks.</span></div>
+          <div class="stack-item"><strong>Service seam</strong><span><code>ReviewService.start</code>, <code>resume</code>, and <code>status</code> hide graph state from callers.</span></div>
+        </div>
+      </div>
+      <div class="footer"><span>Current code assessment</span><span class="slide-no"></span></div>
+      <aside hidden>The legacy top-level review package no longer exists. The remaining work deepens the canonical module instead of moving code again.</aside>
+    </section>
+
+    <section class="slide" data-title="Shared contract">
+      <header>
+        <p class="eyebrow">Standalone execution</p>
+        <h2>Every option receives the same safety and result contract</h2>
+      </header>
+      <div class="flow five">
+        <div class="step"><small>Input</small><strong>Immutable source manifest</strong></div>
+        <div class="step"><small>Access</small><strong>Guarded read-only tools</strong></div>
+        <div class="step"><small>Limits</small><strong>Budgets, deadlines, concurrency</strong></div>
+        <div class="step"><small>State</small><strong>Persistent checkpoints</strong></div>
+        <div class="step"><small>Output</small><strong>Validated atomic bundle</strong></div>
+      </div>
+      <div class="grid-3">
+        <div class="card"><h3>Continue</h3><p class="muted">Record bounded uncertainty and warnings when policy allows completion.</p></div>
+        <div class="card"><h3>Retry</h3><p class="muted">Retry transient provider and transport errors within a fixed budget.</p></div>
+        <div class="card"><h3>Fail</h3><p class="muted">Stop on integrity changes, incomplete coverage, or invalid evidence.</p></div>
+      </div>
+      <div class="footer"><span>No human interrupt in any option</span><span class="slide-no"></span></div>
+      <aside hidden>A fair comparison keeps these controls constant. Removing them would create a different, weaker product.</aside>
+    </section>
+
+    <section class="slide" data-title="Three options">
+      <header>
+        <p class="eyebrow">Architecture choices</p>
+        <h2>Three paths assign control differently</h2>
+      </header>
+      <div class="architecture-map">
+        <article class="architecture">
+          <span class="badge">Plan 1</span>
+          <h3>1. Static controlled graph</h3>
+          <div class="mini-flow"><span class="mini-node">Stages</span><span class="mini-link"></span><span class="mini-node">Agents</span><span class="mini-link"></span><span class="mini-node">Gates</span></div>
+          <p class="muted">Code owns the route. Agents investigate inside bounded nodes.</p>
+        </article>
+        <article class="architecture">
+          <span class="badge">Plan 2</span>
+          <h3>2. Supervisor and subagents</h3>
+          <div class="mini-flow"><span class="mini-node">Supervisor</span><span class="mini-link"></span><span class="mini-node">Tools</span><span class="mini-link"></span><span class="mini-node">Children</span></div>
+          <p class="muted">A model plans and delegates to registered domain specialists.</p>
+        </article>
+        <article class="architecture">
+          <span class="badge">Plan 3</span>
+          <h3>3. One ReAct agent</h3>
+          <div class="mini-flow"><span class="mini-node">Prompt</span><span class="mini-link"></span><span class="mini-node">Tool loop</span><span class="mini-link"></span><span class="mini-node">Result</span></div>
+          <p class="muted">One model chooses tools, order, and stopping within hard limits.</p>
+        </article>
+      </div>
+      <div class="footer"><span>All options retain external validation</span><span class="slide-no"></span></div>
+      <aside hidden>The options differ in orchestration. They share source adapters, deterministic analyses, and final validators.</aside>
+    </section>
+
+    <section class="slide" data-title="Option 1">
+      <header>
+        <p class="eyebrow">Option 1</p>
+        <h2>Static graph makes review stages explicit</h2>
+      </header>
+      <div class="flow">
+        <div class="step"><small>01</small><strong>Manifest and routing</strong></div>
+        <div class="step"><small>02</small><strong>Parallel specialists</strong></div>
+        <div class="step"><small>03</small><strong>Evidence gates</strong></div>
+        <div class="step"><small>04</small><strong>Lead synthesis</strong></div>
+        <div class="step"><small>05</small><strong>Coverage audit</strong></div>
+        <div class="step"><small>06</small><strong>Atomic publish</strong></div>
+      </div>
+      <div class="grid-2">
+        <div class="card cyan-card"><h3>Execution model</h3><p>Named graph nodes own stage order, specialist fan-out, evidence gates, synthesis, and publication.</p></div>
+        <div class="card violet-card"><h3>Implementation focus</h3><p>Typed graph state, reducers, idempotent nodes, checkpoint boundaries, and routing tests.</p></div>
+      </div>
+      <div class="footer"><span>Plan 1: code-defined workflow with bounded agent nodes</span><span class="slide-no"></span></div>
+      <aside hidden>The graph defines each stage and exposes progress through named checkpoints. Agents can still investigate inside selected nodes.</aside>
+    </section>
+
+    <section class="slide" data-title="Option 2">
+      <header>
+        <p class="eyebrow">Option 2</p>
+        <h2>The supervisor activates specialists through one tool</h2>
+      </header>
+      <div class="ledger">
+        <div class="agent-box validator">
+          <h3>Deterministic shell</h3>
+          <p class="muted">Creates assignments, task IDs, source scopes, and run budgets.</p>
+        </div>
+        <div class="agent-box supervisor">
+          <h3>Supervisor ReAct agent</h3>
+          <p>Plans the investigation and calls a registered specialist by name.</p>
+          <pre class="command">run_specialist(
+  specialist_name,
+  task_id,
+  source_ids,
+  objective
+)</pre>
+        </div>
+        <div class="stack">
+          <div class="agent-box specialist"><strong>Risk metrics specialist</strong></div>
+          <div class="agent-box specialist"><strong>PnL specialist</strong></div>
+          <div class="agent-box specialist"><strong>Controls specialist</strong></div>
+          <div class="agent-box specialist"><strong>Commentary specialist</strong></div>
+        </div>
+      </div>
+      <div class="callout">The supervisor sees result envelopes. It never receives child transcripts, raw filesystem access, or a way to create new specialists.</div>
+      <div class="footer"><span>Tool calling provides one level of delegation</span><span class="slide-no"></span></div>
+      <aside hidden>Confirm the activation model: the supervisor calls run_specialist. The host resolves the trusted configuration and executes the child in process.</aside>
+    </section>
+
+    <section class="slide" data-title="Option 2 setup">
+      <header>
+        <p class="eyebrow">Option 2 setup</p>
+        <h2>Host policy defines each subagent before the run</h2>
+      </header>
+      <div class="grid-2 split-60">
+        <div class="stack">
+          <div class="stack-item"><strong>Identity</strong><span>Trusted name, purpose, system instructions, and domain skill.</span></div>
+          <div class="stack-item"><strong>Scope</strong><span>Immutable source IDs from the assignment ledger. The child cannot widen the set.</span></div>
+          <div class="stack-item"><strong>Tools</strong><span>Small assigned-source catalog with tracing, result bounds, and call budgets.</span></div>
+          <div class="stack-item"><strong>Execution</strong><span>Fresh context, no nested delegation, timeout, model limit, and tool limit.</span></div>
+          <div class="stack-item"><strong>Return</strong><span>Typed <code>SpecialistResult</code> with receipts, findings, evidence, warnings, and usage.</span></div>
+        </div>
+        <div class="card violet-card">
+          <h3>Runtime guardrails</h3>
+          <ul class="clean">
+            <li><code>task_id</code> acts as the idempotency key.</li>
+            <li>The host rejects duplicate or changed assignments.</li>
+            <li>Children receive no <code>run_specialist</code> tool.</li>
+            <li>The final validator rejects missing required delegations.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer"><span>Domain specialists, not file-format agents</span><span class="slide-no"></span></div>
+      <aside hidden>File formats stay behind document adapters. Domain agents can reconcile evidence across CSV, Excel, PDF, and DOCX.</aside>
+    </section>
+
+    <section class="slide" data-title="Option 3">
+      <header>
+        <p class="eyebrow">Option 3</p>
+        <h2>One ReAct agent combines planning and execution</h2>
+      </header>
+      <div class="grid-2 split-60">
+        <div>
+          <div class="flow four">
+            <div class="step"><small>Prompt</small><strong>Manifest and objective</strong></div>
+            <div class="step"><small>Loop</small><strong>Select read or analysis tool</strong></div>
+            <div class="step"><small>Stop</small><strong>Structured candidate</strong></div>
+            <div class="step"><small>Gate</small><strong>Validate and publish</strong></div>
+          </div>
+          <div class="callout" style="margin-top:24px">Code runs mandatory deterministic analyses first. The model receives bounded results and receipts.</div>
+        </div>
+        <div class="card violet-card">
+          <h3>Execution model</h3>
+          <p class="body-large" style="font-size:clamp(22px,2.2vw,34px)">One agent chooses tools, ordering, and stopping within a shared context.</p>
+          <p class="muted">Middleware sets model-call, tool-call, context-size, retry, and total-duration limits.</p>
+        </div>
+      </div>
+      <div class="footer"><span>Plan 3: one shared ReAct loop with external validation</span><span class="slide-no"></span></div>
+      <aside hidden>The single agent receives the complete assigned-source catalog. External code still checks coverage, evidence, and the final artifact bundle.</aside>
+    </section>
+
+    <section class="slide" data-title="Tools and skills">
+      <header>
+        <p class="eyebrow">Capability model</p>
+        <h2>Tools perform operations. Skills define domain policy</h2>
+      </header>
+      <div class="grid-3">
+        <div class="card cyan-card"><h3>Document adapters</h3><p>Profile formats and reopen stable evidence locations.</p><p class="muted">Format concern</p></div>
+        <div class="card lime-card"><h3>Command tools</h3><p>Read assigned sources or run bounded deterministic operations.</p><p class="muted">Capability concern</p></div>
+        <div class="card violet-card"><h3>Skills</h3><p>Supply domain instructions, mandatory analysis, and verifier policy.</p><p class="muted">Review concern</p></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3 class="cyan">Assigned-source tool groups</h3>
+          <p class="muted">Inventory, table reading, aggregation, joins, bounded DuckDB, text search, evidence reopening, and statistics.</p>
+        </div>
+        <div>
+          <h3 class="lime">Registered review skills</h3>
+          <p class="muted">Risk metrics, PnL, post-trade controls, risk commentary, and lead review.</p>
+        </div>
+      </div>
+      <div class="callout">Models never receive arbitrary filesystem, process, Python, network, publication, or dynamic skill-loading access.</div>
+      <div class="footer"><span>Shared implementations live in data_agent/tools and data_agent/skills</span><span class="slide-no"></span></div>
+      <aside hidden>Stress that a skill is trusted configuration plus code. It does not grant access by itself.</aside>
+    </section>
+
+    <section class="slide" data-title="Agent capability boundaries">
+      <header>
+        <p class="eyebrow">Least privilege</p>
+        <h2>Each agent receives only the capability its role needs</h2>
+      </header>
+      <div class="capability-grid">
+        <div class="head">Role</div><div class="head">Command tools</div><div class="head">Specialized capability</div><div class="head">Denied</div>
+        <div class="role">Supervisor</div><div class="yes"><code>run_specialist</code> only</div><div>Lead guidance and typed child results</div><div class="no">Raw sources, analysis, writes</div>
+        <div class="role">Specialist analyst</div><div class="yes">Assigned-source research tools</div><div>One domain skill and host-run analysis</div><div class="no">Other skills, delegation</div>
+        <div class="role">Challenger</div><div class="yes">Evidence plus small analysis subset</div><div>Domain verifier policy</div><div class="no">Synthesis, publication</div>
+        <div class="role">Single ReAct</div><div class="yes">Catalog for the full manifest</div><div>Views of all mandatory analysis receipts</div><div class="no">Delegation, direct writes</div>
+        <div class="role">Lead synthesizer</div><div class="yes">No raw-source tools</div><div>Verified reports and lead-review skill</div><div class="no">New evidence or claims</div>
+      </div>
+      <div class="footer"><span>Construction rejects unknown, duplicate, or prohibited capabilities</span><span class="slide-no"></span></div>
+      <aside hidden>This table is a concrete target for implementation tests and runtime manifests.</aside>
+    </section>
+
+    <section class="slide" data-title="Comparison">
+      <header>
+        <p class="eyebrow">Comparison</p>
+        <h2>The plans divide orchestration work differently</h2>
+      </header>
+      <div>
+        <table aria-label="Architecture comparison">
+          <thead><tr><th style="width:22%">Dimension</th><th>Static graph</th><th>Supervisor</th><th>Single ReAct</th></tr></thead>
+          <tbody>
+            <tr><td>Orchestration owner</td><td>Graph nodes and routing code</td><td>Supervisor model plus host shell</td><td>One agent loop</td></tr>
+            <tr><td>Source assignment</td><td>Deterministic graph routing</td><td>Ledger-backed tool calls</td><td>Complete manifest in one context</td></tr>
+            <tr><td>Specialist isolation</td><td>Separate branch state</td><td>Fresh child context per call</td><td>Shared context</td></tr>
+            <tr><td>Evidence checks</td><td>Specialist and final graph gates</td><td>Child envelope and final gate</td><td>Post-loop final gate</td></tr>
+            <tr><td>Parallel execution</td><td>Explicit graph fan-out</td><td>Concurrent child tool calls</td><td>Provider-dependent tool calls</td></tr>
+            <tr><td>Checkpoint unit</td><td>Named workflow stage</td><td>Supervisor and child task</td><td>Agent-loop state</td></tr>
+            <tr><td>Core engineering work</td><td>State, reducers, and node replay</td><td>Registry, child lifecycle, and idempotency</td><td>Context, tool selection, and loop limits</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="footer"><span>All plans keep the same source and result contract</span><span class="slide-no"></span></div>
+      <aside hidden>Describe implementation differences without scoring the plans. The same validation requirements remain outside model discretion.</aside>
+    </section>
+
+    <section class="slide" data-title="Runtime profiles">
+      <header>
+        <p class="eyebrow">Runtime comparison</p>
+        <h2>Each plan creates a different execution profile</h2>
+      </header>
+      <div class="architecture-map">
+        <article class="architecture">
+          <span class="badge">Static graph</span>
+          <h3>Stage-based work</h3>
+          <div class="stack">
+            <div class="stack-item"><strong>Parallelism</strong><span>Explicit specialist branches</span></div>
+            <div class="stack-item"><strong>Work driver</strong><span>Configured stages and bounded inner loops</span></div>
+            <div class="stack-item"><strong>Recovery</strong><span>Resume from named graph checkpoints</span></div>
+          </div>
+          <p class="muted">Baseline work runs for every review.</p>
+        </article>
+        <article class="architecture">
+          <span class="badge">Supervisor</span>
+          <h3>Delegation-based work</h3>
+          <div class="stack">
+            <div class="stack-item"><strong>Parallelism</strong><span>Concurrent specialist calls</span></div>
+            <div class="stack-item"><strong>Work driver</strong><span>Supervisor plan and child-call count</span></div>
+            <div class="stack-item"><strong>Recovery</strong><span>Reuse idempotent task envelopes</span></div>
+          </div>
+          <p class="muted">Planning and result synthesis add model work.</p>
+        </article>
+        <article class="architecture">
+          <span class="badge">Single ReAct</span>
+          <h3>Loop-based work</h3>
+          <div class="stack">
+            <div class="stack-item"><strong>Parallelism</strong><span>Provider-dependent tool calls</span></div>
+            <div class="stack-item"><strong>Work driver</strong><span>Tool trajectory and stopping decision</span></div>
+            <div class="stack-item"><strong>Recovery</strong><span>Resume the agent-loop checkpoint</span></div>
+          </div>
+          <p class="muted">Hard budgets cap calls and elapsed time.</p>
+        </article>
+      </div>
+      <div class="footer"><span>Measure calls, tokens, elapsed time, retries, and recovery work</span><span class="slide-no"></span></div>
+      <aside hidden>These profiles describe control flow, not measured performance. A controlled benchmark supplies the quantitative comparison.</aside>
+    </section>
+
+    <section class="slide" data-title="Implementation scope">
+      <header>
+        <p class="eyebrow">Implementation comparison</p>
+        <h2>Each plan adds different engineering work</h2>
+      </header>
+      <div class="architecture-map">
+        <article class="architecture">
+          <span class="badge">Static graph</span>
+          <h3>Graph implementation</h3>
+          <ul class="clean">
+            <li>Typed parent and specialist state</li>
+            <li>Reducers and deterministic routing</li>
+            <li>Node retry, timeout, and replay policy</li>
+          </ul>
+          <p class="muted">Most existing review orchestration follows this structure.</p>
+        </article>
+        <article class="architecture">
+          <span class="badge">Supervisor</span>
+          <h3>Delegation implementation</h3>
+          <ul class="clean">
+            <li>Specialist registry and command tool</li>
+            <li>Assignment ledger and task cache</li>
+            <li>Child budgets, concurrency, and envelopes</li>
+          </ul>
+          <p class="muted">The chat subagent framework supplies part of the runtime pattern.</p>
+        </article>
+        <article class="architecture">
+          <span class="badge">Single ReAct</span>
+          <h3>Agent implementation</h3>
+          <ul class="clean">
+            <li>Complete bounded review tool catalog</li>
+            <li>Context and middleware limits</li>
+            <li>Structured output and post-loop checks</li>
+          </ul>
+          <p class="muted">The orchestration layer contains fewer explicit stages.</p>
+        </article>
+      </div>
+      <div class="callout">Shared work: document adapters, immutable manifest, deterministic analyses, evidence reopening, result schemas, and artifact validation.</div>
+      <div class="footer"><span>Implementation scope uses the same ReviewService interface</span><span class="slide-no"></span></div>
+      <aside hidden>Separate shared foundation work from architecture-specific orchestration work. This provides a like-for-like implementation estimate.</aside>
+    </section>
+
+    <section class="slide" data-title="Decisions to confirm">
+      <header>
+        <p class="eyebrow">Discussion</p>
+        <h2>Decisions to settle before the PPTX</h2>
+      </header>
+      <ol class="decision-list">
+        <li><strong>Audience and depth</strong><br><span class="muted">Architecture review, engineering team, or executive decision?</span></li>
+        <li><strong>Plan detail</strong><br><span class="muted">Does each plan need one overview slide or a second implementation slide?</span></li>
+        <li><strong>Comparison dimensions</strong><br><span class="muted">Do the current seven dimensions cover the decision criteria?</span></li>
+        <li><strong>Measurement data</strong><br><span class="muted">Add benchmark results when calls, tokens, latency, and variance are available?</span></li>
+        <li><strong>Evidence level</strong><br><span class="muted">Keep citations in an appendix or add them to technical slides?</span></li>
+        <li><strong>Template alignment</strong><br><span class="muted">Use this editorial theme or match an internal presentation template?</span></li>
+      </ol>
+      <div class="footer"><span>Review the HTML before PPTX production</span><span class="slide-no"></span></div>
+      <aside hidden>Use this slide to collect revision instructions. The HTML remains the content and layout prototype.</aside>
+    </section>
+
+    <section class="slide" data-title="Sources">
+      <header>
+        <p class="eyebrow">Appendix</p>
+        <h2>Research basis</h2>
+      </header>
+      <div class="grid-2">
+        <div>
+          <h3 class="cyan">Repository evidence</h3>
+          <ul class="source-list" style="columns:1">
+            <li><code>data_agent/review</code> service, graphs, domain models, evidence, and artifacts</li>
+            <li><code>data_agent/agent/subagents</code> contracts, registry, runner, and delegation tool</li>
+            <li><code>data_agent/tools</code> source, research, tabular, and statistical tools</li>
+            <li><code>data_agent/skills</code> registry and runtime</li>
+            <li><code>skills/*</code> domain playbooks and deterministic entrypoints</li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="lime">Framework sources</h3>
+          <ul class="source-list" style="columns:1">
+            <li>LangGraph workflows, agents, persistence, and subgraphs</li>
+            <li>LangChain agents, subagents, structured output, and middleware</li>
+            <li>LangGraph <code>StateGraph</code> and <code>RetryPolicy</code> source</li>
+            <li>Locked environment: LangChain 1.3.17 and LangGraph 1.2.11</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout">Full findings and links: <code>docs/research/review-service-architecture-options.md</code></div>
+      <div class="footer"><span>End</span><span class="slide-no"></span></div>
+      <aside hidden>The Markdown research document remains the detailed source of truth for implementation decisions.</aside>
+    </section>
+  </main>
+
+  <nav class="controls" aria-label="Slide controls">
+    <button type="button" id="prev" title="Previous slide" aria-label="Previous slide">&#8592;</button>
+    <button type="button" id="overview" title="Overview" aria-label="Toggle overview">&#9638;</button>
+    <button type="button" id="fullscreen" title="Fullscreen" aria-label="Toggle fullscreen">&#9974;</button>
+    <button type="button" id="next" title="Next slide" aria-label="Next slide">&#8594;</button>
+  </nav>
+  <div class="progress" id="progress"></div>
+
+  <script>
+    const deck = document.getElementById("deck");
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const progress = document.getElementById("progress");
+    let current = Math.max(0, Math.min(slides.length - 1, Number(location.hash.replace("#slide-", "")) - 1 || 0));
+    let overviewMode = false;
+
+    slides.forEach((slide, index) => {
+      const counter = slide.querySelector(".slide-no");
+      if (counter) {
+        counter.dataset.current = String(index + 1).padStart(2, "0");
+        counter.dataset.total = String(slides.length).padStart(2, "0");
+      }
+      slide.addEventListener("click", () => {
+        if (overviewMode) {
+          overviewMode = false;
+          deck.classList.remove("overview");
+          show(index);
+        }
+      });
+    });
+
+    function show(index) {
+      current = Math.max(0, Math.min(slides.length - 1, index));
+      slides.forEach((slide, i) => slide.classList.toggle("active", i === current));
+      progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+      history.replaceState(null, "", `#slide-${current + 1}`);
+      document.title = `${slides[current].dataset.title} | Autonomous Review Service`;
+    }
+
+    function toggleOverview() {
+      overviewMode = !overviewMode;
+      deck.classList.toggle("overview", overviewMode);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+
+    document.getElementById("prev").addEventListener("click", () => show(current - 1));
+    document.getElementById("next").addEventListener("click", () => show(current + 1));
+    document.getElementById("overview").addEventListener("click", toggleOverview);
+    document.getElementById("fullscreen").addEventListener("click", toggleFullscreen);
+
+    document.addEventListener("keydown", (event) => {
+      if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(event.key)) {
+        event.preventDefault();
+        show(current + 1);
+      } else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(event.key)) {
+        event.preventDefault();
+        show(current - 1);
+      } else if (event.key === "Home") {
+        show(0);
+      } else if (event.key === "End") {
+        show(slides.length - 1);
+      } else if (event.key.toLowerCase() === "o") {
+        toggleOverview();
+      } else if (event.key.toLowerCase() === "f") {
+        toggleFullscreen();
+      }
+    });
+
+    show(current);
+  </script>
+</body>
+</html>
