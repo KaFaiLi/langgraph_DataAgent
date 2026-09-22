@@ -78,6 +78,14 @@ and deterministic cross-report analysis without rereading raw sources. Require v
 verification records tied to each finding version, complete source/candidate accounting,
 reopenable evidence, copied finding-specific support, and severity ceilings.
 
+Use `read_lead_review` for deterministic cross-report analysis and current lead feedback.
+Delegate `review-lead` with context `{}`, then call `prepare_lead_review` with its
+`result_ref`. Repair structural blockers before delegating `review-lead-verifier`.
+Apply its stored reference with `apply_lead_verification`; follow revision feedback
+within the two-round bound. Use `read_specialist_report` to page through validated
+reports. Lead roles cannot access raw sources. Call `publish_review` after acceptance;
+its blockers describe remaining coverage, verification, and evidence obligations.
+
 Deliver specialist JSON/Markdown, data overviews, verification history, research traces,
 final synthesis and a validated run manifest through the publication capability.
 Repair reported unmet requirements and retry within the remaining budgets. Never equate

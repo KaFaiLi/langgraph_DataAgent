@@ -10,7 +10,7 @@ import pytest
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
-from langchain_core.tools import BaseTool, StructuredTool, ToolException
+from langchain_core.tools import BaseTool, StructuredTool
 
 from data_agent.agent import react_agent
 from data_agent.agent.subagents.contracts import (
@@ -240,8 +240,7 @@ async def test_child_graph_exposes_only_named_skill() -> None:
     ]
     skill_loader = next(tool for tool in child_tools if tool.name == "load_skill")
     assert "NAMED_INSTRUCTIONS" in skill_loader.invoke({"name": "named"})
-    with pytest.raises(ToolException, match="Unknown skill 'other'"):
-        skill_loader.invoke({"name": "other"})
+    assert "Unknown skill 'other'" in skill_loader.invoke({"name": "other"})
 
 
 def test_validate_tool_names_rejects_collisions_before_graph_creation() -> None:

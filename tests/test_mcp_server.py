@@ -63,6 +63,11 @@ REVIEW_TOOL_NAMES = frozenset(
         "apply_review_verification",
         "audit_review_omissions",
         "finalize_specialist_report",
+        "read_specialist_report",
+        "read_lead_review",
+        "prepare_lead_review",
+        "apply_lead_verification",
+        "publish_review",
     }
 )
 TEMPLATE_TOOL_NAMES = frozenset(

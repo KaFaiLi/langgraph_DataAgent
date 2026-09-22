@@ -105,7 +105,7 @@ def test_roles_reject_missing_challenge_wrong_assignment_and_stale_result(role_c
     with pytest.raises(ValueError, match="finding changed"):
         prepared.accept(ChallengerOutput(finding_id="RISK-F1"))
     assert not access.store.read().role_results
-    with pytest.raises(ValueError, match="validated specialist reports"):
+    with pytest.raises(ValueError, match="validated specialist report"):
         adapter.prepare(
             specs["review-lead"], request.model_copy(update={"context": "{}"}), "child-lead"
         )

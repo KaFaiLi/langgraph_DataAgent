@@ -175,7 +175,10 @@ class RunCapabilities:
         store: RunStore,
         definitions: dict[str, SkillDefinition],
         assignment_id: str | None = None,
+        *,
+        trace_context: dict | None = None,
     ) -> None:
+        self.trace_context = dict(trace_context or {})
         self.store, self.definitions, self.bound_assignment = (
             store,
             dict(definitions),
@@ -359,6 +362,7 @@ class RunCapabilities:
             target = self._assignment(current, assignment_id)
             incoming = {f.finding_id: f.model_dump(mode="json") for f in stored.findings}
             for finding_id, value in incoming.items():
+                target.initial_findings.setdefault(finding_id, value)
                 previous = target.findings.get(finding_id)
                 if previous and finding_version(previous) == finding_version(value):
                     continue  # Idempotent replay retains authoritative verification.
@@ -424,7 +428,8 @@ class RunCapabilities:
         finally:
             self.store.update(
                 lambda r: r.trace.extend(
-                    {**entry, "assignment_id": assignment_id} for entry in trace
+                    {**entry, "assignment_id": assignment_id, **self.trace_context}
+                    for entry in trace
                 )
             )
         try:
@@ -622,7 +627,10 @@ class ReviewWorkspace:
         definitions: dict[str, SkillDefinition],
         run_id: str | None = None,
         assignment_id: str | None = None,
+        *,
+        trace_context: dict | None = None,
     ) -> None:
+        self.trace_context = dict(trace_context or {})
         self.source_root, self.workspace_root = source_root.resolve(), workspace_root.resolve()
         self.definitions, self.bound_run, self.bound_assignment = definitions, run_id, assignment_id
         if assignment_id and not run_id:
@@ -637,7 +645,10 @@ class ReviewWorkspace:
         if output.is_symlink() or not output.resolve().is_relative_to(self.workspace_root):
             raise ValueError("run directory escapes the authorized workspace")
         return RunCapabilities(
-            RunStore(self.source_root, output, run_id), self.definitions, self.bound_assignment
+            RunStore(self.source_root, output, run_id),
+            self.definitions,
+            self.bound_assignment,
+            trace_context=self.trace_context,
         )
 
 
@@ -788,6 +799,44 @@ def build_review_run_tools(workspace: ReviewWorkspace) -> list[BaseTool]:
 
         return VerificationCapabilities(workspace.access(run_id)).finalize(assignment_id)
 
+    def read_specialist_report(
+        run_id: str, assignment_id: str, offset: int = 0, max_chars: int = 12000
+    ) -> dict:
+        """Read a validated stored specialist report in bounded pages; no raw-source access."""
+        from data_agent.skills.references import text_page
+
+        access = workspace.access(run_id)
+        assignment = access._assignment(access.store.read(), assignment_id)
+        if not assignment.report:
+            raise ValueError("validated specialist report required")
+        return text_page(json.dumps(assignment.report), offset=offset, max_chars=max_chars)
+
+    def read_lead_review(run_id: str, offset: int = 0, max_chars: int = 12000) -> dict:
+        """Inspect deterministic cross-report analysis, lead draft, feedback and history in pages."""
+        from data_agent.skills.references import text_page
+        from data_agent.tools.review_publication import PublicationCapabilities
+
+        value = PublicationCapabilities(workspace.access(run_id)).inspect()
+        return text_page(json.dumps(value), offset=offset, max_chars=max_chars)
+
+    def prepare_lead_review(run_id: str, lead_ref: str) -> dict:
+        """Build and validate a stored lead draft, returning actionable evidence/derivation/severity blockers."""
+        from data_agent.tools.review_publication import PublicationCapabilities
+
+        return PublicationCapabilities(workspace.access(run_id)).prepare(lead_ref)
+
+    def apply_lead_verification(run_id: str, verifier_ref: str) -> dict:
+        """Apply an independent stored lead verdict with bounded revision and material-objection rules."""
+        from data_agent.tools.review_publication import PublicationCapabilities
+
+        return PublicationCapabilities(workspace.access(run_id)).apply(verifier_ref)
+
+    def publish_review(run_id: str) -> dict:
+        """Validate source/candidate coverage, independent verification and the complete bundle; atomically publish or return blockers."""
+        from data_agent.tools.review_publication import PublicationCapabilities
+
+        return PublicationCapabilities(workspace.access(run_id)).publish()
+
     def review_coverage(run_id: str) -> dict:
         """Read authoritative missing source, assignment and candidate obligations; summaries cannot override it."""
         return workspace.access(run_id).coverage()
@@ -809,6 +858,11 @@ def build_review_run_tools(workspace: ReviewWorkspace) -> list[BaseTool]:
         apply_review_verification,
         audit_review_omissions,
         finalize_specialist_report,
+        read_specialist_report,
+        read_lead_review,
+        prepare_lead_review,
+        apply_lead_verification,
+        publish_review,
     ]
     if workspace.bound_assignment:
         functions = [

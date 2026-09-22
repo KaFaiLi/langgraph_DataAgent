@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 from langchain_core.messages import AIMessage, ToolMessage
-from langchain_core.tools import ToolException
 
 from data_agent.agent.react_agent import build_agent
 from data_agent.config import Settings
@@ -112,15 +111,12 @@ def test_reference_loader_is_bounded_and_rejects_missing_unknown_and_escape(tmp_
     ]
     page = loader.invoke({"name": "demo", "reference": "dataset", "max_chars": 2})
     assert page["content"] == "ab" and page["truncated"] and page["next_offset"] == 2
-    with pytest.raises(ToolException, match="Missing"):
-        loader.invoke({"name": "demo", "reference": "policy"})
-    with pytest.raises(ToolException, match="Unknown"):
-        loader.invoke({"name": "unknown", "reference": "policy"})
+    assert "Missing" in loader.invoke({"name": "demo", "reference": "policy"})
+    assert "Unknown" in loader.invoke({"name": "unknown", "reference": "policy"})
     outside = tmp_path / "private.md"
     outside.write_text("private")
     (references / "policy.md").symlink_to(outside)
-    with pytest.raises(ToolException, match="escapes"):
-        loader.invoke({"name": "demo", "reference": "policy"})
+    assert "escapes" in loader.invoke({"name": "demo", "reference": "policy"})
 
 
 def test_registered_entrypoint_cannot_escape(tmp_path):

@@ -64,7 +64,7 @@ def build_skill_tools(skills: list[Skill]) -> list[BaseTool]:
             "before attempting a task a skill covers, then follow the returned "
             "instructions."
         ),
-        handle_tool_errors=True,
+        handle_tool_error=True,
     )
 
     def load_skill_reference(
@@ -92,6 +92,6 @@ def build_skill_tools(skills: list[Skill]) -> list[BaseTool]:
         args_schema=ReferenceRequest,
         description="Read a selected skill's dataset or policy reference. Follow next_offset "
         "to read every page; truncated output is incomplete context.",
-        handle_tool_errors=True,
+        handle_tool_error=True,
     )
     return [load_tool, reference_tool]

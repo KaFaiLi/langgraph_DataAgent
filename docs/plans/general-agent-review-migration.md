@@ -1,6 +1,6 @@
 # General-agent review migration plan
 
-Status: in progress; M1–M5 implemented and validated.
+Status: in progress; M1–M6 implemented and validated.
 Date: 2026-09-22.
 
 ## Objective and architectural decision
@@ -44,7 +44,7 @@ and adding new document formats are separate work.
 | M3 | Add persistent review context, coverage, and scoped MCP access | M1; integrates M2 | Complete |
 | M4 | Support typed specialist and independent verification roles | M2, M3 | Complete |
 | M5 | Complete all specialist domains and verification parity | M4 | Complete |
-| M6 | Produce validated lead synthesis and compatible artifacts | M5 | Pending |
+| M6 | Produce validated lead synthesis and compatible artifacts | M5 | Complete |
 | M7 | Add durable resume and reliable terminal status | M3; validates M4-M6 | Pending |
 | M8 | Validate packaging, parity, documentation, and entrypoint cutover | M6, M7 | Pending |
 
@@ -211,24 +211,24 @@ Primary sources: [lead-review skill](../../skills/lead-review/SKILL.md),
 [report renderers](../../data_agent/review/reporting/markdown.py), and
 [run-bundle validation](../../data_agent/review/application/run_bundle.py).
 
-- [ ] Expose the lead skill's deterministic cross-report analysis over stored specialist reports.
-- [ ] Supply the lead role with validated reports, clusters, contradictions, and unresolved
+- [x] Expose the lead skill's deterministic cross-report analysis over stored specialist reports.
+- [x] Supply the lead role with validated reports, clusters, contradictions, and unresolved
   items while preserving its prohibition on rereading raw sources.
-- [ ] Support typed lead draft submission and independent lead verification/revision.
-- [ ] Preserve `derived_from` links, finding-specific evidence, severity ceilings,
+- [x] Support typed lead draft submission and independent lead verification/revision.
+- [x] Preserve `derived_from` links, finding-specific evidence, severity ceilings,
   stable identities, and unresolved disclosures.
-- [ ] Add a publication operation that validates coverage, verification records, evidence,
+- [x] Add a publication operation that validates coverage, verification records, evidence,
   and report structure and returns actionable unmet requirements to the agent.
-- [ ] Render compatible specialist/final JSON and Markdown, data overviews, verification
+- [x] Render compatible specialist/final JSON and Markdown, data overviews, verification
   history, research traces, and run manifests.
-- [ ] Publish artifacts atomically and validate the complete bundle before sealing completion.
-- [ ] Preserve downstream completed-bundle consumption, including `risk-ppt` inputs.
+- [x] Publish artifacts atomically and validate the complete bundle before sealing completion.
+- [x] Preserve downstream completed-bundle consumption, including `risk-ppt` inputs.
 
 Acceptance:
 
-- [ ] The agent can repair reported deficiencies and retry publication without a fixed graph route.
-- [ ] Early publication, unsupported severity increases, and invented evidence are rejected.
-- [ ] Existing bundle consumers can open a completed general-agent review.
+- [x] The agent can repair reported deficiencies and retry publication without a fixed graph route.
+- [x] Early publication, unsupported severity increases, and invented evidence are rejected.
+- [x] Existing bundle consumers can open a completed general-agent review.
 
 ## M7 — Durable resume and reliable status
 
@@ -303,3 +303,5 @@ Add implementation and validation evidence here when completing each later miles
 | 2026-09-22 | M4 | Registered typed specialist, independent challenger, no-research adjudicator and lead peers on the ordinary ReAct delegation host. Host-bound context, low/high cost models, strict raw result validation, version-bound stored receipts and reserved result capacity preserve capability and budget limits. Source-operation schemas and paginated stored assignment reads make live role selection usable. `uv run pytest -q`: 429 passed; lint and changed-file formatting passed. Live CLI researched the stored SGMR finding, persisted an 11-category challenger result, then independently adjudicated with the high-cost model; both stored references agree on the finding version. Malformed-output and exhausted-budget attempts produced no authoritative result. Finding remains pending until M5 verification guards. Live evidence: `/tmp/data-agent-m4-cli.log` and M3-LIVE records. |
 
 | 2026-09-23 | M5 | Added version-bound evidence admission, independent challenge sanitization, guarded adjudication, two-round reduction, idempotent acceptance, revision invalidation, bounded omission rescue/disclosure and compatible specialist reports. All four domains run through the general ReAct host; deterministic tables/overviews match direct trusted scripts and composite PnL owns its three inputs. Paginated gates/omission audits and candidate-disposition receipts expose actual coverage. One bounded schema repair retains independent research and closes further research access. `uv run pytest -q`: 438 passed; lint and all changed Python format checks passed. Live M5-LIVE reviewed six synthetic sources and stored 13 pending findings with all four specialist role references; malformed risk evidence references prompted a schema-description fix and successful peer retry. Live M3-LIVE applied guarded verification, exhausted revisions to explicit unresolved outcomes, and constructed report RISK with two unresolved findings, history and seven disclosures. A fresh PnL verification and evidence pagination CLI check also completed. Logs: `/tmp/data-agent-m5-*-cli.log`; artifacts remain local and untracked. |
+
+| 2026-09-23 | M6 | Extracted pure final validation and bounded semantic revision rules; added version-bound lead roles, cross-report analysis, strict derivation/evidence/severity gates, and atomic compatible bundle publication with an integrity seal. Publication, revision, tampering, staging failure and same-domain identity tests pass; existing consumers reopen the live bundle. `uv run pytest -q`: 447 passed; lint and all changed Python format checks passed. Live CLI independently verified and published `/tmp/data-agent-m3-results/runs/M3-LIVE/bundle`, retaining two unresolved specialist findings and 17 disclosures without promoting unsupported conclusions. The live attempt exposed and fixed a missing lead dataset reference and misspelled skill-tool error handling. Logs: `/tmp/data-agent-m6-*-cli.log`. |

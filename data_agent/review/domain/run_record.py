@@ -30,6 +30,7 @@ class AssignmentRecord(BaseModel):
     candidate_dispositions: dict[str, CandidateDispositionRecord] = Field(default_factory=dict)
     artifacts: dict[str, str] = Field(default_factory=dict)
     findings: dict[str, dict] = Field(default_factory=dict)
+    initial_findings: dict[str, dict] = Field(default_factory=dict)
     verification: dict[str, list[dict]] = Field(default_factory=dict)
     unresolved_items: list[str] = Field(default_factory=list)
     omission_disclosure: str | None = None
@@ -57,6 +58,8 @@ class ReviewRecord(BaseModel):
     failures: list[dict] = Field(default_factory=list)
     role_results: dict[str, dict] = Field(default_factory=dict)
     child_runs: dict[str, dict] = Field(default_factory=dict)
+    lead_state: dict = Field(default_factory=dict)
+    lead_history: list[dict] = Field(default_factory=list)
     tool_calls: int = 0
     max_tool_calls: int = 400
     max_verifier_rounds: int = Field(default=2, ge=1, le=2)

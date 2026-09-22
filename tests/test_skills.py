@@ -1,8 +1,5 @@
 from pathlib import Path
 
-import pytest
-from langchain_core.tools import ToolException
-
 from data_agent.config import REPO_ROOT
 from data_agent.skills.loader import discover_skills
 from data_agent.skills.tools import build_skill_tools, render_skills_overview
@@ -49,11 +46,8 @@ def test_skill_tool_roundtrip():
     out = load_skill.invoke({"name": "risk-metrics"})
     assert "risk metrics" in out.lower()
 
-    # When called outside a graph, ToolException propagates directly.
-    # Inside a react agent, handle_tool_errors=True catches it and surfaces
-    # the message as a ToolMessage so the LLM can continue.
-    with pytest.raises(ToolException, match="nope"):
-        load_skill.invoke({"name": "nope"})
+    # Ordinary ReAct callers receive recoverable, explicit tool errors.
+    assert "Unknown skill 'nope'" in load_skill.invoke({"name": "nope"})
 
     overview = render_skills_overview(skills)
     assert "risk-metrics" in overview

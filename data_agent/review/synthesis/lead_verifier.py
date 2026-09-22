@@ -13,27 +13,36 @@ from collections.abc import Iterable
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables.config import RunnableConfig
 
-from data_agent.review.domain.finding import Finding, VerificationStatus
 from data_agent.review.domain.reports import (
     CrossSourceCluster,
     FinalReport,
     SpecialistReport,
 )
-from data_agent.review.domain.severity import SEVERITY_ORDER
 from data_agent.review.domain.verification import (
     LeadChallenge,
-    ObjectionMateriality,
     VerifierDecision,
-)
-from data_agent.review.ingestion.evidence_validator import (
-    EvidenceDisposition,
-    EvidenceValidationSummary,
-    EvidenceValidator,
 )
 from data_agent.review.llm import DEFAULT_LLM_PROVIDER, ReviewLLMProvider
 from data_agent.review.llm.models import ModelTier
 from data_agent.review.llm.structured import invoke_structured
 from data_agent.review.orchestration.state import ParentState
+from data_agent.review.synthesis.lead_policy import (
+    _apply_final_round_challenges as apply_final_challenges,
+)
+from data_agent.review.synthesis.lead_policy import (
+    _challenge_feedback,
+    _needs_semantic_revision,
+)
+from data_agent.review.synthesis.validation import (
+    FatalEvidenceIntegrityError,
+    FinalValidationRequest,
+)
+from data_agent.review.synthesis.validation import (
+    _specialist_findings as _index_specialist_findings,
+)
+from data_agent.review.synthesis.validation import (
+    validate_final_report as validate_report,
+)
 from data_agent.skills.review import load_lead_review_skill
 from data_agent.tools.review_context import ToolContext
 
@@ -41,15 +50,6 @@ MAX_LEAD_ROUNDS = 2
 MAX_LEAD_CHALLENGES = 32
 MAX_LEAD_CHECKS = 64
 MAX_LEAD_FEEDBACK = 4_000
-
-_MATERIALITY_ORDER = {
-    ObjectionMateriality.INFORMATIONAL: 0,
-    ObjectionMateriality.LOW: 1,
-    ObjectionMateriality.MEDIUM: 2,
-    ObjectionMateriality.HIGH: 3,
-    ObjectionMateriality.CRITICAL: 4,
-}
-_MATERIAL_OBJECTION_LEVEL = _MATERIALITY_ORDER[ObjectionMateriality.MEDIUM]
 
 
 def __getattr__(name: str):
@@ -61,44 +61,11 @@ def __getattr__(name: str):
 from data_agent.review.domain.lead_outputs import LeadVerifierOutput
 
 
-class FatalEvidenceIntegrityError(RuntimeError):
-    """Raised when reviewed evidence no longer matches the run manifest."""
-
-
 def _provider(config: RunnableConfig) -> ReviewLLMProvider:
     provider = (config or {}).get("configurable", {}).get("llm_provider")
     if provider is None:
         return DEFAULT_LLM_PROVIDER
     return provider
-
-
-def _specialist_findings(
-    state: ParentState,
-) -> tuple[dict[str, Finding], set[str], set[str], list[str], dict[str, Finding]]:
-    """Index specialist findings while rejecting ambiguous IDs deterministically."""
-    verified: dict[str, Finding] = {}
-    unresolved_ids: set[str] = set()
-    all_ids: set[str] = set()
-    all_findings: dict[str, Finding] = {}
-    feedback: list[str] = []
-    for data in state.get("specialist_reports", {}).values():
-        report = SpecialistReport.model_validate(data)
-        for finding in report.findings:
-            if finding.finding_id in all_ids:
-                feedback.append(
-                    f"duplicate specialist finding ID {finding.finding_id}; "
-                    "lead support is ambiguous"
-                )
-            all_ids.add(finding.finding_id)
-            all_findings[finding.finding_id] = finding
-            if finding.verifier_status in (
-                VerificationStatus.PASSED,
-                VerificationStatus.REVISED,
-            ):
-                verified[finding.finding_id] = finding
-            elif finding.verifier_status is VerificationStatus.UNRESOLVED:
-                unresolved_ids.add(finding.finding_id)
-    return verified, unresolved_ids, all_ids, feedback, all_findings
 
 
 def _ctx(state: ParentState) -> ToolContext:
@@ -115,205 +82,20 @@ def _ctx(state: ParentState) -> ToolContext:
     )
 
 
-def _record_evidence_failures(
-    feedback: list[str],
-    validation: EvidenceValidationSummary,
-    *,
-    label: str,
-) -> None:
-    fatal = [
-        failure
-        for failure in validation.failures
-        if failure.disposition is EvidenceDisposition.FATAL
-    ]
-    if fatal:
-        details = "; ".join(f"{failure.locator}: {failure.reason}" for failure in fatal)
-        raise FatalEvidenceIntegrityError(f"fatal evidence integrity failure in {label}: {details}")
-    feedback.extend(
-        f"{label} locator {failure.locator} could not be reopened: {failure.reason}"
-        for failure in validation.failures
+def _validation_request(state: ParentState) -> FinalValidationRequest:
+    return FinalValidationRequest(
+        _ctx(state),
+        [SpecialistReport.model_validate(r) for r in state.get("specialist_reports", {}).values()],
+        [CrossSourceCluster.model_validate(c) for c in state.get("clusters", [])],
     )
+
+
+def _specialist_findings(state: ParentState):
+    return _index_specialist_findings(_validation_request(state))
 
 
 def validate_final_report(state: ParentState, report: FinalReport) -> list[str]:
-    """Return deterministic lead blockers; no model may override these."""
-    verified, unresolved_ids, all_ids, feedback, all_findings = _specialist_findings(state)
-    context = _ctx(state)
-    validator = EvidenceValidator.source_backed(context.source_root, context.manifest)
-    all_primary_locators = {
-        reference.locator for finding in all_findings.values() for reference in finding.evidence
-    }
-    all_specialist_locators = {
-        reference.locator
-        for finding in all_findings.values()
-        for reference in [*finding.evidence, *finding.counter_evidence]
-    }
-    final_locators: set[str] = set()
-
-    cluster_ids = {
-        str(cluster.get("cluster_id", ""))
-        for cluster in state.get("clusters", [])
-        if isinstance(cluster, dict)
-    }
-    for finding in report.key_findings:
-        unknown = [finding_id for finding_id in finding.derived_from if finding_id not in all_ids]
-        if unknown:
-            feedback.append(
-                f"{finding.final_id}: derived_from references unknown specialist "
-                f"finding ids {unknown}"
-            )
-        support = [
-            verified[finding_id] for finding_id in finding.derived_from if finding_id in verified
-        ]
-        declared_support = [
-            all_findings[finding_id]
-            for finding_id in finding.derived_from
-            if finding_id in verified
-            or (finding_id in unresolved_ids and finding_id in finding.unresolved_dependencies)
-        ]
-        if not support:
-            feedback.append(
-                f"{finding.final_id}: derived_from requires at least one verified "
-                "specialist finding"
-            )
-        unsupported = [
-            finding_id
-            for finding_id in finding.derived_from
-            if finding_id not in verified
-            and not (finding_id in unresolved_ids and finding_id in finding.unresolved_dependencies)
-        ]
-        if unsupported:
-            feedback.append(
-                f"{finding.final_id}: unverified support must be an explicitly declared "
-                f"unresolved dependency, got {unsupported}"
-            )
-        if support and SEVERITY_ORDER[finding.severity] > max(
-            SEVERITY_ORDER[item.severity] for item in support
-        ):
-            feedback.append(
-                f"{finding.final_id}: severity {finding.severity.value} exceeds verified support"
-            )
-        if not finding.evidence:
-            feedback.append(f"{finding.final_id}: final finding requires copied evidence")
-        else:
-            support_locators = {
-                reference.locator for item in declared_support for reference in item.evidence
-            }
-            for reference in finding.evidence:
-                final_locators.add(reference.locator)
-                if reference.locator not in support_locators:
-                    feedback.append(
-                        f"{finding.final_id}: evidence {reference.locator} was not copied "
-                        "from supporting findings"
-                    )
-            evidence_validation = validator.validate_references(finding.evidence)
-            _record_evidence_failures(
-                feedback,
-                evidence_validation,
-                label=f"{finding.final_id}: evidence",
-            )
-        missing_clusters = [
-            cluster_id
-            for cluster_id in finding.cross_source_cluster_ids
-            if cluster_id not in cluster_ids
-        ]
-        if missing_clusters:
-            feedback.append(f"{finding.final_id}: unknown cross-source clusters {missing_clusters}")
-        for dependency in finding.unresolved_dependencies:
-            if dependency in all_ids and dependency not in unresolved_ids:
-                feedback.append(
-                    f"{finding.final_id}: dependency {dependency} is not an unresolved "
-                    "specialist finding"
-                )
-
-    declared_unresolved = "\n".join(report.unresolved_questions)
-    dependency_ids = {
-        dependency
-        for finding in report.key_findings
-        for dependency in finding.unresolved_dependencies
-    }
-    missing_unresolved = sorted(
-        finding_id
-        for finding_id in unresolved_ids
-        if finding_id not in dependency_ids and finding_id not in declared_unresolved
-    )
-    if missing_unresolved:
-        feedback.append(f"unresolved specialist findings are not disclosed: {missing_unresolved}")
-
-    report_cluster_ids: set[str] = set()
-    for cluster in report.cross_source_findings:
-        if cluster.cluster_id in report_cluster_ids:
-            feedback.append(f"duplicate final cross-source cluster ID {cluster.cluster_id}")
-        report_cluster_ids.add(cluster.cluster_id)
-        if cluster.cluster_id not in cluster_ids:
-            feedback.append(f"final report references unknown cluster {cluster.cluster_id}")
-        unknown_cluster_findings = [
-            finding_id for finding_id in cluster.findings if finding_id not in all_ids
-        ]
-        if unknown_cluster_findings:
-            feedback.append(
-                f"cluster {cluster.cluster_id} contains unknown specialist findings "
-                f"{unknown_cluster_findings}"
-            )
-        final_locators.update(reference.locator for reference in cluster.supporting_evidence)
-        cluster_validation = validator.validate_references(cluster.supporting_evidence)
-        _record_evidence_failures(
-            feedback,
-            cluster_validation,
-            label=f"cluster {cluster.cluster_id}: evidence",
-        )
-        unknown_cluster_evidence = sorted(
-            reference.locator
-            for reference in cluster.supporting_evidence
-            if reference.locator not in all_specialist_locators
-        )
-        if unknown_cluster_evidence:
-            feedback.append(
-                f"cluster {cluster.cluster_id} contains non-specialist evidence "
-                f"{unknown_cluster_evidence}"
-            )
-
-    for raw_cluster in state.get("clusters") or []:
-        try:
-            cluster = CrossSourceCluster.model_validate(raw_cluster)
-        except ValueError as exc:
-            feedback.append(f"invalid deterministic cluster: {exc}")
-            continue
-        unknown_cluster_findings = [
-            finding_id for finding_id in cluster.findings if finding_id not in all_ids
-        ]
-        if unknown_cluster_findings:
-            feedback.append(
-                f"deterministic cluster {cluster.cluster_id} contains unknown findings "
-                f"{unknown_cluster_findings}"
-            )
-        cluster_validation = validator.validate_references(cluster.supporting_evidence)
-        _record_evidence_failures(
-            feedback,
-            cluster_validation,
-            label=f"deterministic cluster {cluster.cluster_id}: evidence",
-        )
-        unknown_cluster_evidence = sorted(
-            reference.locator
-            for reference in cluster.supporting_evidence
-            if reference.locator not in all_specialist_locators
-        )
-        if unknown_cluster_evidence:
-            feedback.append(
-                f"deterministic cluster {cluster.cluster_id} contains non-specialist evidence "
-                f"{unknown_cluster_evidence}"
-            )
-
-    indexed = {reference.locator for reference in report.evidence_index}
-    missing_index = sorted(final_locators - indexed)
-    if missing_index:
-        feedback.append(f"evidence_index omits final report evidence {missing_index}")
-    unknown_index = sorted(indexed - all_primary_locators)
-    if unknown_index:
-        feedback.append(f"evidence_index contains non-specialist evidence {unknown_index}")
-    index_validation = validator.validate_references(report.evidence_index)
-    _record_evidence_failures(feedback, index_validation, label="evidence_index")
-    return feedback
+    return validate_report(_validation_request(state), report)
 
 
 def _prior_lead_history(state: ParentState) -> list[dict]:
@@ -354,179 +136,8 @@ def _with_history(state: ParentState, entry: dict) -> list[dict]:
     return [*_prior_lead_history(state), entry]
 
 
-def _challenge_feedback(challenges: Iterable[LeadChallenge]) -> str:
-    """Render concise, concrete structured objections for lead revision."""
-    parts: list[str] = []
-    for challenge in challenges:
-        targets = ", ".join(challenge.affected_finding_ids) or "report-wide"
-        explanation = challenge.explanation.strip() or "No explanation was supplied."
-        resolution = (
-            f" Proposed resolution: {challenge.proposed_resolution.strip()}"
-            if challenge.proposed_resolution and challenge.proposed_resolution.strip()
-            else ""
-        )
-        parts.append(
-            f"[{challenge.materiality.value}] {challenge.challenge_type.value} "
-            f"(affected: {targets}): {explanation}{resolution}"
-        )
-    return "\n".join(parts)[:MAX_LEAD_FEEDBACK]
-
-
-def _challenge_disclosure(challenge: LeadChallenge, *, suppressed: bool) -> str:
-    targets = ", ".join(challenge.affected_finding_ids) or "report-wide"
-    action = "suppressed" if suppressed else "disclosed"
-    explanation = challenge.explanation.strip() or "No explanation was supplied."
-    return (
-        f"Lead verification {action} {challenge.materiality.value} "
-        f"{challenge.challenge_type.value} objection (affected: {targets}): {explanation}"
-    )
-
-
-def _rebuild_synthesis_after_suppression(
-    state: ParentState,
-    report: FinalReport,
-    suppressed_ids: set[str],
-) -> list[dict]:
-    """Remove challenged conclusions and rebuild dependent cluster/index data.
-
-    The lead model is not allowed to leave a stale cluster or evidence index
-    referring to a semantically suppressed final finding.  Deterministic
-    clusters are filtered in parallel because the final hard gate validates
-    their relationship to the parent state.
-    """
-    suppressed_locators = {
-        reference.locator
-        for finding in report.key_findings
-        if finding.final_id in suppressed_ids
-        for reference in finding.evidence
-    }
-    retained_final_locators = {
-        reference.locator
-        for finding in report.key_findings
-        if finding.final_id not in suppressed_ids
-        for reference in finding.evidence
-    }
-    filtered_state_clusters: list[dict] = []
-    state_cluster_ids: set[str] = set()
-    for raw_cluster in state.get("clusters", []):
-        try:
-            cluster = CrossSourceCluster.model_validate(raw_cluster)
-        except ValueError:
-            # validate_final_report already reports malformed deterministic
-            # clusters before semantic review.  Keep malformed data untouched
-            # here so that the hard gate remains authoritative if encountered.
-            continue
-        cluster.findings = [
-            finding_id for finding_id in cluster.findings if finding_id not in suppressed_ids
-        ]
-        if not cluster.findings:
-            continue
-        cluster.supporting_evidence = [
-            reference
-            for reference in cluster.supporting_evidence
-            if reference.locator not in suppressed_locators
-            or reference.locator in retained_final_locators
-        ]
-        state_cluster_ids.add(cluster.cluster_id)
-        filtered_state_clusters.append(cluster.model_dump(mode="json"))
-
-    retained_clusters: list[CrossSourceCluster] = []
-    for cluster in report.cross_source_findings:
-        cluster.findings = [
-            finding_id for finding_id in cluster.findings if finding_id not in suppressed_ids
-        ]
-        if not cluster.findings or cluster.cluster_id not in state_cluster_ids:
-            continue
-        cluster.supporting_evidence = [
-            reference
-            for reference in cluster.supporting_evidence
-            if reference.locator not in suppressed_locators
-            or reference.locator in retained_final_locators
-        ]
-        retained_clusters.append(cluster)
-    retained_cluster_ids = {cluster.cluster_id for cluster in retained_clusters}
-
-    retained_findings = []
-    for finding in report.key_findings:
-        if finding.final_id in suppressed_ids:
-            continue
-        finding.cross_source_cluster_ids = [
-            cluster_id
-            for cluster_id in finding.cross_source_cluster_ids
-            if cluster_id in retained_cluster_ids
-        ]
-        retained_findings.append(finding)
-
-    report.key_findings = retained_findings
-    report.cross_source_findings = retained_clusters
-
-    evidence_index = []
-    seen_locators: set[str] = set()
-    for reference in [
-        *(reference for finding in report.key_findings for reference in finding.evidence),
-        *(reference for cluster in retained_clusters for reference in cluster.supporting_evidence),
-    ]:
-        if reference.locator in seen_locators:
-            continue
-        seen_locators.add(reference.locator)
-        evidence_index.append(reference)
-    report.evidence_index = evidence_index
-    return filtered_state_clusters
-
-
-def _apply_final_round_challenges(
-    state: ParentState,
-    report: FinalReport,
-    challenges: list[LeadChallenge],
-) -> tuple[FinalReport, list[dict], set[str], list[str]]:
-    """Apply final-round materiality rules to structured semantic objections.
-
-    High/critical report-wide or ambiguously targeted objections fail closed.
-    Medium-or-higher targeted objections suppress only the explicitly named
-    final findings.  Informational/low objections are retained as disclosures.
-    """
-    report_ids = {finding.final_id for finding in report.key_findings}
-    suppressed_ids: set[str] = set()
-    blockers: list[str] = []
-    disclosures: list[str] = []
-
-    for challenge in challenges:
-        targets = list(dict.fromkeys(challenge.affected_finding_ids))
-        unknown_targets = sorted(set(targets) - report_ids)
-        materiality = _MATERIALITY_ORDER[challenge.materiality]
-        if materiality < _MATERIAL_OBJECTION_LEVEL:
-            disclosures.append(_challenge_disclosure(challenge, suppressed=False))
-            continue
-
-        # A material objection without a precise final-finding target cannot
-        # be safely repaired by deleting arbitrary synthesis.  We fail closed
-        # for medium as well as high/critical; high/critical is called out in
-        # the user-facing reason because it is the strongest safety boundary.
-        if not targets or unknown_targets:
-            qualifier = "report-wide" if not targets else f"unknown targets {unknown_targets}"
-            blockers.append(
-                f"{challenge.materiality.value} {challenge.challenge_type.value} objection "
-                f"is ambiguously targeted ({qualifier})"
-            )
-            continue
-
-        if materiality >= _MATERIAL_OBJECTION_LEVEL:
-            suppressed_ids.update(targets)
-            disclosures.append(_challenge_disclosure(challenge, suppressed=True))
-
-    if blockers:
-        return report, list(state.get("clusters") or []), suppressed_ids, blockers
-
-    filtered_clusters = _rebuild_synthesis_after_suppression(state, report, suppressed_ids)
-    report.unresolved_questions = [*report.unresolved_questions, *disclosures]
-    return report, filtered_clusters, suppressed_ids, []
-
-
-def _needs_semantic_revision(challenges: Iterable[LeadChallenge]) -> bool:
-    return any(
-        _MATERIALITY_ORDER[challenge.materiality] >= _MATERIAL_OBJECTION_LEVEL
-        for challenge in challenges
-    )
+def _apply_final_round_challenges(state, report, challenges):
+    return apply_final_challenges(list(state.get("clusters") or []), report, challenges)
 
 
 def lead_verifier(state: ParentState, config: RunnableConfig) -> dict:

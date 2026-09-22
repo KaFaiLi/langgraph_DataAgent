@@ -12,9 +12,9 @@ from data_agent.agent.subagents.contracts import ChildPreparation, DelegationReq
 from data_agent.review.domain.finding import Finding
 from data_agent.review.domain.lead_outputs import LeadDraft, LeadVerifierOutput
 from data_agent.review.domain.outputs import AdjudicatorOutput, ChallengerOutput
-from data_agent.review.domain.reports import SpecialistReport
 from data_agent.review.domain.source import SourceManifest
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
+from data_agent.review.synthesis.collection import collect_reports, report_projection
 from data_agent.review.verification.challenge_validation import _sanitize_challenge_case
 from data_agent.review.verification.identity import finding_version
 from data_agent.review.verification.projection import _strip_hidden
@@ -100,6 +100,7 @@ def review_profiles(definitions: dict[str, SkillDefinition]) -> tuple[SubagentSp
             system_prompt="Synthesize validated specialist reports and deterministic cross-report analysis. "
             "Preserve finding-specific evidence and derived_from links, severity ceilings and unresolved disclosures. "
             "Do not read raw sources.",
+            tool_names=("read_specialist_report",),
             skill_names=("lead-review",),
             input_schema=LeadInput,
             result_schema=LeadDraft,
@@ -112,6 +113,7 @@ def review_profiles(definitions: dict[str, SkillDefinition]) -> tuple[SubagentSp
             description="Independently verify a stored lead draft; context JSON: {}.",
             system_prompt="Independently challenge the lead draft against supplied validated specialist reports. "
             "Test derivation, evidence specificity, severity and omissions. Do not read raw sources.",
+            tool_names=("read_specialist_report",),
             skill_names=("lead-review",),
             input_schema=LeadInput,
             result_schema=LeadVerifierOutput,
@@ -162,6 +164,7 @@ class ReviewRoleAdapter:
                 self.workspace.definitions,
                 self.run_id,
                 assignment_id,
+                trace_context={"agent_id": child_id, "role": spec.name, "finding_id": finding_id},
             )
             tools = tuple(t for t in build_review_run_tools(scoped) if t.name in spec.tool_names)
             selected_skills = (assignment.skill_name,) if spec.skill_names else ()
@@ -259,26 +262,27 @@ class ReviewRoleAdapter:
                     "The host retains unchanged findings and enforces two verification rounds."
                 )
         else:
-            reports = [
-                SpecialistReport.model_validate(a.report)
-                for a in record.assignments.values()
-                if a.report
-            ]
-            if not reports or len(reports) != len(record.assignments):
-                raise ValueError("validated specialist reports required before lead execution")
-            payload["specialist_reports"] = [report.model_dump(mode="json") for report in reports]
+            reports, identities = collect_reports(record)
+            payload["specialist_reports"] = report_projection(reports)
+            payload["finding_identities"] = identities
             payload["cross_report_analysis"] = analyze_reports(reports).model_dump(mode="json")
-            version = _digest(payload["specialist_reports"])
+            payload["lead_feedback"] = record.lead_state.get("blockers", [])
+            payload["previous_lead_draft"] = record.lead_state.get("final_report")
+            payload["lead_rounds_remaining"] = 2 - len(record.lead_history)
+            tools = tuple(
+                t for t in build_review_run_tools(self.workspace) if t.name in spec.tool_names
+            )
+            version = _digest([a.report for a in record.assignments.values() if a.report])
             if spec.name == "review-lead-verifier":
-                drafts = [
-                    r
-                    for r in record.role_results.values()
-                    if r["role"] == "review-lead" and r["finding_version"] == version
-                ]
-                if not drafts:
-                    raise ValueError("a current typed lead draft is required before verification")
-                payload["lead_draft"] = drafts[-1]["output"]
-                payload["lead_result_ref"] = drafts[-1]["result_ref"]
+                if (
+                    record.lead_state.get("status") != "draft"
+                    or record.lead_state.get("reports_version") != version
+                ):
+                    raise ValueError(
+                        "prepare a current structurally valid lead draft before verification"
+                    )
+                payload["final_report"] = record.lead_state["final_report"]
+                payload["lead_result_ref"] = record.lead_state["lead_ref"]
 
         def accept(output: BaseModel) -> dict:
             current = access.store.read()
@@ -319,6 +323,19 @@ class ReviewRoleAdapter:
                     != version
                 ):
                     raise ValueError("finding changed before verification result could be stored")
+                if (
+                    assignment_id is None
+                    and _digest([a.report for a in record.assignments.values() if a.report])
+                    != version
+                ):
+                    raise ValueError(
+                        "specialist reports changed before lead result could be stored"
+                    )
+                if (
+                    spec.name == "review-lead-verifier"
+                    and record.lead_state.get("lead_ref") != value["lead_result_ref"]
+                ):
+                    raise ValueError("lead draft changed during independent verification")
                 record.role_results[reference] = value
                 record.child_runs[child_id] = {
                     "role": spec.name,
