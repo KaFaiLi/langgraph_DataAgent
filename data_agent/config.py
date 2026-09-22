@@ -84,6 +84,13 @@ class Settings(BaseSettings):
     # --- Skills --------------------------------------------------------------
     skills_dir: str = Field(default="skills")
 
+    review_child_max_runs: int = Field(default=160, gt=0)
+    review_child_max_concurrency: int = Field(default=4, gt=0)
+    review_child_max_model_calls: int = Field(default=18, gt=0)
+    review_child_max_tool_calls: int = Field(default=32, gt=0)
+    review_child_timeout_seconds: float = Field(default=240.0, gt=0)
+    review_child_max_input_chars: int = Field(default=120_000, gt=0)
+    review_child_max_result_chars: int = Field(default=64_000, gt=0)
     review_run_id: str | None = None
     review_assignment_id: str | None = None
     review_workspace: str = Field(default=".analysis_workspace/review-skills")

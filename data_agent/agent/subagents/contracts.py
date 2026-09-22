@@ -28,13 +28,18 @@ class SubagentSpec(BaseModel):
     root catalog before exposing a spec to the runner.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
     name: str = Field(min_length=1, max_length=128)
     description: str = ""
     system_prompt: str = ""
     tool_names: tuple[str, ...] = ()
     skill_names: tuple[str, ...] = ()
+    input_schema: type[BaseModel] | None = None
+    result_schema: type[BaseModel] | None = None
+    model_role: Literal["general", "low_cost", "high_cost"] = "general"
+    max_model_calls: int | None = Field(default=None, gt=0)
+    max_tool_calls: int | None = Field(default=None, ge=0)
 
     @field_validator("name", "description", "system_prompt", mode="before")
     @classmethod
@@ -114,6 +119,8 @@ class DelegationResult(BaseModel):
     error: str | None = None
     model_calls: int = Field(default=0, ge=0)
     tool_calls: int = Field(default=0, ge=0)
+    structured_output: dict[str, Any] | None = None
+    result_ref: str | None = None
 
     def envelope(self) -> dict[str, Any]:
         """Return the compact model-visible result mapping."""
@@ -157,6 +164,16 @@ class DelegationPolicy(BaseModel):
             max_input_chars=settings.subagent_max_input_chars,
             max_result_chars=settings.subagent_max_result_chars,
         )
+
+
+@dataclass(frozen=True)
+class ChildPreparation:
+    """Trusted per-attempt tools/context and an optional validated-result publisher."""
+
+    prompt: str
+    tools: tuple[Any, ...]
+    skill_names: tuple[str, ...] | None = None
+    accept: Any = None
 
 
 @dataclass

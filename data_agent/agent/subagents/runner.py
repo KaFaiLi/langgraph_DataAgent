@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
@@ -11,11 +12,13 @@ from uuid import uuid4
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import BaseTool
+from pydantic import BaseModel
 
 from data_agent.agent.factory import build_react_graph
 from data_agent.agent.prompts import build_child_system_prompt
 from data_agent.agent.runtime import invoke_scoped_graph
 from data_agent.agent.subagents.contracts import (
+    ChildPreparation,
     DelegationPolicy,
     DelegationRequest,
     DelegationResult,
@@ -103,8 +106,12 @@ class DelegationRunner:
         policy: DelegationPolicy,
         max_iterations: int = 10,
         graph_builder: Callable[..., Any] = build_react_graph,
+        role_models: Mapping[str, Any] | None = None,
+        child_adapter: Any = None,
     ) -> None:
         self.model = model
+        self.role_models = dict(role_models or {})
+        self.child_adapter = child_adapter
         self.tools = tuple(tools)
         self.tool_by_name = {tool.name: tool for tool in self.tools}
         self.skills = tuple(skills)
@@ -194,6 +201,16 @@ class DelegationRunner:
                 error=_sanitize_error(exc),
             )
 
+        if spec.input_schema is not None:
+            try:
+                spec.input_schema.model_validate_json(request.context)
+            except ValueError:
+                return self._result(
+                    child_id=str(uuid4()),
+                    agent_name=spec.name,
+                    status="rejected",
+                    error="context must match the trusted role input JSON schema",
+                )
         key = tool_call_id or request.tool_call_id
         kind, existing, child_id = await scope.reserve_attempt(key)
         if kind == "cached":
@@ -211,8 +228,15 @@ class DelegationRunner:
         assert child_id is not None
         future = existing if hasattr(existing, "set_result") else None
         budget = ChildCallBudget(
-            max_model_calls=self.policy.max_model_calls,
-            max_tool_calls=self.policy.max_tool_calls,
+            max_model_calls=min(
+                self.policy.max_model_calls, spec.max_model_calls or self.policy.max_model_calls
+            ),
+            max_tool_calls=min(
+                self.policy.max_tool_calls,
+                spec.max_tool_calls
+                if spec.max_tool_calls is not None
+                else self.policy.max_tool_calls,
+            ),
         )
         task = asyncio.current_task()
         if task is not None:
@@ -277,7 +301,14 @@ class DelegationRunner:
         config: RunnableConfig | None,
         budget: ChildCallBudget,
     ) -> DelegationResult:
-        graph = self._build_child_graph(spec, budget)
+        preparation = (
+            self.child_adapter.prepare(spec, request, child_id) if self.child_adapter else None
+        )
+        graph = (
+            self._build_child_graph(spec, budget, preparation)
+            if preparation
+            else self._build_child_graph(spec, budget)
+        )
         child_config = self._child_config(config, scope=scope, child_id=child_id, spec=spec)
         child_context = InvocationContext(
             scope=scope,
@@ -291,6 +322,15 @@ class DelegationRunner:
         prompt = request.task
         if request.context:
             prompt += "\n\nSelected context:\n" + request.context
+        if preparation is not None:
+            prompt = preparation.prompt
+        if len(prompt) > self.policy.max_input_chars:
+            return self._result(
+                child_id=child_id,
+                agent_name=spec.name,
+                status="rejected",
+                error="trusted role context exceeds input budget; narrow the assignment",
+            )
         try:
             state = await invoke_scoped_graph(
                 graph,
@@ -308,7 +348,18 @@ class DelegationRunner:
                 tool_calls=budget.tool_calls,
             )
         messages = state.get("messages", []) if isinstance(state, Mapping) else []
-        final = messages[-1] if messages else None
+        structured_response = (
+            state.get("structured_response") if isinstance(state, Mapping) else None
+        )
+        # The ordinary ReAct graph resolves its schema transport tool internally.
+        # Keep raw JSON until our strict boundary checks have rejected coercion/truncation.
+        final = (
+            AIMessage(content=json.dumps(structured_response))
+            if spec.result_schema is not None and structured_response is not None
+            else messages[-1]
+            if messages
+            else None
+        )
         if not isinstance(final, AIMessage):
             return self._result(
                 child_id=child_id,
@@ -355,6 +406,39 @@ class DelegationRunner:
                 model_calls=budget.model_calls,
                 tool_calls=budget.tool_calls,
             )
+        structured = None
+        result_ref = None
+        if spec.result_schema is not None:
+            if truncated:
+                return self._result(
+                    child_id=child_id,
+                    agent_name=spec.name,
+                    status="failed",
+                    error="typed child output exceeds result budget",
+                    truncated=True,
+                    model_calls=budget.model_calls,
+                    tool_calls=budget.tool_calls,
+                )
+            try:
+                fenced = re.fullmatch(r"```(?:json)?\s*(\{[\s\S]*\})\s*```", output)
+                raw = json.loads(fenced.group(1) if fenced else output)
+                parsed = validate_typed_output(spec.result_schema, raw)
+                structured = parsed.model_dump(mode="json")
+                if preparation is not None and preparation.accept is not None:
+                    receipt = preparation.accept(parsed)
+                    result_ref = receipt["result_ref"]
+                    structured = receipt
+                    output = json.dumps(receipt, ensure_ascii=False)
+            except (ValueError, TypeError, KeyError) as exc:
+                return self._result(
+                    child_id=child_id,
+                    agent_name=spec.name,
+                    status="failed",
+                    error=f"invalid typed child result: {_sanitize_error(exc)}; "
+                    f"output prefix={_sanitize_error(output[:120])!r}",
+                    model_calls=budget.model_calls,
+                    tool_calls=budget.tool_calls,
+                )
         return self._result(
             child_id=child_id,
             agent_name=spec.name,
@@ -363,11 +447,31 @@ class DelegationRunner:
             truncated=truncated,
             model_calls=budget.model_calls,
             tool_calls=budget.tool_calls,
+            structured_output=structured,
+            result_ref=result_ref,
         )
 
-    def _build_child_graph(self, spec: SubagentSpec, budget: ChildCallBudget) -> Any:
-        selected_tools = [self.tool_by_name[name] for name in spec.tool_names]
-        selected_skills = [self.skill_by_name[name] for name in spec.skill_names]
+    def _build_child_graph(
+        self,
+        spec: SubagentSpec,
+        budget: ChildCallBudget,
+        preparation: ChildPreparation | None = None,
+    ) -> Any:
+        selected_tools = (
+            list(preparation.tools)
+            if preparation
+            else [self.tool_by_name[name] for name in spec.tool_names]
+        )
+        if any(tool.name not in spec.tool_names for tool in selected_tools):
+            raise ValueError("prepared child tools exceed the trusted profile")
+        skill_names = (
+            preparation.skill_names
+            if preparation and preparation.skill_names is not None
+            else spec.skill_names
+        )
+        if set(skill_names) - set(spec.skill_names):
+            raise ValueError("prepared child skills exceed the trusted profile")
+        selected_skills = [self.skill_by_name[name] for name in skill_names]
         child_skill_tools = build_skill_tools(selected_skills)
         child_tools = [*selected_tools, *child_skill_tools]
         names = [tool.name for tool in child_tools]
@@ -377,14 +481,31 @@ class DelegationRunner:
             spec.system_prompt,
             render_skills_overview(selected_skills),
         )
+        if spec.result_schema is not None:
+            prompt += (
+                "\nFinish by submitting the structured response tool matching this schema exactly.\n"
+                + json.dumps(spec.result_schema.model_json_schema())
+            )
+        model = (
+            self.model if spec.model_role == "general" else self.role_models.get(spec.model_role)
+        )
+        if model is None:
+            raise ValueError(f"host has not configured model role {spec.model_role!r}")
         return self.graph_builder(
-            self.model,
+            model,
             child_tools,
             system_prompt=prompt,
-            middleware=(ChildCallLimitMiddleware(budget),),
+            middleware=(
+                ChildCallLimitMiddleware(budget, structured_result=spec.result_schema is not None),
+            ),
             context_schema=InvocationContext,
             checkpointer=False,
             name=f"subagent_{spec.name}",
+            **(
+                {"result_schema": spec.result_schema.model_json_schema()}
+                if spec.result_schema
+                else {}
+            ),
         )
 
     def _child_config(
@@ -436,6 +557,8 @@ class DelegationRunner:
         error: str | None = None,
         model_calls: int = 0,
         tool_calls: int = 0,
+        structured_output: dict[str, Any] | None = None,
+        result_ref: str | None = None,
     ) -> DelegationResult:
         result = DelegationResult(
             output=output,
@@ -446,8 +569,34 @@ class DelegationRunner:
             error=error,
             model_calls=model_calls,
             tool_calls=tool_calls,
+            structured_output=structured_output,
+            result_ref=result_ref,
         )
         return result
 
 
 __all__ = ["DelegationRunner"]
+
+
+def validate_typed_output(schema: type[BaseModel], raw: object) -> BaseModel:
+    """Reject invalid, extra or silently truncated output before it can become authoritative."""
+    parsed = schema.model_validate(raw)
+    normalized = parsed.model_dump(mode="json")
+
+    def unchanged(original, validated):
+        if isinstance(original, dict):
+            return isinstance(validated, dict) and all(
+                key in validated and unchanged(value, validated[key])
+                for key, value in original.items()
+            )
+        if isinstance(original, list):
+            return (
+                isinstance(validated, list)
+                and len(original) == len(validated)
+                and all(unchanged(a, b) for a, b in zip(original, validated, strict=True))
+            )
+        return original == validated
+
+    if not unchanged(raw, normalized):
+        raise ValueError("output contains extra fields, coercion or silent truncation")
+    return parsed

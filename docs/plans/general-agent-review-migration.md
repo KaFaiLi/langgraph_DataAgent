@@ -1,6 +1,6 @@
 # General-agent review migration plan
 
-Status: in progress; M1–M3 implemented and validated.
+Status: in progress; M1–M4 implemented and validated.
 Date: 2026-09-22.
 
 ## Objective and architectural decision
@@ -42,7 +42,7 @@ and adding new document formats are separate work.
 | M1 | Extract graph-independent review capabilities | M0 | Complete |
 | M2 | Make one specialist skill executable through the general agent | M1 | Complete |
 | M3 | Add persistent review context, coverage, and scoped MCP access | M1; integrates M2 | Complete |
-| M4 | Support typed specialist and independent verification roles | M2, M3 | Pending |
+| M4 | Support typed specialist and independent verification roles | M2, M3 | Complete |
 | M5 | Complete all specialist domains and verification parity | M4 | Pending |
 | M6 | Produce validated lead synthesis and compatible artifacts | M5 | Pending |
 | M7 | Add durable resume and reliable terminal status | M3; validates M4-M6 | Pending |
@@ -160,24 +160,24 @@ Primary sources: [subagent contracts](../../data_agent/agent/subagents/contracts
 [registry](../../data_agent/agent/subagents/registry.py), and
 [runner](../../data_agent/agent/subagents/runner.py).
 
-- [ ] Register trusted specialist, challenger, adjudicator, and lead profiles with
+- [x] Register trusted specialist, challenger, adjudicator, and lead profiles with
   explicit skills, tool subsets, input contracts, and result schemas.
-- [ ] Extend child execution to validate structured outputs or return validated stored
+- [x] Extend child execution to validate structured outputs or return validated stored
   result references; free-form text alone must not establish a completed review result.
-- [ ] Add host-configured model roles that preserve low-cost research/challenge and
+- [x] Add host-configured model roles that preserve low-cost research/challenge and
   high-cost adjudication allocation. Keep provider configuration out of skill documents.
-- [ ] Give challengers independent context and evidence access; preserve removal of
+- [x] Give challengers independent context and evidence access; preserve removal of
   anchoring fields from their inputs and the adjudicator's restricted capabilities.
-- [ ] Let the root select and coordinate peer roles within the existing one-level
+- [x] Let the root select and coordinate peer roles within the existing one-level
   delegation model; deeper delegation is not required for this migration.
-- [ ] Configure budgets sufficient for specialists, verification, revisions, and lead
+- [x] Configure budgets sufficient for specialists, verification, revisions, and lead
   synthesis, with explicit failure, timeout, truncation, and cancellation results.
 
 Acceptance:
 
-- [ ] Different roles receive only their authorized tools, sources, context, and model tier.
-- [ ] Malformed child output cannot become an authoritative report or verification decision.
-- [ ] Parallel children retain isolated state, trace ancestry, and bounded execution.
+- [x] Different roles receive only their authorized tools, sources, context, and model tier.
+- [x] Malformed child output cannot become an authoritative report or verification decision.
+- [x] Parallel children retain isolated state, trace ancestry, and bounded execution.
 
 ## M5 — All specialist domains and verification parity
 
@@ -299,3 +299,5 @@ Add implementation and validation evidence here when completing each later miles
 | 2026-09-22 | M1 | Extracted typed analysis, evidence, omission, cross-report and report operations; legacy adapters reuse them. Lazy registry/workflow imports verified in a fresh process. `uv run pytest -q`: 405 passed; `uv run ruff check .`: passed; all 18 changed Python files pass format checks. Live `data-agent chat` loaded risk-metrics and answered through the configured API (two HTTP 200 model calls). Fixed a pre-existing POSIX sandbox realpath recursion revealed on this host; path, process, credential and symlink restrictions pass. |
 | 2026-09-22 | M2 | Added contained paginated references, registered trusted analysis, hash-bound result storage, evidence reopening, and typed pending candidate submission; general-review playbook and four specialist tool instructions. Guarded ReAct integration invokes no legacy workflow. `uv run pytest -q`: 411 passed; lint and changed-file formatting passed. Live CLI reviewed five synthetic SGMR rows, loaded both references, ran trusted analysis, inspected candidates/overviews, reopened evidence and stored three pending findings, disclosing missing Colibris inputs. Artifacts retained locally at `/tmp/data-agent-m2-results`; no API secrets or run artifacts committed. |
 | 2026-09-22 | M3 | Added transactional versioned run records, immutable source manifests, explicit classification/assignment/disposition operations, stored source and candidate coverage, hash-checked scoped research and shared MCP adapters. SQL registers only assigned tables and disables external access. Concurrent writes, cross-run/assignment isolation, parse failures, source changes and pagination tested. Live CLI initialized M3-LIVE, analyzed/submitted/dispositioned through MCP; a fresh assignment-bound process reopened persisted evidence and rejected an unauthorized source. Live coverage exposed and helped fix locator-free candidate ID drift; repeated accounting now reports both candidates covered while publication stays pending. `uv run pytest -q`: 419 passed; lint and changed-file formatting passed. Local records: `/tmp/data-agent-m3-results/runs/M3-LIVE`. |
+
+| 2026-09-22 | M4 | Registered typed specialist, independent challenger, no-research adjudicator and lead peers on the ordinary ReAct delegation host. Host-bound context, low/high cost models, strict raw result validation, version-bound stored receipts and reserved result capacity preserve capability and budget limits. Source-operation schemas and paginated stored assignment reads make live role selection usable. `uv run pytest -q`: 429 passed; lint and changed-file formatting passed. Live CLI researched the stored SGMR finding, persisted an 11-category challenger result, then independently adjudicated with the high-cost model; both stored references agree on the finding version. Malformed-output and exhausted-budget attempts produced no authoritative result. Finding remains pending until M5 verification guards. Live evidence: `/tmp/data-agent-m4-cli.log` and M3-LIVE records. |

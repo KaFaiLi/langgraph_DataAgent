@@ -44,6 +44,15 @@ every material deterministic candidate with a finding, source-backed disposition
 explicit unresolved disclosure. Do not silently drop findings or candidates to fit a
 response limit. Source integrity failures must stop dependent conclusions.
 
+When independent roles are enabled, use `run_subagent` to select `review-risk-metrics`,
+`review-pnl`, `review-post-trade-controls`, or `review-risk-commentary` with `context`
+as a JSON string containing `assignment_id`. Use `review-challenger` then
+`review-adjudicator` for a finding, with `assignment_id` and `finding_id` in that JSON.
+The host rebuilds independent context; task prose cannot substitute for stored inputs.
+Lead roles `review-lead` and `review-lead-verifier` take context `{}` and require stored
+validated reports. A completed child returns a validated stored role reference; it does
+not automatically establish a verified finding or publish a report.
+
 When independent roles and publication capabilities are available, coordinate trusted
 specialists, challengers, adjudicators and the lead using their declared contracts.
 Challengers must independently investigate without analyst anchoring; adjudicators

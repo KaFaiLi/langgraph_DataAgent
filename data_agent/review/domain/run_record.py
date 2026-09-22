@@ -52,6 +52,8 @@ class ReviewRecord(BaseModel):
     artifacts: dict[str, str] = Field(default_factory=dict)
     trace: list[dict] = Field(default_factory=list)
     failures: list[dict] = Field(default_factory=list)
+    role_results: dict[str, dict] = Field(default_factory=dict)
+    child_runs: dict[str, dict] = Field(default_factory=dict)
     tool_calls: int = 0
     max_tool_calls: int = 400
     status: Literal["running", "interrupted", "failed", "completed"] = "running"

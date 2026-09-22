@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import Any, cast
 
 from langchain_core.runnables.config import RunnableConfig
@@ -34,31 +34,9 @@ from data_agent.review.orchestration.specialist.state import (
     SpecialistState,
     loads_finding,
 )
+from data_agent.review.verification.projection import _finding_projection, _strip_hidden
 from data_agent.review.verification.rules import required_challenge_types
 from data_agent.tools.research import build_research_tools
-
-
-def _finding_projection(finding: Finding) -> dict[str, Any]:
-    """Project a finding while hiding anchoring fields from the challenger."""
-
-    raw = finding.model_dump(mode="json")
-    hidden = {"severity", "confidence", "recommendation", "verifier_status"}
-    return {key: value for key, value in raw.items() if key not in hidden}
-
-
-def _strip_hidden(value: object) -> object:
-    """Remove anchoring fields from nested deterministic prompt data."""
-
-    hidden = {"severity", "confidence", "recommendation", "verifier_status"}
-    if isinstance(value, Mapping):
-        return {
-            str(key): _strip_hidden(nested)
-            for key, nested in value.items()
-            if str(key).lower() not in hidden
-        }
-    if isinstance(value, list):
-        return [_strip_hidden(item) for item in value]
-    return value
 
 
 def _reopened_payload(gate: EvidenceGateResult) -> list[dict[str, str]]:

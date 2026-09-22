@@ -613,6 +613,16 @@ def build_review_run_tools(workspace: ReviewWorkspace) -> list[BaseTool]:
         """Inspect every discovered source in pages, including parse errors and required dispositions."""
         return workspace.access(run_id).inventory(offset, limit)
 
+    def read_review_assignment(
+        run_id: str, assignment_id: str, offset: int = 0, max_chars: int = 12000
+    ) -> dict:
+        """Read stored findings with their stable IDs, verification and outstanding assignment state in pages."""
+        from data_agent.skills.references import text_page
+
+        access = workspace.access(run_id)
+        assignment = access._assignment(access.store.read(), assignment_id)
+        return text_page(assignment.model_dump_json(), offset=offset, max_chars=max_chars)
+
     def classify_review_source(
         run_id: str, source_id: str, skill_names: list[str], rationale: str
     ) -> dict:
@@ -649,7 +659,8 @@ def build_review_run_tools(workspace: ReviewWorkspace) -> list[BaseTool]:
         run_id: str, assignment_id: str, tool_name: str, arguments: dict
     ) -> dict:
         """Use scoped list_assigned_sources, inspect_table, read_rows, describe_columns, group_by,
-        join_tables, run_duckdb_query, search_text, read_lines, reopen_evidence or statistics.
+        join_tables, run_duckdb_query, search_text, read_lines, reopen_evidence, zscore,
+        outlier_detection, change_point_candidates or pearson_correlation.
         read_rows arguments: path, start, end (1-based data rows), optional sheet.
         reopen_evidence arguments: locator. inspect_table: path, optional preview_rows/sheet.
         search_text: pattern, optional max_results/case_insensitive. run_duckdb_query: sql, max_rows.
@@ -679,6 +690,7 @@ def build_review_run_tools(workspace: ReviewWorkspace) -> list[BaseTool]:
     functions = [
         initialize_review_run,
         review_inventory,
+        read_review_assignment,
         classify_review_source,
         assign_review_work,
         execute_assigned_analysis,

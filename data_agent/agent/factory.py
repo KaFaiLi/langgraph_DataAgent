@@ -12,6 +12,7 @@ from typing import Any
 
 from langchain.agents import create_agent
 from langchain.agents.middleware import AgentMiddleware
+from langchain.agents.structured_output import ToolStrategy
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.tools import BaseTool
 
@@ -25,6 +26,7 @@ def build_react_graph(
     context_schema: type[Any] | None = None,
     checkpointer: Any = None,
     name: str | None = None,
+    result_schema: dict[str, Any] | None = None,
 ) -> Any:
     """Build a ReAct graph from supplied model/tools without side effects."""
 
@@ -36,6 +38,7 @@ def build_react_graph(
         context_schema=context_schema,
         checkpointer=checkpointer,
         name=name,
+        response_format=ToolStrategy(result_schema, handle_errors=False) if result_schema else None,
     )
 
 

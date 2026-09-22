@@ -35,4 +35,9 @@ Read the stored candidates and overviews with `read_analysis_result`, follow pag
 and inspect cited regions with `reopen_analysis_evidence`. Submit the typed analyst draft
 with `submit_candidate_result`, retaining deterministic candidate IDs, contrary evidence
 and unresolved limitations. The submission stays pending until independent verification.
+For a persistent run or delegated review role, use the supplied run/assignment IDs with
+`execute_assigned_analysis`, `read_assigned_analysis` and `review_source_tool` instead.
+Return the required typed JSON result to the host; it records the pending candidate or
+independent role result. Tools outside the declared role are unavailable. Challengers
+research independently; adjudicators receive evidence and challenges with no source tools.
 Tool summaries, truncated references and source previews never establish full coverage.

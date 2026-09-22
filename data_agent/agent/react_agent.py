@@ -184,6 +184,7 @@ async def build_agent(
     model: BaseChatModel | None = None,
     extra_tools: list[BaseTool] | None = None,
     subagent_specs: Sequence[SubagentSpec] | None = None,
+    role_models: dict[str, BaseChatModel] | None = None,
 ) -> AgentBundle:
     """Build the ReAct agent and return an :class:`AgentBundle`.
 
@@ -237,6 +238,38 @@ async def build_agent(
     tools = base_tools
     parent_agent: Any
     registry: SubagentRegistry | None = None
+    child_adapter = None
+    if policy.enabled and settings.review_run_id and not settings.review_assignment_id:
+        from data_agent.agent.subagents.review import ReviewRoleAdapter, review_profiles
+        from data_agent.review.llm import ConfiguredReviewProvider, ModelTier
+        from data_agent.skills.review import discover_skills as discover_review_skills
+        from data_agent.tools.review_runs import ReviewWorkspace
+
+        definitions = {s.name: s for s in discover_review_skills(settings.skills_path)}
+        workspace = ReviewWorkspace(
+            settings.source_path,
+            settings.review_workspace_path,
+            definitions,
+            settings.review_run_id,
+        )
+        child_adapter = ReviewRoleAdapter(workspace, settings.review_run_id)
+        subagent_specs = subagent_specs or review_profiles(definitions)
+        if role_models is None:
+            provider = ConfiguredReviewProvider(settings)
+            role_models = {
+                "low_cost": provider(ModelTier.LOW_COST),
+                "high_cost": provider(ModelTier.HIGH_COST),
+            }
+        policy = DelegationPolicy(
+            enabled=True,
+            max_runs=settings.review_child_max_runs,
+            max_concurrency=settings.review_child_max_concurrency,
+            max_model_calls=settings.review_child_max_model_calls,
+            max_tool_calls=settings.review_child_max_tool_calls,
+            timeout_seconds=settings.review_child_timeout_seconds,
+            max_input_chars=settings.review_child_max_input_chars,
+            max_result_chars=settings.review_child_max_result_chars,
+        )
     if policy.enabled:
         registry = SubagentRegistry.build(
             subagent_specs,
@@ -250,11 +283,20 @@ async def build_agent(
             registry=registry,
             policy=policy,
             max_iterations=settings.agent_max_iterations,
+            role_models=role_models,
+            child_adapter=child_adapter,
         )
         delegation_tool = build_delegation_tool(runner)
         validate_tool_names([*base_tools, delegation_tool])
         tools = [*base_tools, delegation_tool]
         spec_lines = "\n".join(f"  - {spec.name}: {spec.description}" for spec in registry.specs)
+        if child_adapter:
+            system_prompt += (
+                f"\nThe host-authorized review run_id is {settings.review_run_id!r}. "
+                "Review peers require context as a JSON string matching the described input contract. "
+                "The host supplies source context and role models; free-form child text cannot verify a report. "
+                "Select and coordinate peers according to the outstanding obligations.\n"
+            )
         system_prompt += (
             "\n\nDELEGATION — you may delegate one focused task to a trusted child "
             "agent and wait for its bounded result. Split independent work into "

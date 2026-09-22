@@ -12,7 +12,6 @@ from collections.abc import Iterable
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables.config import RunnableConfig
-from pydantic import BaseModel, Field, field_validator
 
 from data_agent.review.domain.finding import Finding, VerificationStatus
 from data_agent.review.domain.reports import (
@@ -59,33 +58,7 @@ def __getattr__(name: str):
     raise AttributeError(name)
 
 
-class LeadVerifierOutput(BaseModel):
-    """The lead verifier's structured verdict."""
-
-    decision: VerifierDecision
-    feedback: str = Field(default="", max_length=MAX_LEAD_FEEDBACK)
-    checks: list[str] = Field(default_factory=list, max_length=MAX_LEAD_CHECKS)
-    challenges: list[LeadChallenge] = Field(
-        default_factory=list,
-        max_length=MAX_LEAD_CHALLENGES,
-    )
-
-    @field_validator("feedback", mode="before")
-    @classmethod
-    def _bound_feedback(cls, value: object) -> object:
-        return value[:MAX_LEAD_FEEDBACK] if isinstance(value, str) else value
-
-    @field_validator("checks", mode="before")
-    @classmethod
-    def _bound_checks(cls, value: object) -> object:
-        if not isinstance(value, list):
-            return value
-        return [item[:500] if isinstance(item, str) else item for item in value[:MAX_LEAD_CHECKS]]
-
-    @field_validator("challenges", mode="before")
-    @classmethod
-    def _bound_challenges(cls, value: object) -> object:
-        return value[:MAX_LEAD_CHALLENGES] if isinstance(value, list) else value
+from data_agent.review.domain.lead_outputs import LeadVerifierOutput
 
 
 class FatalEvidenceIntegrityError(RuntimeError):

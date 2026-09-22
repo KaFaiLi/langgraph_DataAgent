@@ -49,6 +49,7 @@ REVIEW_TOOL_NAMES = frozenset(
     {
         "initialize_review_run",
         "review_inventory",
+        "read_review_assignment",
         "classify_review_source",
         "assign_review_work",
         "execute_assigned_analysis",

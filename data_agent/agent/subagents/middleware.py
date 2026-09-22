@@ -12,7 +12,7 @@ from langchain.agents.middleware import (
     ModelResponse,
     ToolCallRequest,
 )
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 
 
 class ChildBudgetExceeded(RuntimeError):
@@ -76,8 +76,30 @@ class ChildCallLimitMiddleware(AgentMiddleware[Any, Any]):
     graph steps and cannot distinguish a model retry from a tool call.
     """
 
-    def __init__(self, budget: ChildCallBudget) -> None:
+    def __init__(self, budget: ChildCallBudget, *, structured_result: bool = False) -> None:
         self.budget = budget
+        self.structured_result = structured_result
+
+    def _bounded_request(self, request: ModelRequest[Any]) -> ModelRequest[Any]:
+        if not self.structured_result:
+            return request
+        remaining_models = self.budget.max_model_calls - self.budget.model_calls
+        remaining_tools = self.budget.max_tool_calls - self.budget.tool_calls
+        finishing = remaining_models <= 1 or remaining_tools <= 2
+        instruction = (
+            f"Remaining budget after this call: {remaining_models} model calls, "
+            f"{remaining_tools} research tool calls. "
+            "Finish using the structured response tool as soon as sufficient evidence is available. "
+            "Disclose incomplete research and unresolved checks in the typed result."
+        )
+        if finishing:
+            instruction += " Research is now closed to reserve capacity for the required result."
+        return request.override(
+            tools=[] if finishing else request.tools,
+            system_message=SystemMessage(
+                content=(request.system_prompt or "") + "\n" + instruction
+            ),
+        )
 
     @property
     def name(self) -> str:
@@ -89,7 +111,7 @@ class ChildCallLimitMiddleware(AgentMiddleware[Any, Any]):
         handler: Callable[[ModelRequest[Any]], Awaitable[ModelResponse[Any]]],
     ) -> ModelResponse[Any] | AIMessage:
         await self.budget.reserve_model()
-        return await handler(request)
+        return await handler(self._bounded_request(request))
 
     def wrap_model_call(
         self,
@@ -97,7 +119,7 @@ class ChildCallLimitMiddleware(AgentMiddleware[Any, Any]):
         handler: Callable[[ModelRequest[Any]], ModelResponse[Any]],
     ) -> ModelResponse[Any] | AIMessage:
         self.budget.reserve_model_sync()
-        return handler(request)
+        return handler(self._bounded_request(request))
 
     async def awrap_tool_call(
         self,
