@@ -13,7 +13,7 @@ A verifier must be able to reopen the cited region from the locator alone.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 SCHEME = "source://"
 
@@ -109,7 +109,10 @@ def format_locator(locator: Locator) -> str:
 class EvidenceReference(BaseModel):
     """A reproducible pointer to the source region supporting a claim."""
 
-    locator: str
+    locator: str = Field(
+        description="Exact source evidence URI, e.g. source://risk.csv#rows=2:3 or source://notes.md#lines=4:4. Analysis references, overview IDs and bare paths are not evidence locators.",
+        json_schema_extra={"pattern": "^source://"},
+    )
     quote: str | None = None
 
     @field_validator("locator")

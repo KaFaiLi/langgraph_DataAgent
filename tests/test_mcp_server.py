@@ -59,6 +59,10 @@ REVIEW_TOOL_NAMES = frozenset(
         "record_source_disposition",
         "record_candidate_disposition",
         "review_coverage",
+        "validate_review_evidence",
+        "apply_review_verification",
+        "audit_review_omissions",
+        "finalize_specialist_report",
     }
 )
 TEMPLATE_TOOL_NAMES = frozenset(

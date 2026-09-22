@@ -33,6 +33,7 @@ class ChildCallBudget:
         self.model_calls = 0
         self.tool_calls = 0
         self.exceeded_kind: str | None = None
+        self.close_research = False
         self._lock = threading.Lock()
 
     async def reserve_model(self) -> int:
@@ -85,7 +86,7 @@ class ChildCallLimitMiddleware(AgentMiddleware[Any, Any]):
             return request
         remaining_models = self.budget.max_model_calls - self.budget.model_calls
         remaining_tools = self.budget.max_tool_calls - self.budget.tool_calls
-        finishing = remaining_models <= 1 or remaining_tools <= 2
+        finishing = self.budget.close_research or remaining_models <= 1 or remaining_tools <= 2
         instruction = (
             f"Remaining budget after this call: {remaining_models} model calls, "
             f"{remaining_tools} research tool calls. "

@@ -124,6 +124,7 @@ class ReportRequest:
     rejected: list[Finding] = field(default_factory=list)
     history: dict[str, list[VerificationRound]] = field(default_factory=dict)
     omission_audit: OmissionAuditResult | None = None
+    unresolved_items: list[str] = field(default_factory=list)
 
 
 def construct_report(request: ReportRequest) -> SpecialistReport:
@@ -169,6 +170,7 @@ def construct_report(request: ReportRequest) -> SpecialistReport:
             f"Omission disclosure: {disclosure}"
             for disclosure in omission_audit.unresolved_disclosures
         )
+    unresolved_items.extend(request.unresolved_items)
     conclusion = (
         f"{request.domain_label} review completed: {len(verified)} finding(s) verified, "
         f"{len(rejected)} rejected, {len(unresolved_findings)} unresolved. "

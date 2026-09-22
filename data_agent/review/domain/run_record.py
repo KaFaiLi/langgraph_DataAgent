@@ -31,6 +31,9 @@ class AssignmentRecord(BaseModel):
     artifacts: dict[str, str] = Field(default_factory=dict)
     findings: dict[str, dict] = Field(default_factory=dict)
     verification: dict[str, list[dict]] = Field(default_factory=dict)
+    unresolved_items: list[str] = Field(default_factory=list)
+    omission_disclosure: str | None = None
+    rescue_attempts: int = 0
     report: dict | None = None
 
 
@@ -56,4 +59,5 @@ class ReviewRecord(BaseModel):
     child_runs: dict[str, dict] = Field(default_factory=dict)
     tool_calls: int = 0
     max_tool_calls: int = 400
+    max_verifier_rounds: int = Field(default=2, ge=1, le=2)
     status: Literal["running", "interrupted", "failed", "completed"] = "running"

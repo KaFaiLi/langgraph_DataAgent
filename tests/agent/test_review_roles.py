@@ -231,7 +231,7 @@ async def test_react_schema_transport_preserves_raw_output_for_strict_validation
         scope=RunScope(policy),
     )
     assert result.status == ("failed" if extra else "completed")
-    assert result.model_calls == 1
+    assert result.model_calls == (2 if extra else 1)
     assert result.tool_calls == 0  # Schema transport grants no research capability.
     assert (result.structured_output is None) == extra
 
@@ -269,3 +269,44 @@ async def test_typed_child_reserves_budget_for_explicit_incomplete_result():
     assert result.structured_output["research_complete"] is False
     assert result.tool_calls == len(reads) == 3
     assert result.model_calls == 4
+
+
+@pytest.mark.asyncio
+async def test_one_format_repair_retains_research_and_cannot_reopen_tools():
+    from langchain_core.messages import HumanMessage, ToolMessage
+    from langchain_core.tools import StructuredTool
+
+    from tests.agent.test_agent_entrypoints import RoutingModel, _call
+
+    reads = []
+
+    def research() -> str:
+        """Read source evidence."""
+        reads.append(1)
+        return "Assigned evidence."
+
+    tool = StructuredTool.from_function(research)
+
+    def respond(messages, names):
+        if isinstance(messages[-1], HumanMessage) and "failed validation" in messages[-1].content:
+            assert names == ("ChallengerOutput",)
+            assert any(isinstance(m, ToolMessage) and m.name == "research" for m in messages)
+            return _call(
+                "ChallengerOutput", {"finding_id": "F1", "research_complete": False}, "fixed"
+            )
+        if not any(isinstance(m, ToolMessage) for m in messages):
+            return _call("research", {}, "read")
+        return _call("ChallengerOutput", {"finding_id": "F1", "decision": "pass"}, "invalid")
+
+    spec = SubagentSpec(name="typed", tool_names=("research",), result_schema=ChallengerOutput)
+    policy = DelegationPolicy(enabled=True, max_model_calls=5, max_tool_calls=10)
+    runner = DelegationRunner(
+        model=RoutingModel(respond=respond),
+        tools=[tool],
+        registry=SubagentRegistry.build([spec], tools=[tool], skills=[]),
+        policy=policy,
+    )
+    result = await runner.run({"agent_name": "typed", "task": "challenge"}, scope=RunScope(policy))
+    assert result.status == "completed" and result.model_calls == 3
+    assert result.structured_output["research_complete"] is False
+    assert result.tool_calls == len(reads) == 1

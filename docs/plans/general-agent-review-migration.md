@@ -1,6 +1,6 @@
 # General-agent review migration plan
 
-Status: in progress; M1–M4 implemented and validated.
+Status: in progress; M1–M5 implemented and validated.
 Date: 2026-09-22.
 
 ## Objective and architectural decision
@@ -43,7 +43,7 @@ and adding new document formats are separate work.
 | M2 | Make one specialist skill executable through the general agent | M1 | Complete |
 | M3 | Add persistent review context, coverage, and scoped MCP access | M1; integrates M2 | Complete |
 | M4 | Support typed specialist and independent verification roles | M2, M3 | Complete |
-| M5 | Complete all specialist domains and verification parity | M4 | Pending |
+| M5 | Complete all specialist domains and verification parity | M4 | Complete |
 | M6 | Produce validated lead synthesis and compatible artifacts | M5 | Pending |
 | M7 | Add durable resume and reliable terminal status | M3; validates M4-M6 | Pending |
 | M8 | Validate packaging, parity, documentation, and entrypoint cutover | M6, M7 | Pending |
@@ -185,24 +185,24 @@ Primary sources: [evidence validation](../../data_agent/review/ingestion/evidenc
 [verification rules](../../data_agent/review/verification/rules.py),
 [omission auditing](../../data_agent/review/verification/omission.py), and the four domain skills.
 
-- [ ] Extend the first slice to composite PnL, post-trade controls, and risk commentary.
-- [ ] Preserve composite PnL ownership of income attribution, validation, and adjustments.
-- [ ] Expose evidence validation, independent challenge, adjudication, revision, and
+- [x] Extend the first slice to composite PnL, post-trade controls, and risk commentary.
+- [x] Preserve composite PnL ownership of income attribution, validation, and adjustments.
+- [x] Expose evidence validation, independent challenge, adjudication, revision, and
   candidate-disposition capabilities without embedding the specialist graph in a tool.
-- [ ] Preserve `PASS`, `REVISE`, `REJECT`, and `UNRESOLVED`, severity constraints,
+- [x] Preserve `PASS`, `REVISE`, `REJECT`, and `UNRESOLVED`, severity constraints,
   counter-evidence, bounded revisions, and exhausted-revision handling.
-- [ ] Persist verification records bound to the finding version and its evidence;
+- [x] Persist verification records bound to the finding version and its evidence;
   editing a finding must invalidate any acceptance that no longer applies.
-- [ ] Expose omission auditing and preserve bounded rescue or explicit unresolved
+- [x] Expose omission auditing and preserve bounded rescue or explicit unresolved
   disclosure for material deterministic candidates that remain unaccounted for.
-- [ ] Reject self-declared verification status unsupported by authoritative records.
+- [x] Reject self-declared verification status unsupported by authoritative records.
 
 Acceptance:
 
-- [ ] Each domain produces compatible typed findings and data overviews through the general agent.
-- [ ] Invalid evidence, missing independent challenge, failed adjudication, and material
+- [x] Each domain produces compatible typed findings and data overviews through the general agent.
+- [x] Invalid evidence, missing independent challenge, failed adjudication, and material
   omissions cannot silently become a successful verified result.
-- [ ] Tests validate obligations and outcomes while permitting different valid tool-call sequences.
+- [x] Tests validate obligations and outcomes while permitting different valid tool-call sequences.
 
 ## M6 — Lead synthesis and artifact publication
 
@@ -301,3 +301,5 @@ Add implementation and validation evidence here when completing each later miles
 | 2026-09-22 | M3 | Added transactional versioned run records, immutable source manifests, explicit classification/assignment/disposition operations, stored source and candidate coverage, hash-checked scoped research and shared MCP adapters. SQL registers only assigned tables and disables external access. Concurrent writes, cross-run/assignment isolation, parse failures, source changes and pagination tested. Live CLI initialized M3-LIVE, analyzed/submitted/dispositioned through MCP; a fresh assignment-bound process reopened persisted evidence and rejected an unauthorized source. Live coverage exposed and helped fix locator-free candidate ID drift; repeated accounting now reports both candidates covered while publication stays pending. `uv run pytest -q`: 419 passed; lint and changed-file formatting passed. Local records: `/tmp/data-agent-m3-results/runs/M3-LIVE`. |
 
 | 2026-09-22 | M4 | Registered typed specialist, independent challenger, no-research adjudicator and lead peers on the ordinary ReAct delegation host. Host-bound context, low/high cost models, strict raw result validation, version-bound stored receipts and reserved result capacity preserve capability and budget limits. Source-operation schemas and paginated stored assignment reads make live role selection usable. `uv run pytest -q`: 429 passed; lint and changed-file formatting passed. Live CLI researched the stored SGMR finding, persisted an 11-category challenger result, then independently adjudicated with the high-cost model; both stored references agree on the finding version. Malformed-output and exhausted-budget attempts produced no authoritative result. Finding remains pending until M5 verification guards. Live evidence: `/tmp/data-agent-m4-cli.log` and M3-LIVE records. |
+
+| 2026-09-23 | M5 | Added version-bound evidence admission, independent challenge sanitization, guarded adjudication, two-round reduction, idempotent acceptance, revision invalidation, bounded omission rescue/disclosure and compatible specialist reports. All four domains run through the general ReAct host; deterministic tables/overviews match direct trusted scripts and composite PnL owns its three inputs. Paginated gates/omission audits and candidate-disposition receipts expose actual coverage. One bounded schema repair retains independent research and closes further research access. `uv run pytest -q`: 438 passed; lint and all changed Python format checks passed. Live M5-LIVE reviewed six synthetic sources and stored 13 pending findings with all four specialist role references; malformed risk evidence references prompted a schema-description fix and successful peer retry. Live M3-LIVE applied guarded verification, exhausted revisions to explicit unresolved outcomes, and constructed report RISK with two unresolved findings, history and seven disclosures. A fresh PnL verification and evidence pagination CLI check also completed. Logs: `/tmp/data-agent-m5-*-cli.log`; artifacts remain local and untracked. |

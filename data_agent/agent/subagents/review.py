@@ -14,6 +14,9 @@ from data_agent.review.domain.lead_outputs import LeadDraft, LeadVerifierOutput
 from data_agent.review.domain.outputs import AdjudicatorOutput, ChallengerOutput
 from data_agent.review.domain.reports import SpecialistReport
 from data_agent.review.domain.source import SourceManifest
+from data_agent.review.ingestion.evidence_validator import EvidenceValidator
+from data_agent.review.verification.challenge_validation import _sanitize_challenge_case
+from data_agent.review.verification.identity import finding_version
 from data_agent.review.verification.projection import _strip_hidden
 from data_agent.review.verification.rules import required_challenge_types
 from data_agent.skills.review import SkillDefinition
@@ -37,13 +40,6 @@ class LeadInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-def finding_version(finding: Finding | dict) -> str:
-    """Bind verification to all substantive fields, excluding host-derived status."""
-    data = finding.model_dump(mode="json") if isinstance(finding, Finding) else dict(finding)
-    data.pop("verifier_status", None)
-    return _digest(data)
-
-
 def review_profiles(definitions: dict[str, SkillDefinition]) -> tuple[SubagentSpec, ...]:
     """Registered roles expose fixed contracts, never caller-selected code or models."""
     specialists = tuple(
@@ -51,7 +47,10 @@ def review_profiles(definitions: dict[str, SkillDefinition]) -> tuple[SubagentSp
             name=f"review-{name}",
             description=f"Analyze a stored {name} assignment; context JSON: assignment_id.",
             system_prompt="Investigate the assigned sources using the specialist skill and deterministic analysis. "
-            "Interpret evidence, counter-evidence and uncertainty. Return a typed pending candidate draft.",
+            "Interpret evidence, counter-evidence and uncertainty. Return a typed pending candidate draft. "
+            "Every evidence locator must be an exact source:// URI emitted by the source tools. "
+            "Analysis references and overview IDs belong in analysis_performed, never in evidence. "
+            "Copy deterministic candidate IDs exactly from stored analysis when linking findings.",
             tool_names=(
                 "review_inventory",
                 "execute_assigned_analysis",
@@ -242,10 +241,23 @@ class ReviewRoleAdapter:
                     ]
                     if not cases:
                         raise ValueError("independent challenge required before adjudication")
-                    payload["independent_challenge"] = cases[-1]["output"]
+                    payload["independent_challenge"] = _sanitize_challenge_case(
+                        ChallengerOutput.model_validate(cases[-1]["output"]),
+                        finding_id=finding_id,
+                        validator=EvidenceValidator.source_backed(
+                            access.store.source_root, source_manifest
+                        ),
+                        assigned_paths=payload["source_paths"],
+                    ).model_dump(mode="json")
                     payload["challenger_result_ref"] = cases[-1]["result_ref"]
             else:
                 payload["existing_findings"] = assignment.findings
+                payload["verification_feedback"] = assignment.verification
+                payload["omission_disclosure"] = assignment.omission_disclosure
+                payload["revision_instruction"] = (
+                    "Preserve stable finding IDs; submit changed findings with pending status. "
+                    "The host retains unchanged findings and enforces two verification rounds."
+                )
         else:
             reports = [
                 SpecialistReport.model_validate(a.report)

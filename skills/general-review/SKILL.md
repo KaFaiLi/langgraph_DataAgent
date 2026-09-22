@@ -53,6 +53,23 @@ Lead roles `review-lead` and `review-lead-verifier` take context `{}` and requir
 validated reports. A completed child returns a validated stored role reference; it does
 not automatically establish a verified finding or publish a report.
 
+Read `read_review_assignment` to discover the stored finding IDs and verification state.
+Use `validate_review_evidence` to inspect a deterministic evidence gate. After independent
+challenge and adjudication, call `apply_review_verification` with the stored adjudicator
+reference. A model's PASS is only a proposal: the host enforces evidence, challenge,
+severity and version checks. Revise pending findings using their original IDs through
+`submit_assigned_candidate` or the specialist peer, with pending status; unchanged
+accepted findings retain acceptance. Never rename or omit an old finding to evade the
+two-round bound. Exhausted revisions become explicit unresolved outcomes.
+
+Use `audit_review_omissions` to inspect actual deterministic candidate coverage. Investigate
+uncovered candidates, record source-backed dispositions, or reserve one `rescue` attempt.
+When missing information prevents resolution, use `disclose` with a concrete reason;
+this preserves the uncovered candidate IDs in report uncertainty. Call
+`finalize_specialist_report` only after assigned source dispositions, current independent
+verification, and candidate accounting are complete. Stored specialist reports include
+data overviews, rejected-finding history and unresolved disclosures for lead synthesis.
+
 When independent roles and publication capabilities are available, coordinate trusted
 specialists, challengers, adjudicators and the lead using their declared contracts.
 Challengers must independently investigate without analyst anchoring; adjudicators

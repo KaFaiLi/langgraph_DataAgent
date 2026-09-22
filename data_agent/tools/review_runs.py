@@ -20,6 +20,7 @@ from data_agent.review.domain.source import DateRange, SourceManifest
 from data_agent.review.domain.verification import CandidateDispositionRecord
 from data_agent.review.ingestion.catalog import build_catalog
 from data_agent.review.ingestion.evidence_validator import EvidenceValidator
+from data_agent.review.verification.identity import finding_version
 from data_agent.skills.review import SkillDefinition
 from data_agent.tools.research import build_research_tools
 from data_agent.tools.review_context import ToolContext
@@ -356,8 +357,21 @@ class RunCapabilities:
 
         def update(current):
             target = self._assignment(current, assignment_id)
+            incoming = {f.finding_id: f.model_dump(mode="json") for f in stored.findings}
+            for finding_id, value in incoming.items():
+                previous = target.findings.get(finding_id)
+                if previous and finding_version(previous) == finding_version(value):
+                    continue  # Idempotent replay retains authoritative verification.
+                if len(target.verification.get(finding_id, [])) >= current.max_verifier_rounds:
+                    raise ValueError("verification revision budget exhausted for " + finding_id)
+                target.findings[finding_id] = value
+            if len(target.findings) > 16:
+                raise ValueError("assignment finding budget exhausted (16 including rescue)")
             target.candidate_ref = result["candidate_ref"]
-            target.findings = {f.finding_id: f.model_dump(mode="json") for f in stored.findings}
+            target.unresolved_items = list(
+                dict.fromkeys([*target.unresolved_items, *stored.unresolved_items])
+            )
+            target.report = None
             target.candidate_dispositions.update(
                 {d.candidate_id: d for d in stored.candidate_dispositions}
             )
@@ -393,6 +407,9 @@ class RunCapabilities:
 
         self.store.update(reserve)
         try:
+            unknown = set(arguments) - set(tools[tool_name].args)
+            if unknown:
+                raise ValueError("unsupported source tool arguments: " + ", ".join(sorted(unknown)))
             value = tools[tool_name].invoke(arguments)
             self.store.check_sources(record, assignment.source_ids)
         except Exception as exc:
@@ -450,6 +467,8 @@ class RunCapabilities:
                 else current.source_dispositions
             )
             target[source_id] = disposition
+            if assignment_id:
+                self._assignment(current, assignment_id).report = None
 
         self.store.update(update)
         return {"source_id": source_id, "status": disposition.status}
@@ -474,12 +493,39 @@ class RunCapabilities:
             raise ValueError(
                 "candidate disposition requires a reason and assigned source-backed evidence"
             )
-        self.store.update(
-            lambda r: self._assignment(r, assignment_id).candidate_dispositions.update(
-                {disposition.candidate_id: disposition}
+
+        def update(current):
+            target = self._assignment(current, assignment_id)
+            target.candidate_dispositions[disposition.candidate_id] = disposition
+            target.report = None
+
+        self.store.update(update)
+        current = self.store.read()
+        audit = audit_candidates(
+            OmissionRequest(
+                ToolContext(
+                    self.store.source_root, self.store.output_dir / "workspace", result.manifest
+                ),
+                tuple(result.source_paths),
+                result.analyses,
+                verified=[
+                    Finding.model_validate(f)
+                    for f in current.assignments[assignment_id].findings.values()
+                ],
+                dispositions=list(
+                    current.assignments[assignment_id].candidate_dispositions.values()
+                ),
             )
         )
-        return {"candidate_id": disposition.candidate_id, "recorded": True}
+        covered = disposition.candidate_id in audit.covered_candidate_ids
+        return {
+            "candidate_id": disposition.candidate_id,
+            "recorded": True,
+            "covered": covered,
+            "next_action": None
+            if covered
+            else "Link the candidate ID to an actual stored finding, or record a source-backed non-finding disposition.",
+        }
 
     def coverage(self) -> dict:
         self._root()
@@ -683,6 +729,65 @@ def build_review_run_tools(workspace: ReviewWorkspace) -> list[BaseTool]:
         """Account for a deterministic candidate with a reason and assigned, reopenable evidence."""
         return workspace.access(run_id).dispose_candidate(assignment_id, disposition)
 
+    def validate_review_evidence(
+        run_id: str, assignment_id: str, finding_id: str, offset: int = 0, max_chars: int = 12000
+    ) -> dict:
+        """Reopen current finding evidence and inspect its version-bound gate in bounded pages."""
+        from data_agent.skills.references import text_page
+        from data_agent.tools.review_verification import VerificationCapabilities
+
+        result = VerificationCapabilities(workspace.access(run_id)).evidence(
+            assignment_id, finding_id
+        )
+        return text_page(json.dumps(result["gate"]), offset=offset, max_chars=max_chars) | {
+            "finding_id": finding_id,
+            "finding_version": result["finding_version"],
+            "decision": result["gate"]["decision"],
+        }
+
+    def apply_review_verification(run_id: str, assignment_id: str, adjudicator_ref: str) -> dict:
+        """Apply evidence/challenge/severity rules to a stored independent adjudicator result; no self-verification."""
+        from data_agent.tools.review_verification import VerificationCapabilities
+
+        return VerificationCapabilities(workspace.access(run_id)).apply(
+            assignment_id, adjudicator_ref
+        )
+
+    def audit_review_omissions(
+        run_id: str,
+        assignment_id: str,
+        action: Literal["inspect", "rescue", "disclose"] = "inspect",
+        reason: str = "",
+        offset: int = 0,
+        max_chars: int = 12000,
+    ) -> dict:
+        """Inspect paginated coverage, reserve one rescue, or disclose omissions. Use inspect for subsequent pages."""
+        from data_agent.skills.references import text_page
+        from data_agent.tools.review_verification import VerificationCapabilities
+
+        if action != "inspect" and offset:
+            raise ValueError("use inspect to page an already recorded omission action")
+        result = VerificationCapabilities(workspace.access(run_id)).omissions(
+            assignment_id, action, reason
+        )
+        audit = result.pop("audit")
+        return (
+            text_page(json.dumps(audit), offset=offset, max_chars=max_chars)
+            | result
+            | {
+                "uncovered_count": len(audit["uncovered_candidates"]),
+                "material_uncovered_count": len(audit["material_candidate_ids"]),
+                "rescue_required": audit["rescue_required"],
+                "disclosures_recorded": bool(audit["unresolved_disclosures"]),
+            }
+        )
+
+    def finalize_specialist_report(run_id: str, assignment_id: str) -> dict:
+        """Construct the stored typed specialist report after source coverage and independent verification."""
+        from data_agent.tools.review_verification import VerificationCapabilities
+
+        return VerificationCapabilities(workspace.access(run_id)).finalize(assignment_id)
+
     def review_coverage(run_id: str) -> dict:
         """Read authoritative missing source, assignment and candidate obligations; summaries cannot override it."""
         return workspace.access(run_id).coverage()
@@ -700,6 +805,10 @@ def build_review_run_tools(workspace: ReviewWorkspace) -> list[BaseTool]:
         record_source_disposition,
         record_candidate_disposition,
         review_coverage,
+        validate_review_evidence,
+        apply_review_verification,
+        audit_review_omissions,
+        finalize_specialist_report,
     ]
     if workspace.bound_assignment:
         functions = [
@@ -719,7 +828,7 @@ def build_review_run_tools(workspace: ReviewWorkspace) -> list[BaseTool]:
         def call(*args, **kwargs):
             try:
                 return function(*args, **kwargs)
-            except (OSError, ValueError, KeyError, sqlite3.Error) as exc:
+            except (OSError, ValueError, KeyError, RuntimeError, sqlite3.Error) as exc:
                 raise ToolException(str(exc)) from exc
 
         return call

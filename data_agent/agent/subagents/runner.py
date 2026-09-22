@@ -273,6 +273,15 @@ class DelegationRunner:
                     tool_calls=budget.tool_calls,
                 )
                 raise
+            except ChildBudgetExceeded as exc:
+                result = self._result(
+                    child_id=child_id,
+                    agent_name=spec.name,
+                    status="budget_exceeded",
+                    error=str(exc),
+                    model_calls=budget.model_calls,
+                    tool_calls=budget.tool_calls,
+                )
             except Exception as exc:  # noqa: BLE001 - provider failures become bounded results
                 result = self._result(
                     child_id=child_id,
@@ -347,109 +356,142 @@ class DelegationRunner:
                 model_calls=budget.model_calls,
                 tool_calls=budget.tool_calls,
             )
-        messages = state.get("messages", []) if isinstance(state, Mapping) else []
-        structured_response = (
-            state.get("structured_response") if isinstance(state, Mapping) else None
-        )
-        # The ordinary ReAct graph resolves its schema transport tool internally.
-        # Keep raw JSON until our strict boundary checks have rejected coercion/truncation.
-        final = (
-            AIMessage(content=json.dumps(structured_response))
-            if spec.result_schema is not None and structured_response is not None
-            else messages[-1]
-            if messages
-            else None
-        )
-        if not isinstance(final, AIMessage):
-            return self._result(
-                child_id=child_id,
-                agent_name=spec.name,
-                status="failed",
-                error="child did not return a final assistant message",
-                model_calls=budget.model_calls,
-                tool_calls=budget.tool_calls,
+        for result_attempt in range(2):
+            messages = state.get("messages", []) if isinstance(state, Mapping) else []
+            structured_response = (
+                state.get("structured_response") if isinstance(state, Mapping) else None
             )
-        if final.invalid_tool_calls:
-            return self._result(
-                child_id=child_id,
-                agent_name=spec.name,
-                status="failed",
-                error="child returned malformed tool calls",
-                model_calls=budget.model_calls,
-                tool_calls=budget.tool_calls,
+            # The ordinary ReAct graph resolves its schema transport tool internally.
+            # Keep raw JSON until our strict boundary checks have rejected coercion/truncation.
+            final = (
+                AIMessage(content=json.dumps(structured_response))
+                if spec.result_schema is not None and structured_response is not None
+                else messages[-1]
+                if messages
+                else None
             )
-        if final.tool_calls:
-            return self._result(
-                child_id=child_id,
-                agent_name=spec.name,
-                status="failed",
-                error="child returned unresolved tool calls",
-                model_calls=budget.model_calls,
-                tool_calls=budget.tool_calls,
-            )
-        if budget.exceeded_kind is not None:
-            return self._result(
-                child_id=child_id,
-                agent_name=spec.name,
-                status="budget_exceeded",
-                error="child model/tool call budget exceeded",
-                model_calls=budget.model_calls,
-                tool_calls=budget.tool_calls,
-            )
-        output, truncated = _bound_text(_content_text(final.content), self.policy.max_result_chars)
-        if not output:
-            return self._result(
-                child_id=child_id,
-                agent_name=spec.name,
-                status="failed",
-                error="child returned an empty final answer",
-                model_calls=budget.model_calls,
-                tool_calls=budget.tool_calls,
-            )
-        structured = None
-        result_ref = None
-        if spec.result_schema is not None:
-            if truncated:
+            if not isinstance(final, AIMessage):
                 return self._result(
                     child_id=child_id,
                     agent_name=spec.name,
                     status="failed",
-                    error="typed child output exceeds result budget",
-                    truncated=True,
+                    error="child did not return a final assistant message",
                     model_calls=budget.model_calls,
                     tool_calls=budget.tool_calls,
                 )
-            try:
-                fenced = re.fullmatch(r"```(?:json)?\s*(\{[\s\S]*\})\s*```", output)
-                raw = json.loads(fenced.group(1) if fenced else output)
-                parsed = validate_typed_output(spec.result_schema, raw)
-                structured = parsed.model_dump(mode="json")
-                if preparation is not None and preparation.accept is not None:
-                    receipt = preparation.accept(parsed)
-                    result_ref = receipt["result_ref"]
-                    structured = receipt
-                    output = json.dumps(receipt, ensure_ascii=False)
-            except (ValueError, TypeError, KeyError) as exc:
+            if final.invalid_tool_calls:
                 return self._result(
                     child_id=child_id,
                     agent_name=spec.name,
                     status="failed",
-                    error=f"invalid typed child result: {_sanitize_error(exc)}; "
-                    f"output prefix={_sanitize_error(output[:120])!r}",
+                    error="child returned malformed tool calls",
                     model_calls=budget.model_calls,
                     tool_calls=budget.tool_calls,
                 )
-        return self._result(
-            child_id=child_id,
-            agent_name=spec.name,
-            status="completed",
-            output=output,
-            truncated=truncated,
-            model_calls=budget.model_calls,
-            tool_calls=budget.tool_calls,
-            structured_output=structured,
-            result_ref=result_ref,
-        )
+            if final.tool_calls:
+                return self._result(
+                    child_id=child_id,
+                    agent_name=spec.name,
+                    status="failed",
+                    error="child returned unresolved tool calls",
+                    model_calls=budget.model_calls,
+                    tool_calls=budget.tool_calls,
+                )
+            if budget.exceeded_kind is not None:
+                return self._result(
+                    child_id=child_id,
+                    agent_name=spec.name,
+                    status="budget_exceeded",
+                    error="child model/tool call budget exceeded",
+                    model_calls=budget.model_calls,
+                    tool_calls=budget.tool_calls,
+                )
+            output, truncated = _bound_text(
+                _content_text(final.content), self.policy.max_result_chars
+            )
+            if not output:
+                return self._result(
+                    child_id=child_id,
+                    agent_name=spec.name,
+                    status="failed",
+                    error="child returned an empty final answer",
+                    model_calls=budget.model_calls,
+                    tool_calls=budget.tool_calls,
+                )
+            structured = None
+            result_ref = None
+            if spec.result_schema is not None:
+                if truncated:
+                    return self._result(
+                        child_id=child_id,
+                        agent_name=spec.name,
+                        status="failed",
+                        error="typed child output exceeds result budget",
+                        truncated=True,
+                        model_calls=budget.model_calls,
+                        tool_calls=budget.tool_calls,
+                    )
+                parsed = None
+                try:
+                    fenced = re.fullmatch(r"```(?:json)?\s*(\{[\s\S]*\})\s*```", output)
+                    raw = json.loads(fenced.group(1) if fenced else output)
+                    parsed = validate_typed_output(spec.result_schema, raw)
+                    structured = parsed.model_dump(mode="json")
+                    if preparation is not None and preparation.accept is not None:
+                        receipt = preparation.accept(parsed)
+                        result_ref = receipt["result_ref"]
+                        structured = receipt
+                        output = json.dumps(receipt, ensure_ascii=False)
+                except (ValueError, TypeError, KeyError) as exc:
+                    if (
+                        parsed is None
+                        and result_attempt == 0
+                        and budget.model_calls < budget.max_model_calls
+                    ):
+                        # One bounded formatting repair retains this child's independent research.
+                        # It cannot reopen research or bypass host admission/version checks.
+                        budget.close_research = True
+                        state = await invoke_scoped_graph(
+                            graph,
+                            {
+                                "messages": [
+                                    *messages,
+                                    {
+                                        "role": "user",
+                                        "content": (
+                                            "Your structured result failed validation: "
+                                            + _sanitize_error(exc)
+                                            + ". Correct the result using the existing evidence. Do not research again. "
+                                            "Keep every string and array within its schema limit, use only declared fields "
+                                            "and exact source:// evidence locators, and explicitly retain unresolved checks."
+                                        ),
+                                    },
+                                ]
+                            },
+                            config=child_config,
+                            context=child_context,
+                        )
+                        continue
+                    return self._result(
+                        child_id=child_id,
+                        agent_name=spec.name,
+                        status="failed",
+                        error=f"invalid typed child result: {_sanitize_error(exc)}; "
+                        f"output prefix={_sanitize_error(output[:120])!r}",
+                        model_calls=budget.model_calls,
+                        tool_calls=budget.tool_calls,
+                    )
+            return self._result(
+                child_id=child_id,
+                agent_name=spec.name,
+                status="completed",
+                output=output,
+                truncated=truncated,
+                model_calls=budget.model_calls,
+                tool_calls=budget.tool_calls,
+                structured_output=structured,
+                result_ref=result_ref,
+            )
 
     def _build_child_graph(
         self,
