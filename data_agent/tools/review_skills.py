@@ -111,6 +111,22 @@ class SkillExecution:
         self._check_sources(result.manifest)
         return result
 
+    def load_candidate(self, reference: str, analysis_ref: str) -> CandidateSubmission:
+        """Read an integrity-checked pending draft bound to its original analysis."""
+        if not re.fullmatch(r"candidate-[0-9a-f]{64}", reference):
+            raise ValueError("invalid candidate result reference")
+        path = self.workspace_root / f"{reference}.json"
+        if path.is_symlink() or not path.resolve().is_relative_to(self.workspace_root):
+            raise ValueError("candidate result escapes storage")
+        value = path.read_text(encoding="utf-8")
+        if hashlib.sha256(value.encode()).hexdigest() != reference.removeprefix("candidate-"):
+            raise ValueError("stored candidate integrity check failed")
+        data = json.loads(value)
+        if data["analysis_ref"] != analysis_ref:
+            raise ValueError("candidate belongs to another analysis")
+        self.load(analysis_ref)
+        return CandidateSubmission.model_validate(data["candidate"])
+
     def _check_sources(self, manifest: SourceManifest) -> None:
         from data_agent.tools.source_tools import resolve_source_path
 

@@ -12,6 +12,7 @@ from fastmcp import FastMCP
 
 from data_agent.config import Settings, get_settings
 from data_agent.logging_utils import get_logger, setup_logging
+from data_agent.mcp_server import review
 from data_agent.tools import (
     context_tools,
     example_tools,
@@ -53,14 +54,17 @@ def build_server(settings: Settings | None = None) -> FastMCP:
         instructions=SERVER_INSTRUCTIONS,
     )
 
-    # Register tool groups. Add your own modules here.
-    example_tools.register(mcp)
-    context_tools.register(mcp)
-    grep_tools.register(mcp)
-    source_tools.register(mcp, root=settings.source_path)
-    tabular_tools.register(mcp, root=settings.source_path, settings=settings)
-    statistics_tools.register(mcp)
-    python_tools.register(mcp, root=settings.source_path, settings=settings)
+    # A bound review server exposes only its authorized run/assignment operations.
+    # Root chat retains general capabilities; review children never inherit them.
+    if not settings.review_run_id:
+        example_tools.register(mcp)
+        context_tools.register(mcp)
+        grep_tools.register(mcp)
+        source_tools.register(mcp, root=settings.source_path)
+        tabular_tools.register(mcp, root=settings.source_path, settings=settings)
+        statistics_tools.register(mcp)
+        python_tools.register(mcp, root=settings.source_path, settings=settings)
+    review.register(mcp, settings)
 
     logger.info("FastMCP server '%s' built.", settings.mcp_server_name)
     return mcp

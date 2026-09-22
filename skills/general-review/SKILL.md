@@ -15,7 +15,19 @@ and `policy` using `load_skill_reference`. Follow `next_offset` until every requ
 reference page is read. Select domains from source schemas and content; composite `pnl`
 owns income attribution, validation, and adjustments together with PnL.
 
-Use `list_sources` and table/document inspection to identify all supplied material.
+For a persistent review, call `initialize_review_run(run_id, desk_context)` using the
+host's configured source/output roots, then page through `review_inventory`. Resolve
+ambiguous or unclassified sources with `classify_review_source` and create specialist
+assignments with `assign_review_work`. Use `execute_assigned_analysis`,
+`read_assigned_analysis`, `review_source_tool`, and `submit_assigned_candidate` for
+those assignments. Record source and candidate dispositions with their named operations.
+Use `review_coverage` as the authoritative outstanding-work list; findings, material
+omissions and unsupported sources remain visible independently of conversation text.
+A host-bound review server exposes only these scoped capabilities. A run or assignment
+ID does not grant access to another scope.
+
+For an isolated exploratory slice without a run, use `list_sources` and table/document
+inspection to identify all supplied material.
 Explicitly disclose unreadable, ambiguous, unclassified and out-of-period sources.
 A bounded inventory or preview is not proof of complete source or population coverage.
 

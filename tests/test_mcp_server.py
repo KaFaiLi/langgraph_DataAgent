@@ -45,6 +45,21 @@ MIGRATED_TOOL_CALLS = {
     "run_python_analysis": {"code": "print(1)"},
 }
 MIGRATED_TOOL_NAMES = frozenset(MIGRATED_TOOL_CALLS)
+REVIEW_TOOL_NAMES = frozenset(
+    {
+        "initialize_review_run",
+        "review_inventory",
+        "classify_review_source",
+        "assign_review_work",
+        "execute_assigned_analysis",
+        "read_assigned_analysis",
+        "submit_assigned_candidate",
+        "review_source_tool",
+        "record_source_disposition",
+        "record_candidate_disposition",
+        "review_coverage",
+    }
+)
 TEMPLATE_TOOL_NAMES = frozenset(
     {
         "ping",
@@ -65,7 +80,7 @@ async def test_stdio_server_exposes_tools():
     tools = await client.get_tools()
     names = {t.name for t in tools}
 
-    expected = MIGRATED_TOOL_NAMES | TEMPLATE_TOOL_NAMES
+    expected = MIGRATED_TOOL_NAMES | TEMPLATE_TOOL_NAMES | REVIEW_TOOL_NAMES
     assert names == expected, (
         f"tool catalog mismatch; missing={sorted(expected - names)}, extra={sorted(names - expected)}"
     )
@@ -108,7 +123,7 @@ async def test_all_migrated_tools_are_exposed_and_callable(tmp_path: Path):
     tools = {tool.name for tool in await server.list_tools()}
 
     assert MIGRATED_TOOL_NAMES == frozenset(MIGRATED_TOOL_CALLS)
-    assert tools == MIGRATED_TOOL_NAMES | TEMPLATE_TOOL_NAMES
+    assert tools == MIGRATED_TOOL_NAMES | TEMPLATE_TOOL_NAMES | REVIEW_TOOL_NAMES
     for name, arguments in MIGRATED_TOOL_CALLS.items():
         result = await server.call_tool(name, arguments)
         assert not result.is_error, f"{name} returned an MCP error: {result}"

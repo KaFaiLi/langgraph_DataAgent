@@ -13,6 +13,7 @@ from typing import Any, Literal
 from langchain_core.tools import BaseTool, StructuredTool, ToolException
 
 from data_agent.review.domain.evidence import parse_locator
+from data_agent.review.ingestion.evidence_validator import EvidenceValidator
 from data_agent.tools import source_tools, statistics_tools, tabular_tools
 from data_agent.tools.review_context import ToolContext
 
@@ -37,6 +38,10 @@ def build_research_tools(
         normalized = Path(path).as_posix()
         if normalized not in allowed:
             raise ToolException(f"source path is outside this specialist scope: {path!r}")
+        source = ctx.manifest.by_path(normalized)
+        path = source_tools.resolve_source_path(ctx.source_root, normalized)
+        if source_tools.file_digest(path)[0] != source.sha256:
+            raise ToolException(f"source changed since manifest: {normalized}")
         return normalized
 
     def call(name: str, arguments: dict[str, Any], operation: Any) -> str:
@@ -68,7 +73,11 @@ def build_research_tools(
             trace.append(record)
         if error is not None:
             raise ToolException(error)
-        return rendered
+        return rendered + (
+            "\n[TRUNCATED: result exceeds context limit; narrow the query.]"
+            if len(raw) > MAX_RESULT_CHARS
+            else ""
+        )
 
     def list_assigned_sources() -> str:
         """List only the immutable sources assigned to this specialist."""
@@ -149,22 +158,14 @@ def build_research_tools(
 
     def run_duckdb_query(sql: str, max_rows: int = 1000) -> str:
         """Run one read-only query over assigned registered source tables."""
-        all_names = {
-            tabular_tools._table_name(Path(source.path)): source.path
-            for source in ctx.manifest.sources
-            if Path(source.path).suffix.lower() in tabular_tools.SUPPORTED_SUFFIXES
-        }
-        forbidden = [
-            name
-            for name, path in all_names.items()
-            if path not in allowed and re.search(rf"\b{re.escape(name)}\b", sql, re.IGNORECASE)
-        ]
-        if forbidden:
-            raise ToolException(f"query references tables outside specialist scope: {forbidden}")
+        for path in allowed:
+            checked(path)
         return call(
             "run_duckdb_query",
             {"sql": sql, "max_rows": max_rows},
-            lambda: tabular_tools.run_duckdb_query(ctx.source_root, sql, max_rows),
+            lambda: tabular_tools.run_duckdb_query(
+                ctx.source_root, sql, max_rows, allowed_paths=sorted(allowed), include_metadata=True
+            ),
         )
 
     def search_text(pattern: str, case_insensitive: bool = False, max_results: int = 50) -> str:
@@ -172,7 +173,10 @@ def build_research_tools(
 
         def operation() -> dict[str, Any]:
             matches: list[Any] = []
-            for path in sorted(allowed):
+            truncated = False
+            paths = sorted(allowed)
+            for index, path in enumerate(paths):
+                checked(path)
                 result = source_tools.search_text_data(
                     ctx.source_root,
                     pattern,
@@ -181,11 +185,13 @@ def build_research_tools(
                     path=path,
                 )
                 matches.extend(result.get("matches", []))
+                truncated = truncated or bool(result.get("truncated"))
                 if len(matches) >= max_results:
+                    truncated = truncated or index < len(paths) - 1
                     break
             return {
                 "matches": matches[:max_results],
-                "truncated": len(matches) > max_results,
+                "truncated": truncated or len(matches) > max_results,
             }
 
         return call(
@@ -216,7 +222,12 @@ def build_research_tools(
         return call(
             "reopen_evidence",
             {"locator": locator},
-            lambda: source_tools.read_document_section_data(ctx.source_root, locator),
+            lambda: {
+                "locator": locator,
+                "content": EvidenceValidator.source_backed(ctx.source_root, ctx.manifest).reopen(
+                    locator
+                )[0],
+            },
         )
 
     def zscore(values: list[float | None]) -> str:

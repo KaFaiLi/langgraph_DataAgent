@@ -68,6 +68,10 @@ def build_mcp_client(settings: Settings | None = None) -> MultiServerMCPClient:
             # process; otherwise Settings overrides would only affect the
             # parent and source tools would silently use the .env value.
             "SOURCE_ROOT": str(settings.source_path),
+            "SKILLS_DIR": str(settings.skills_path),
+            "REVIEW_WORKSPACE": str(settings.review_workspace_path),
+            "REVIEW_RUN_ID": settings.review_run_id or "",
+            "REVIEW_ASSIGNMENT_ID": settings.review_assignment_id or "",
         }
         connection: dict[str, Any] = {
             "transport": "stdio",
@@ -202,11 +206,12 @@ async def build_agent(
     # 2. Skills -> tools + prompt overview.
     skills = discover_skills(settings.skills_path)
     skill_tools = build_skill_tools(skills)
-    skill_tools += build_review_skill_tools(
-        settings.source_path,
-        settings.review_workspace_path,
-        skills,
-    )
+    if not settings.review_run_id:
+        skill_tools += build_review_skill_tools(
+            settings.source_path,
+            settings.review_workspace_path,
+            skills,
+        )
     overview = render_skills_overview(skills)
 
     # 3. Model.

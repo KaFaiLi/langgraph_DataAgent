@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 from langchain_core.tools import ToolException
 
-from data_agent.review.domain.source import Source, SourceManifest, SourceType
 from data_agent.tools.research import build_research_tools
 from data_agent.tools.review_context import ToolContext
 
@@ -15,24 +14,9 @@ def _context(tmp_path: Path) -> ToolContext:
     source.mkdir()
     (source / "assigned.csv").write_text("desk,value\nA,1\nB,2\n", encoding="utf-8")
     (source / "other.csv").write_text("desk,value\nX,99\n", encoding="utf-8")
-    manifest = SourceManifest(
-        sources=[
-            Source(
-                source_id="SRC-001",
-                path="assigned.csv",
-                source_type=SourceType.CSV,
-                sha256="a" * 64,
-                size_bytes=20,
-            ),
-            Source(
-                source_id="SRC-002",
-                path="other.csv",
-                source_type=SourceType.CSV,
-                sha256="b" * 64,
-                size_bytes=20,
-            ),
-        ]
-    )
+    from data_agent.review.ingestion.catalog import build_catalog
+
+    manifest = build_catalog(source)
     return ToolContext(source_root=source, workspace_root=tmp_path / "workspace", manifest=manifest)
 
 

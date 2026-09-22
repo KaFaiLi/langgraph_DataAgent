@@ -84,6 +84,8 @@ class Settings(BaseSettings):
     # --- Skills --------------------------------------------------------------
     skills_dir: str = Field(default="skills")
 
+    review_run_id: str | None = None
+    review_assignment_id: str | None = None
     review_workspace: str = Field(default=".analysis_workspace/review-skills")
 
     @property

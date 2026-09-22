@@ -69,7 +69,11 @@ def _stable_value(value: object, *, key: str | None = None) -> object:
     """Canonicalize non-prose values for a stable candidate fingerprint."""
 
     normalized_key = key.lower() if key else None
-    if normalized_key in _PROSE_KEYS or normalized_key in {"candidate_id", "id"}:
+    if normalized_key in _PROSE_KEYS or normalized_key in {
+        "candidate_id",
+        "deterministic_candidate_id",
+        "id",
+    }:
         return None
     if isinstance(value, EvidenceReference):
         return value.locator

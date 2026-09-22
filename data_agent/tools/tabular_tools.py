@@ -22,6 +22,7 @@ from pydantic import Field
 
 from data_agent.config import REPO_ROOT, Settings, get_settings
 from data_agent.tools._safe_paths import guarded_path, root_from
+from data_agent.tools.source_tools import resolve_source_path
 
 MAX_QUERY_ROWS = 1_000
 MAX_PREVIEW_ROWS = 100
@@ -370,7 +371,9 @@ def _register_frame(
     )
 
 
-def _register_tables(root: Path, connection: duckdb.DuckDBPyConnection) -> None:
+def _register_tables(
+    root: Path, connection: duckdb.DuckDBPyConnection, allowed_paths: list[str] | None = None
+) -> None:
     used_names: set[str] = set()
 
     def register(name: str, frame: pl.DataFrame) -> None:
@@ -382,7 +385,17 @@ def _register_tables(root: Path, connection: duckdb.DuckDBPyConnection) -> None:
         used_names.add(name)
         _register_frame(connection, name, frame)
 
-    for path in _iter_table_paths(root):
+    if allowed_paths is None:
+        paths = _iter_table_paths(root)
+    else:
+        if len(allowed_paths) > MAX_REGISTERED_FILES:
+            raise ToolError("assigned SQL scope exceeds the table registration limit")
+        paths = [
+            resolve_source_path(root, path)
+            for path in sorted(set(allowed_paths))
+            if Path(path).suffix.lower() in SUPPORTED_SUFFIXES
+        ]
+    for path in paths:
         relative = path.relative_to(root)
         try:
             if path.suffix.lower() in {".xlsx", ".xlsm"}:
@@ -438,7 +451,14 @@ def _validate_read_only_sql(sql: str) -> str:
     return statement
 
 
-def run_duckdb_query(root: Path, sql: str, max_rows: int = MAX_QUERY_ROWS) -> list[dict[str, Any]]:
+def run_duckdb_query(
+    root: Path,
+    sql: str,
+    max_rows: int = MAX_QUERY_ROWS,
+    *,
+    allowed_paths: list[str] | None = None,
+    include_metadata: bool = False,
+) -> list[dict[str, Any]] | dict[str, Any]:
     """Run one read-only SELECT/WITH query over registered ``src_*`` tables."""
 
     if not 1 <= max_rows <= MAX_QUERY_ROWS:
@@ -446,12 +466,15 @@ def run_duckdb_query(root: Path, sql: str, max_rows: int = MAX_QUERY_ROWS) -> li
     statement = _validate_read_only_sql(sql)
     try:
         with duckdb.connect(":memory:") as connection:
-            _register_tables(root, connection)
+            _register_tables(root, connection, allowed_paths)
+            connection.execute("SET enable_external_access = false")
             result = connection.execute(statement)
             columns = [item[0] for item in result.description or []]
-            return _json_safe(
-                [dict(zip(columns, row, strict=True)) for row in result.fetchmany(max_rows)]
-            )
+            rows = result.fetchmany(max_rows + 1)
+            rendered = _json_safe([dict(zip(columns, row, strict=True)) for row in rows[:max_rows]])
+            if include_metadata:
+                return {"rows": rendered, "truncated": len(rows) > max_rows, "max_rows": max_rows}
+            return rendered
     except ToolError:
         raise
     except Exception as exc:
