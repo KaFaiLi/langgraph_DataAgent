@@ -1,6 +1,8 @@
 # Autonomous review service architecture comparison
 
-Source of truth: `../review-service-architecture-options.md`
+Architecture comparison source: `../review-service-architecture-options.md`
+
+Implementation and PPTX delivery source: `../../plans/three-agent-review-ppt.md`
 
 Visual reference only: `../review-service-architecture-deck.html`
 
@@ -21,7 +23,7 @@ Editorial rule: compare the three plans without ranking or selecting one.
 
 - Review heterogeneous documents through a common service interface.
 - Run mandatory domain analysis and bounded model investigation.
-- Produce a structured result with reopenable evidence.
+- Produce a structured result with reopenable evidence and a validated review PPTX.
 - Compare orchestration, context boundaries, validation, runtime, and implementation work.
 - Visual idea: one shared outcome on the right fed by three equally weighted paths.
 - Layout role: comparison frame.
@@ -34,6 +36,7 @@ Editorial rule: compare the three plans without ranking or selecting one.
 - Restrict agents to guarded, read-only source tools.
 - Bound calls, retries, concurrency, duration, and result size.
 - Validate coverage, evidence, and the artifact bundle before completion.
+- Treat PPTX generation and rendered-slide validation as mandatory publication gates.
 - Visual idea: five-stage horizontal contract with a small current-baseline inset.
 - Layout role: context and shared constraints.
 - Required source images: none.
@@ -78,7 +81,7 @@ Editorial rule: compare the three plans without ranking or selecting one.
 - Code runs mandatory deterministic domain analyses before the loop.
 - The agent chooses read and analysis tools until it produces a structured candidate.
 - Middleware limits model calls, tool calls, context growth, retries, and duration.
-- External code still validates coverage, evidence, and final artifacts.
+- External code still validates coverage, evidence, and the generated presentation.
 - Visual idea: circular tool loop bounded by an outer validation frame.
 - Layout role: architecture.
 - Required source images: none.
@@ -119,8 +122,8 @@ Editorial rule: compare the three plans without ranking or selecting one.
 
 ## Slide 11: Implementation and evaluation use one shared test frame
 
-- Shared work: adapters, manifest, deterministic analyses, evidence reopening, schemas, and
-  artifact validation.
+- Shared work: adapters, manifest, deterministic analyses, evidence reopening, schemas,
+  deterministic deck rendering, and visual/artifact validation.
 - Plan-specific work: graph state and reducers; child lifecycle and idempotency; or context
   and loop controls.
 - Run each plan against the same corpus, models, budgets, and concurrency limits.
