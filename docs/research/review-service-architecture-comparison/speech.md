@@ -7,8 +7,8 @@ and connect implementation choices to observable runtime behavior.
 
 This presentation compares three ways to implement the same autonomous review service. Each
 plan must review a heterogeneous document set, run the required domain analyses, validate the
-evidence behind retained findings, and produce a final artifact without asking a person to
-intervene during the run.
+evidence behind retained findings, and produce a validated review PowerPoint without asking a
+person to intervene during the run.
 
 The difference lies in orchestration. The first plan uses a controlled graph, the second uses a
 supervisor that delegates through tool calls, and the third uses one ReAct agent. The following
@@ -18,8 +18,9 @@ slides keep the external contract fixed so we can compare the implementation cho
 
 All three paths lead to the same product outcome. The service receives documents, performs
 domain-specific analysis, and returns a structured result with evidence that can be reopened.
-The comparison therefore focuses on how each plan organizes the work rather than on changing
-what the service promises.
+That result feeds a deterministic deck planner and renderer, so every path must publish the same
+validated PPTX deliverable. The comparison therefore focuses on how each plan organizes the work
+rather than on changing what the service promises.
 
 We will compare who chooses the next step, how source scope and context are isolated, where
 validation occurs, what can execute in parallel, how a run resumes after interruption, and what
@@ -34,7 +35,9 @@ size all have explicit bounds.
 
 The current domain covers eight document formats: CSV, XLSX, XLSM, Parquet, PDF, DOCX, Markdown,
 and text. A run ends as completed, completed with warnings, or failed. Coverage, evidence, and the
-artifact bundle determine that status outside model prose.
+artifact bundle determine that status outside model prose. Successful publication requires a
+PPTX that reopens and passes rendered-slide checks for clipping, overflow, readability, and
+provenance.
 
 ## Slide 4: Plan 1 uses a static controlled graph
 
@@ -80,8 +83,8 @@ the resulting receipts and bounded outputs to the agent.
 
 The agent chooses which source or analysis tool to use next and stops when it can produce a
 structured candidate result. Middleware limits model calls, tool calls, context growth, retries,
-and total duration. The same external validators still check coverage, evidence, and the final
-artifact bundle before publication.
+and total duration. The same external validators still check coverage and evidence before the
+shared deterministic presentation pipeline renders and validates the final deck.
 
 ## Slide 8: Tools, skills, and adapters have separate responsibilities
 
@@ -123,10 +126,11 @@ the slide describes execution mechanics rather than measured performance.
 ## Slide 11: Implementation and evaluation use one shared test frame
 
 Much of the implementation belongs to every plan: document adapters, the immutable manifest,
-deterministic analyses, evidence reopening, typed results, and artifact validation. Plan-specific
-work sits above that foundation. The graph plan adds state, reducers, and node policies. The
-supervisor plan adds registry, ledger, task cache, concurrency, and result envelopes. The single
-agent plan adds context controls, middleware, and post-loop checks.
+deterministic analyses, evidence reopening, typed results, deterministic PPTX rendering, and
+rendered-slide validation. Plan-specific work sits above that foundation. The graph plan adds
+state, reducers, and node policies. The supervisor plan adds registry, ledger, task cache,
+concurrency, and result envelopes. The single-agent plan adds context controls, middleware, and
+post-loop checks.
 
 Evaluation should separate correctness from runtime and cost. The common test frame measures
 source coverage, mandatory-analysis completion, citation support, output variance, resume
